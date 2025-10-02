@@ -42,7 +42,7 @@ jobs:
       - name: Upload to MagicPod
         working-directory: e2e
         run: |
-          curl -L -X POST \
+          curl --fail-with-body -L -X POST \
             -F "file=@build/ios/iphonesimulator/Runner.app.zip" \
             -H "Authorization: Token ${{ secrets.MAGICPOD_API_TOKEN }}" \
             "https://app.magicpod.com/api/v1.0/Nativebrik.inc/Nativebrik-Flutter/upload-file/"
@@ -71,7 +71,7 @@ jobs:
       - name: Upload e2e app
         working-directory: e2e
         run: |
-          curl -L -X POST \
+          curl --fail-with-body -L -X POST \
             -F "file=@build/app/outputs/flutter-apk/app-debug.apk" \
             -H "Authorization: Token ${{ secrets.MAGICPOD_API_TOKEN }}" \
             "https://app.magicpod.com/api/v1.0/Nativebrik.inc/Nativebrik-Flutter/upload-file/"
