@@ -11,15 +11,15 @@ let package = Package(
     ],
     dependencies: [
         .package(
-            url: "https://github.com/plaidev/nativebrik-sdk.git",
-            exact: "0.11.1"
+            url: "https://github.com/plaidev/nubrick-ios.git",
+            exact: "0.12.0"
         )
     ],
     targets: [
         .target(
             name: "nativebrik_bridge",
             dependencies: [
-                .product(name: "Nativebrik", package: "nativebrik-sdk")
+                .product(name: "Nativebrik", package: "nubrick-ios")
             ]
         )
     ]

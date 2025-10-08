@@ -1,13 +1,22 @@
 {
-  "originHash" : "cb7b463d1d383ef53792debc98a352946538a7c498af183e74b8c2c26eb9c714",
+  "originHash" : "b5b755e3cd9a3d13bd44411d9a85c89a483cddc8515d48df2a029141ec2ae906",
   "pins" : [
     {
-      "identity" : "nativebrik-sdk",
+      "identity" : "nubrick-ios",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/plaidev/nativebrik-sdk.git",
+      "location" : "https://github.com/plaidev/nubrick-ios.git",
       "state" : {
-        "revision" : "1aeed0ff01fbc4be01bc075154a2feca841de730",
-        "version" : "0.11.1"
+        "revision" : "ac41c3b8cdcb068a9239db2e825ef1cb194f8e89",
+        "version" : "0.12.0"
+      }
+    },
+    {
+      "identity" : "yoga",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/facebook/yoga.git",
+      "state" : {
+        "revision" : "042f5013152eb81c1552dec945b88f7b95ca350f",
+        "version" : "3.2.1"
       }
     }
   ],
