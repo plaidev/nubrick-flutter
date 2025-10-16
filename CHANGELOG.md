@@ -1,3 +1,8 @@
+## 0.11.0
+
+- Update Dependencies
+    - Nativebrik to 0.12.3
+    - Fix some issues related to iOS 26
 
 ## 0.10.6
 
