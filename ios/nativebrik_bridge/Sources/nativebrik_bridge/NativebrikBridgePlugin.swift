@@ -42,7 +42,7 @@ public class NativebrikBridgePlugin: NSObject, FlutterPlugin {
             let cacheTime = cachePolicy["cacheTime"] as! Int
             let staleTime = cachePolicy["staleTime"] as! Int
             let storage = cachePolicy["storage"] as! String
-            let nativebrikCachePolicy = NubrickCachePolicy(cacheTime: TimeInterval(cacheTime), staleTime: TimeInterval(staleTime), storage: storage == "inMemory" ? .INMEMORY : .INMEMORY)
+            let nativebrikCachePolicy = NativebrikCachePolicy(cacheTime: TimeInterval(cacheTime), staleTime: TimeInterval(staleTime), storage: storage == "inMemory" ? .INMEMORY : .INMEMORY)
             self.manager.setNativebrikClient(nativebrik: NubrickClient(
                 projectId: projectId,
                 onEvent: { [weak self] event in
