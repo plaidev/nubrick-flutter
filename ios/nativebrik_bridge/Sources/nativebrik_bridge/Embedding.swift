@@ -1,7 +1,7 @@
 import Foundation
 import Flutter
 import UIKit
-import Nativebrik
+import Nubrick
 
 class FLNativeViewFactory: NSObject, FlutterPlatformViewFactory {
     let messenger: FlutterBinaryMessenger

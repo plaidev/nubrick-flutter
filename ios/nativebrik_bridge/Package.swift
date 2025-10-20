@@ -19,7 +19,7 @@ let package = Package(
         .target(
             name: "nativebrik_bridge",
             dependencies: [
-                .product(name: "Nativebrik", package: "nubrick-ios")
+                .product(name: "Nubrick", package: "nubrick-ios")
             ]
         )
     ]

@@ -8,7 +8,7 @@
 import Foundation
 import Flutter
 import UIKit
-import Nativebrik
+import Nubrick
 
 struct EmbeddingEntity {
     let uiview: UIView
@@ -21,7 +21,7 @@ struct RemoteConfigEntity {
 }
 
 class NativebrikBridgeManager {
-    private var nativebrikClient: NativebrikClient? = nil
+    private var nubrickClient: NubrickClient? = nil
     private var embeddingMaps: [String:EmbeddingEntity]
     private var configMaps: [String:RemoteConfigEntity]
 
@@ -30,11 +30,11 @@ class NativebrikBridgeManager {
         self.configMaps = [:]
     }
 
-    func setNativebrikClient(nativebrik: NativebrikClient) {
-        if self.nativebrikClient != nil {
+    func setNativebrikClient(nativebrik: NubrickClient) {
+        if self.nubrickClient != nil {
             return print("NativebrikClient is already set")
         }
-        self.nativebrikClient = nativebrik
+        self.nubrickClient = nativebrik
         if let vc = UIApplication.shared.delegate?.window??.rootViewController {
             let overlay = nativebrik.experiment.overlayViewController()
             vc.addChild(overlay)
@@ -43,33 +43,33 @@ class NativebrikBridgeManager {
     }
 
     func getUserId() -> String? {
-        guard let nativebrikClient = self.nativebrikClient else {
+        guard let nubrickClient = self.nubrickClient else {
             return nil
         }
-        return nativebrikClient.user.id
+        return nubrickClient.user.id
     }
 
     func setUserProperties(properties: [String: Any]) {
-        guard let nativebrikClient = self.nativebrikClient else {
+        guard let nubrickClient = self.nubrickClient else {
             return
         }
-        nativebrikClient.user.setProperties(properties)
+        nubrickClient.user.setProperties(properties)
     }
 
     func getUserProperties() -> [String: String]? {
-        guard let nativebrikClient = self.nativebrikClient else {
+        guard let nubrickClient = self.nubrickClient else {
             return nil
         }
-        return nativebrikClient.user.getProperties()
+        return nubrickClient.user.getProperties()
     }
 
     // embedding
     func connectEmbedding(id: String, channelId: String, arguments: Any?, messenger: FlutterBinaryMessenger) {
-        guard let nativebrikClient = self.nativebrikClient else {
+        guard let nubrickClient = self.nubrickClient else {
             return
         }
         let channel = FlutterMethodChannel(name: "Nativebrik/Embedding/\(channelId)", binaryMessenger: messenger)
-        let uiview = nativebrikClient.experiment.embeddingUIView(id, arguments: arguments, onEvent: { event in
+        let uiview = nubrickClient.experiment.embeddingUIView(id, arguments: arguments, onEvent: { event in
             channel.invokeMethod(ON_EVENT_METHOD, arguments: [
                 "name": event.name as Any?,
                 "deepLink": event.deepLink as Any?,
@@ -117,13 +117,13 @@ class NativebrikBridgeManager {
 
     // remote config
     func connectRemoteConfig(id: String, channelId: String, onPhase:  @escaping ((RemoteConfigPhase) -> Void)) {
-        guard let nativebrikClient = self.nativebrikClient else {
+        guard let nubrickClient = self.nubrickClient else {
             return
         }
         let entity = RemoteConfigEntity(variant: nil)
         self.configMaps[channelId] = entity
 
-        nativebrikClient.experiment.remoteConfig(id) { phase in
+        nubrickClient.experiment.remoteConfig(id) { phase in
             switch phase {
             case .completed(let config):
                 if self.configMaps[channelId] == nil {
@@ -204,12 +204,12 @@ class NativebrikBridgeManager {
 
     // tooltip
     func connectTooltip(name: String, onFetch: @escaping (String) -> Void, onError: @escaping (String) -> Void) {
-        guard let nativebrikClient = self.nativebrikClient else {
+        guard let nubrickClient = self.nubrickClient else {
             onError("NativebrikClient is not set")
             return
         }
         Task {
-            let result = await nativebrikClient.experiment.__do_not_use__fetch_tooltip_data(trigger: name)
+            let result = await nubrickClient.experiment.__do_not_use__fetch_tooltip_data(trigger: name)
             switch result {
             case .success(let data):
                 onFetch(data)
@@ -220,11 +220,11 @@ class NativebrikBridgeManager {
     }
 
     func connectTooltipEmbedding(channelId: String, rootBlock: String, messenger: FlutterBinaryMessenger) {
-        guard let nativebrikClient = self.nativebrikClient else {
+        guard let nubrickClient = self.nubrickClient else {
             return
         }
         let channel = FlutterMethodChannel(name: "Nativebrik/Embedding/\(channelId)", binaryMessenger: messenger)
-        let accessor = nativebrikClient.experiment.__do_not_use__render_uiview(
+        let accessor = nubrickClient.experiment.__do_not_use__render_uiview(
             json: rootBlock,
             onEvent: { event in
                 channel.invokeMethod(ON_EVENT_METHOD, arguments: [
@@ -274,10 +274,10 @@ class NativebrikBridgeManager {
 
     // trigger
     func dispatch(name: String) {
-        guard let nativebrikClient = self.nativebrikClient else {
+        guard let nubrickClient = self.nubrickClient else {
             return
         }
-        nativebrikClient.experiment.dispatch(NativebrikEvent(name))
+        nubrickClient.experiment.dispatch(NubrickEvent(name))
     }
 
     /**
@@ -286,10 +286,10 @@ class NativebrikBridgeManager {
      * This method forwards the exception to the Nativebrik SDK for crash reporting.
      */
     func recordCrash(exception: NSException) {
-        guard let nativebrikClient = self.nativebrikClient else {
+        guard let nubrickClient = self.nubrickClient else {
             return
         }
-        nativebrikClient.experiment.record(exception: exception)
+        nubrickClient.experiment.record(exception: exception)
     }
 }
 
