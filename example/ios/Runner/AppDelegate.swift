@@ -1,6 +1,6 @@
 import UIKit
 import Flutter
-import Nativebrik
+import Nubrick
 import YogaKit
 
 @main

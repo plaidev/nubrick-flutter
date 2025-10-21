@@ -1,6 +1,6 @@
 import Flutter
 import UIKit
-import Nativebrik
+import Nubrick
 
 let EMEBEDDING_VIEW_ID = "nativebrik-embedding-view"
 let EMBEDDING_PHASE_UPDATE_METHOD = "embedding-phase-update"
@@ -34,7 +34,7 @@ public class NativebrikBridgePlugin: NSObject, FlutterPlugin {
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         switch call.method {
         case "getNativebrikSDKVersion":
-            result(nativebrikSdkVersion)
+            result(nubrickSdkVersion)
         case "connectClient":
             let args = call.arguments as! [String:Any]
             let projectId = args["projectId"] as! String
@@ -43,7 +43,7 @@ public class NativebrikBridgePlugin: NSObject, FlutterPlugin {
             let staleTime = cachePolicy["staleTime"] as! Int
             let storage = cachePolicy["storage"] as! String
             let nativebrikCachePolicy = NativebrikCachePolicy(cacheTime: TimeInterval(cacheTime), staleTime: TimeInterval(staleTime), storage: storage == "inMemory" ? .INMEMORY : .INMEMORY)
-            self.manager.setNativebrikClient(nativebrik: NativebrikClient(
+            self.manager.setNativebrikClient(nativebrik: NubrickClient(
                 projectId: projectId,
                 onEvent: { [weak self] event in
                     self?.channel.invokeMethod(ON_EVENT_METHOD, arguments: [

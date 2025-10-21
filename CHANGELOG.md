@@ -1,3 +1,9 @@
+## 0.12.0
+
+- Update iOS dependencies
+    - Bump version to 0.13.0
+    - Restore CocoaPods support
+
 ## 0.11.0
 
 - Update Dependencies
