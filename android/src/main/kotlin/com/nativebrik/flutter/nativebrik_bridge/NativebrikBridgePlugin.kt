@@ -1,24 +1,21 @@
 package com.nativebrik.flutter.nativebrik_bridge
 
 import android.content.Context
-import android.provider.Settings.Global
-import com.nativebrik.sdk.CachePolicy
-import com.nativebrik.sdk.CacheStorage
-import com.nativebrik.sdk.Config
+import io.nubrick.nubrick.CachePolicy
+import io.nubrick.nubrick.CacheStorage
+import io.nubrick.nubrick.Config
+import io.nubrick.nubrick.VERSION
+import io.nubrick.nubrick.NubrickClient
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
-import com.nativebrik.sdk.VERSION
-import com.nativebrik.sdk.NativebrikClient
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import kotlin.coroutines.CoroutineContext
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
@@ -82,7 +79,7 @@ class NativebrikBridgePlugin: FlutterPlugin, MethodCallHandler {
                         staleTime = staleTime.toDuration(DurationUnit.SECONDS),
                         storage = if (storage == "inMemory") CacheStorage.IN_MEMORY else CacheStorage.IN_MEMORY
                     )
-                val client = NativebrikClient(
+                val client = NubrickClient(
                     Config(
                         projectId,
                         onEvent = { it ->
@@ -109,7 +106,7 @@ class NativebrikBridgePlugin: FlutterPlugin, MethodCallHandler {
                             }
                         }
                     ), context)
-                this.manager.setNativebrikClient(client)
+                this.manager.setNubrickClient(client)
                 result.success("ok")
             }
             "getUserId" -> {

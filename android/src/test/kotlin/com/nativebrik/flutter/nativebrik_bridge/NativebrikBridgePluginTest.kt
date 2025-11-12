@@ -5,7 +5,7 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import kotlin.test.Test
 import org.mockito.Mockito
-import com.nativebrik.sdk.VERSION
+import io.nubrick.nubrick.VERSION
 
 /*
  * This demonstrates a simple unit test of the Kotlin portion of this plugin's implementation.
