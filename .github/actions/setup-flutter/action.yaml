@@ -1,0 +1,42 @@
+# This action is forked from subosito/flutter-action@v2.21.0
+
+name: Set up Flutter
+
+runs:
+  using: composite
+  steps:
+    - name: Make setup script executable
+      run: chmod +x "$GITHUB_ACTION_PATH/setup.sh"
+      shell: bash
+
+    - name: Set action inputs
+      id: flutter-action
+      shell: bash
+      env:
+        FLUTTER_VERSION: "3.32.8"
+      run: |
+        $GITHUB_ACTION_PATH/setup.sh -p -n "$FLUTTER_VERSION" stable
+
+    - name: Cache Flutter
+      id: cache-flutter
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      with:
+        path: ${{ steps.flutter-action.outputs.CACHE-PATH }}
+        key: ${{ steps.flutter-action.outputs.CACHE-KEY }}
+
+    - name: Cache pub dependencies
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      id: cache-pub
+      with:
+        path: ${{ steps.flutter-action.outputs.PUB-CACHE-PATH }}
+        key: ${{ steps.flutter-action.outputs.PUB-CACHE-KEY }}-${{ hashFiles('**/pubspec.lock') }}
+
+    - name: Run setup script
+      shell: bash
+      run: |
+        $GITHUB_ACTION_PATH/setup.sh \
+          -n '${{ steps.flutter-action.outputs.VERSION }}' \
+          -a '${{ steps.flutter-action.outputs.ARCHITECTURE }}' \
+          -c '${{ steps.flutter-action.outputs.CACHE-PATH }}' \
+          -d '${{ steps.flutter-action.outputs.PUB-CACHE-PATH }}' \
+          ${{ steps.flutter-action.outputs.CHANNEL }}
