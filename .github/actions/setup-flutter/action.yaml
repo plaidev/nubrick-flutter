@@ -2,16 +2,6 @@
 
 name: Set up Flutter
 
-inputs:
-  channel:
-    description: The Flutter build release channel
-    required: false
-    default: stable
-  flutter-version:
-    description: The Flutter version to make available on the path
-    required: false
-    default: ""
-
 runs:
   using: composite
   steps:
@@ -22,10 +12,10 @@ runs:
     - name: Set action inputs
       id: flutter-action
       shell: bash
+      env:
+        FLUTTER_VERSION: "3.32.8"
       run: |
-        $GITHUB_ACTION_PATH/setup.sh -p \
-          -n '${{ inputs.flutter-version }}' \
-          ${{ inputs.channel }}
+        $GITHUB_ACTION_PATH/setup.sh -p -n "$FLUTTER_VERSION" stable
 
     - name: Cache Flutter
       id: cache-flutter

@@ -26,9 +26,6 @@ jobs:
 
       - name: Set up Flutter
         uses: ./.github/actions/setup-flutter
-        with:
-          channel: stable
-          flutter-version: 3.19.2
 
       - name: Validate package
         run: dart pub publish --dry-run
