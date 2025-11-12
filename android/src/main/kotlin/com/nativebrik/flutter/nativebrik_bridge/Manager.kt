@@ -1,9 +1,9 @@
 package com.nativebrik.flutter.nativebrik_bridge
 
 import android.content.Context
-import com.nativebrik.sdk.NativebrikClient
-import com.nativebrik.sdk.__DO_NOT_USE_THIS_INTERNAL_BRIDGE
-import com.nativebrik.sdk.data.NotFoundException
+import io.nubrick.nubrick.NubrickClient
+import io.nubrick.nubrick.__DO_NOT_USE_THIS_INTERNAL_BRIDGE
+import io.nubrick.nubrick.data.NotFoundException
 import io.flutter.plugin.platform.PlatformView
 import io.flutter.plugin.platform.PlatformViewFactory
 import io.flutter.plugin.common.StandardMessageCodec
@@ -13,9 +13,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
-import com.nativebrik.sdk.NativebrikEvent
-import com.nativebrik.sdk.component.bridge.UIBlockEventBridgeViewModel
-import com.nativebrik.sdk.remoteconfig.RemoteConfigVariant
+import io.nubrick.nubrick.NubrickEvent
+import io.nubrick.nubrick.component.bridge.UIBlockEventBridgeViewModel
+import io.nubrick.nubrick.remoteconfig.RemoteConfigVariant
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -26,14 +26,14 @@ import kotlinx.coroutines.launch
 internal data class ConfigEntity(val variant: RemoteConfigVariant?, val experimentId: String?)
 
 internal class NativebrikBridgeManager(private val binaryMessenger: BinaryMessenger) {
-    private var nativebrikClient: NativebrikClient? = null
+    private var nativebrikClient: NubrickClient? = null
     private var bridgeClient: __DO_NOT_USE_THIS_INTERNAL_BRIDGE? = null
 
     private var embeddingMap: MutableMap<String, Any?> = mutableMapOf()
     private var eventBridgeViewMap: MutableMap<String, UIBlockEventBridgeViewModel> = mutableMapOf()
     private var configMap: MutableMap<String, ConfigEntity> = mutableMapOf()
 
-    fun setNativebrikClient(client: NativebrikClient) {
+    fun setNubrickClient(client: NubrickClient) {
         this.nativebrikClient = client
         this.bridgeClient = __DO_NOT_USE_THIS_INTERNAL_BRIDGE(client)
     }
@@ -210,7 +210,7 @@ internal class NativebrikBridgeManager(private val binaryMessenger: BinaryMessen
     }
 
     fun dispatch(name: String) {
-        this.nativebrikClient?.experiment?.dispatch(NativebrikEvent(name))
+        this.nativebrikClient?.experiment?.dispatch(NubrickEvent(name))
     }
 
     /**
