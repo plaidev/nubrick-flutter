@@ -5,17 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/plaidev/nubrick-ios.git",
       "state" : {
-        "revision" : "f1d33ebf6ab7bb098eec58480015187c3c01c696",
-        "version" : "0.13.0"
-      }
-    },
-    {
-      "identity" : "yoga",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/facebook/yoga.git",
-      "state" : {
-        "revision" : "042f5013152eb81c1552dec945b88f7b95ca350f",
-        "version" : "3.2.1"
+        "revision" : "71d201b739f760ab53bfdb663f5781a76fb62a4e",
+        "version" : "0.14.0"
       }
     }
   ],
