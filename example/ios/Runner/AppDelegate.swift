@@ -1,7 +1,6 @@
 import UIKit
 import Flutter
 import Nubrick
-import YogaKit
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
