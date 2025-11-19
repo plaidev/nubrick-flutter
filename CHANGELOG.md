@@ -1,3 +1,9 @@
+## 0.13.1
+
+- Enhance tooltip feature
+    - Tooltip will follow anchor frame change
+    - Tooltip will be hidden when anchor size is near zero.
+
 ## 0.13.0
 
 - Update Dependencies
