@@ -1,3 +1,10 @@
+## 0.13.0
+
+- Update Dependencies
+    - io.nubrick:nubrick to 0.8.1
+    - Nubrick to 0.14.0
+
+
 ## 0.12.0
 
 - Update iOS dependencies
