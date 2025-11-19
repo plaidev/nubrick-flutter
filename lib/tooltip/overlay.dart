@@ -35,6 +35,8 @@ class NativebrikTooltipOverlayState extends State<NativebrikTooltipOverlay>
   Size? _anchorSize;
   Offset? _tooltipPosition;
   Size? _tooltipSize;
+  bool _isUpdatingPosition = false;
+  bool _isFrameCallbackRegistered = false;
 
   void _onDispatch(String name) async {
     var uiroot = await NativebrikBridgePlatform.instance.connectTooltip(name);
@@ -72,6 +74,65 @@ class NativebrikTooltipOverlayState extends State<NativebrikTooltipOverlay>
     );
   }
 
+  /// calculate the anchor position, size, tooltip position, size
+  /// return the result if successful, return null if failed
+  _TooltipPositionData? _calculateTooltipPositionData(
+      schema.UIPageBlock? page) {
+    if (page == null) {
+      return null;
+    }
+    final anchorId = page.data?.tooltipAnchor;
+    if (anchorId == null) {
+      return null;
+    }
+    final key = widget.keysReference[anchorId];
+    if (key == null) {
+      return null;
+    }
+    final context = key.currentContext;
+    if (context == null || !context.mounted) {
+      return null;
+    }
+
+    final box = context.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) {
+      return null;
+    }
+
+    final anchorPosition = box.localToGlobal(Offset.zero);
+    final anchorSize = box.size;
+
+    final tooltipSize = page.data?.tooltipSize;
+    if (tooltipSize == null) {
+      return null;
+    }
+    final tooltipSizeValue = (tooltipSize.width != null &&
+            tooltipSize.height != null)
+        ? Size(tooltipSize.width!.toDouble(), tooltipSize.height!.toDouble())
+        : null;
+    if (tooltipSizeValue == null) {
+      return null;
+    }
+
+    final screenSize = MediaQuery.of(context).size;
+    final tooltipPosition = calculateTooltipPosition(
+      anchorPosition: anchorPosition,
+      anchorSize: anchorSize,
+      tooltipSize: tooltipSizeValue,
+      screenSize: screenSize,
+      placement: page.data?.tooltipPlacement ??
+          schema.UITooltipPlacement.BOTTOM_CENTER,
+    );
+
+    return _TooltipPositionData(
+      anchorPosition: anchorPosition,
+      anchorSize: anchorSize,
+      tooltipPosition: tooltipPosition,
+      tooltipSize: tooltipSizeValue,
+      context: context,
+    );
+  }
+
   Future<bool> _onNextTooltip(String pageId) async {
     // find the page
     var page =
@@ -80,80 +141,108 @@ class NativebrikTooltipOverlayState extends State<NativebrikTooltipOverlay>
       return false;
     }
     _currentPage = page;
-    var anchorId = page.data?.tooltipAnchor;
-    if (anchorId == null) {
-      return false;
-    }
-    final key = widget.keysReference[anchorId];
-    if (key == null) {
-      return false;
-    }
-    final context = key.currentContext;
-    if (context == null) {
-      return false;
-    }
-    if (!context.mounted) return false;
-    final tooltipSize = page.data?.tooltipSize;
-    if (tooltipSize == null) {
-      return false;
-    }
-    final tooltipSizeValue = (tooltipSize.width != null &&
-            tooltipSize.height != null)
-        ? Size(tooltipSize.width!.toDouble(), tooltipSize.height!.toDouble())
-        : null;
-    if (tooltipSizeValue == null) {
-      return false;
-    }
 
-    final box = context.findRenderObject() as RenderBox?;
-    if (box == null || !box.hasSize) {
+    final data = _calculateTooltipPositionData(page);
+    if (data == null) {
       return false;
     }
-    final anchorPosition = box.localToGlobal(Offset.zero);
-    final anchorSize = box.size;
 
     // check if the anchor is in the screen
-    final Size screenSize = MediaQuery.of(context).size;
+    final Size screenSize = MediaQuery.of(data.context).size;
     final Rect screenRect = Offset.zero & screenSize;
     final Rect anchorRect = Rect.fromLTWH(
-      anchorPosition.dx,
-      anchorPosition.dy,
-      anchorSize.width,
-      anchorSize.height,
+      data.anchorPosition.dx,
+      data.anchorPosition.dy,
+      data.anchorSize.width,
+      data.anchorSize.height,
     );
+
+    // if the anchor size is too small, return false
+    const double minAnchorSize = 2.0;
+    if (data.anchorSize.width < minAnchorSize ||
+        data.anchorSize.height < minAnchorSize) {
+      return false;
+    }
+
     // if the anchor is not in the screen, return false (retryUntilTrue will retry)
     if (!anchorRect.overlaps(screenRect.deflate(16))) {
       // try to scroll to the anchor if possible
       await Scrollable.ensureVisible(
-        context,
+        data.context,
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
       return false;
     }
 
-    final tooltipPosition = calculateTooltipPosition(
-      anchorPosition: anchorPosition,
-      anchorSize: anchorSize,
-      tooltipSize: tooltipSizeValue,
-      screenSize: MediaQuery.of(context).size,
-      placement: page.data?.tooltipPlacement ??
-          schema.UITooltipPlacement.BOTTOM_CENTER,
-    );
-
     final willAnimateHole =
         getTransitionTarget(page) == schema.UITooltipTransitionTarget.ANCHOR &&
             page.data?.triggerSetting?.onTrigger != null;
 
     setState(() {
-      _anchorPosition = anchorPosition;
-      _anchorSize = anchorSize;
-      _tooltipPosition = tooltipPosition;
-      _tooltipSize = tooltipSizeValue;
+      _anchorPosition = data.anchorPosition;
+      _anchorSize = data.anchorSize;
+      _tooltipPosition = data.tooltipPosition;
+      _tooltipSize = data.tooltipSize;
       _isAnimateHole = willAnimateHole;
     });
 
+    // register the frame callback when the tooltip is shown
+    _registerFrameCallback();
+
     return true;
+  }
+
+  void _updateTooltipPosition() {
+    if (_currentPage == null || _anchorPosition == null) {
+      return;
+    }
+    if (_isUpdatingPosition) {
+      return;
+    }
+    _isUpdatingPosition = true;
+
+    final data = _calculateTooltipPositionData(_currentPage);
+    if (data == null) {
+      _isUpdatingPosition = false;
+      return;
+    }
+
+    // do nothing if the position or size is not changed
+    if (_anchorPosition == data.anchorPosition &&
+        _anchorSize == data.anchorSize &&
+        _tooltipPosition != null &&
+        _tooltipSize != null) {
+      _isUpdatingPosition = false;
+      return;
+    }
+
+    setState(() {
+      _anchorPosition = data.anchorPosition;
+      _anchorSize = data.anchorSize;
+      _tooltipPosition = data.tooltipPosition;
+      _tooltipSize = data.tooltipSize;
+    });
+
+    _isUpdatingPosition = false;
+  }
+
+  void _registerFrameCallback() {
+    if (_isFrameCallbackRegistered) {
+      return;
+    }
+    _isFrameCallbackRegistered = true;
+    WidgetsBinding.instance.addPersistentFrameCallback(_onFrame);
+  }
+
+  void _onFrame(Duration timestamp) {
+    // do nothing if the tooltip is not shown
+    if (!_isFrameCallbackRegistered ||
+        _anchorPosition == null ||
+        _currentPage == null) {
+      return;
+    }
+    _updateTooltipPosition();
   }
 
   void _hideTooltip() {
@@ -242,10 +331,16 @@ class NativebrikTooltipOverlayState extends State<NativebrikTooltipOverlay>
   }
 
   Widget _renderTooltip(BuildContext context) {
-    if (_anchorPosition != null &&
+    final visible = _anchorPosition != null &&
         _anchorSize != null &&
         _tooltipPosition != null &&
-        _tooltipSize != null) {
+        _tooltipSize != null;
+    if (visible) {
+      final isTooSmall = _anchorSize!.width < 2.0 || _anchorSize!.height < 2.0;
+      if (isTooSmall) {
+        return const SizedBox.shrink();
+      }
+
       final screenSize = MediaQuery.of(context).size;
       Widget tooltipWidget = AnimationFrame(
         position: _tooltipPosition!,
@@ -411,4 +506,20 @@ class _BarrierWithHolePainter extends CustomPainter {
 schema.UITooltipTransitionTarget getTransitionTarget(schema.UIPageBlock? page) {
   return page?.data?.tooltipTransitionTarget ??
       schema.UITooltipTransitionTarget.ANCHOR;
+}
+
+class _TooltipPositionData {
+  final Offset anchorPosition;
+  final Size anchorSize;
+  final Offset tooltipPosition;
+  final Size tooltipSize;
+  final BuildContext context;
+
+  _TooltipPositionData({
+    required this.anchorPosition,
+    required this.anchorSize,
+    required this.tooltipPosition,
+    required this.tooltipSize,
+    required this.context,
+  });
 }
