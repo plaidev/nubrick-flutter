@@ -27,5 +27,27 @@ jobs:
       - name: Set up Flutter
         uses: ./.github/actions/setup-flutter
 
+      - name: Check version consistency
+        run: |
+          # Extract version from pubspec.yaml
+          PUBSPEC_VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //' | tr -d ' ')
+
+          # Extract version from lib/version.dart
+          VERSION_DART=$(grep 'const String nativebrikFlutterSdkVersion' lib/version.dart | sed "s/.*'\(.*\)'.*/\1/")
+
+          echo "pubspec.yaml version: $PUBSPEC_VERSION"
+          echo "lib/version.dart version: $VERSION_DART"
+
+          if [ "$PUBSPEC_VERSION" != "$VERSION_DART" ]; then
+            echo "Error: Version mismatch between pubspec.yaml ($PUBSPEC_VERSION) and lib/version.dart ($VERSION_DART)"
+            echo "Please run 'make bump-version VERSION=x.y.z' to update both versions consistently"
+            exit 1
+          fi
+
+          echo "Version consistency check passed"
+
+      - name: Run tests
+        run: flutter test
+
       - name: Validate package
         run: dart pub publish --dry-run

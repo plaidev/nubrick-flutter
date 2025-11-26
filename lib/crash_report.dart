@@ -1,78 +1,161 @@
 import 'package:flutter/foundation.dart';
 import 'package:nativebrik_bridge/channel/nativebrik_bridge_platform_interface.dart';
+import 'package:nativebrik_bridge/version.dart';
+import 'package:stack_trace/stack_trace.dart';
+
+/// Represents a single stack frame in a crash report.
+///
+/// This structure matches the Android SDK format for consistency.
+class _StackFrame {
+  final String? fileName;
+  final String? className;
+  final String? methodName;
+  final int? lineNumber;
+
+  _StackFrame({
+    this.fileName,
+    this.className,
+    this.methodName,
+    this.lineNumber,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'fileName': fileName,
+      'className': className,
+      'methodName': methodName,
+      'lineNumber': lineNumber,
+    };
+  }
+}
+
+/// Represents an exception record in a crash report.
+///
+/// This structure matches the Android SDK format for consistency.
+class _ExceptionRecord {
+  final String? type;
+  final String? message;
+  final List<_StackFrame>? callStacks;
+
+  _ExceptionRecord({
+    this.type,
+    this.message,
+    this.callStacks,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'type': type,
+      'message': message,
+      'callStacks': callStacks?.map((frame) => frame.toMap()).toList(),
+    };
+  }
+}
+
+/// Parses a stack trace and converts it to a list of _StackFrame objects.
+List<_StackFrame> _parseStackTrace(StackTrace? stackTrace) {
+    if (stackTrace == null) return [];
+
+    try {
+      final trace = Trace.from(stackTrace);
+      final frames = trace.frames.map((frame) {
+        // Flutter/Dart stack traces have URIs like "package:nativebrik_bridge/nativebrik_bridge.dart"
+        // Split on first '/' to get module name (package:nativebrik_bridge) and file name (nativebrik_bridge.dart)
+        String uriString = frame.uri.toString();
+        String? className;
+        String? fileName;
+
+        if (uriString.contains('/')) {
+          final slashIndex = uriString.indexOf('/');
+          className = uriString.substring(0, slashIndex);
+          fileName = uriString.substring(slashIndex + 1);
+        } else {
+          // No slash, use whole URI as fileName
+          fileName = uriString;
+        }
+
+        String? methodName = frame.member;
+
+        // Extract just the method name if member contains a dot
+        if (frame.member != null && frame.member!.contains('.')) {
+          final parts = frame.member!.split('.');
+          if (parts.isNotEmpty) {
+            methodName = parts.last;
+          }
+        }
+
+        return _StackFrame(
+          fileName: fileName,
+          className: className,
+          methodName: methodName,
+          lineNumber: frame.line,
+        );
+      }).toList();
+
+      return frames;
+    } catch (e) {
+      debugPrint('Error parsing stack trace: $e');
+      return [];
+    }
+  }
+
+/// Records an error and stack trace for crash reporting.
+///
+/// This function is used internally by the SDK for automatic crash reporting.
+Future<void> recordCrash(Object error, StackTrace stackTrace) async {
+    try {
+      final callStacks = _parseStackTrace(stackTrace);
+
+      final exceptionRecord = _ExceptionRecord(
+        type: error.runtimeType.toString(),
+        message: error.toString(),
+        callStacks: callStacks,
+      );
+
+      final Map<String, dynamic> errorData = {
+        'exceptions': [exceptionRecord.toMap()],
+        'flutterSdkVersion': nativebrikFlutterSdkVersion,
+      };
+
+      await NativebrikBridgePlatform.instance.recordCrash(errorData);
+    } catch (e) {
+      // Silently handle any errors in the crash reporting itself
+      debugPrint('[CrashReport] Error recording crash: $e');
+    }
+  }
 
 /// A class to handle crash reporting in Flutter applications.
 ///
-/// This class provides methods to record Flutter errors and exceptions
-/// and sends them to the native Nativebrik SDK for tracking.
+/// **DEPRECATED**: Crash reporting is now handled automatically by the SDK.
+/// Simply initialize NativebrikBridge and crash reporting will be enabled by default.
 ///
-/// reference: https://docs.nativebrik.com/reference/flutter/nativebrikcrashreport
-///
-/// Usage:
+/// If you need to disable crash reporting, use:
 /// ```dart
-/// // Set up global error handling
-/// FlutterError.onError = (errorDetails) {
-///   NativebrikCrashReport.instance.recordFlutterError(errorDetails);
-/// };
-///
-/// // Set up platform dispatcher error handling
-/// PlatformDispatcher.instance.onError = (error, stack) {
-///   NativebrikCrashReport.instance.recordPlatformError(error, stack);
-///   return true;
-/// };
+/// NativebrikBridge("PROJECT_ID", trackCrashes: false);
 /// ```
+@Deprecated(
+  'Crash reporting is now automatic. '
+  'Remove manual crash reporting setup and the SDK will handle it automatically. '
+  'This class will be removed in a future version.'
+)
 class NativebrikCrashReport {
   static final NativebrikCrashReport _instance = NativebrikCrashReport._();
 
-  /// The singleton instance of [NativebrikCrashReport].
   static NativebrikCrashReport get instance => _instance;
 
   NativebrikCrashReport._();
 
-  /// Creates a new instance of [NativebrikCrashReport].
-  ///
-  /// In most cases, you should use [NativebrikCrashReport.instance] instead.
   factory NativebrikCrashReport() => _instance;
 
-  /// Records a Flutter error for crash reporting.
-  ///
-  /// This method takes a [FlutterErrorDetails] object, extracts the relevant
-  /// information, and sends it to the native implementation for tracking.
-  Future<void> recordFlutterError(FlutterErrorDetails errorDetails) async {
-    try {
-      final Map<String, dynamic> errorData = {
-        'exception': errorDetails.exception.toString(),
-        'stack': errorDetails.stack?.toString() ?? '',
-        'library': errorDetails.library ?? 'flutter',
-        'context': errorDetails.context?.toString() ?? '',
-        'summary': errorDetails.summary.toString(),
-      };
+  @Deprecated(
+    'Crash reporting is now automatic. '
+    'Remove this call and the SDK will handle crash reporting automatically.'
+  )
+  Future<void> recordFlutterError(FlutterErrorDetails errorDetails) async {}
 
-      await NativebrikBridgePlatform.instance.recordCrash(errorData);
-    } catch (e) {
-      // Silently handle any errors in the crash reporting itself
-      // to avoid causing additional crashes
-      debugPrint('Error recording crash: $e');
-    }
-  }
-
-  /// Records a platform error and stack trace for crash reporting.
-  ///
-  /// This is a convenience method that can be used when you have an error
-  Future<void> recordPlatformError(Object error, StackTrace stackTrace) async {
-    try {
-      final Map<String, dynamic> errorData = {
-        'exception': error.toString(),
-        'stack': stackTrace.toString(),
-        'library': 'flutter',
-        'context': '',
-        'summary': error.toString(),
-      };
-
-      await NativebrikBridgePlatform.instance.recordCrash(errorData);
-    } catch (e) {
-      // Silently handle any errors in the crash reporting itself
-      debugPrint('Error recording crash: $e');
-    }
-  }
+  @Deprecated(
+    'Crash reporting is now automatic. '
+    'Remove this call and the SDK will handle crash reporting automatically.'
+  )
+  Future<void> recordPlatformError(Object error, StackTrace stackTrace) async {}
 }

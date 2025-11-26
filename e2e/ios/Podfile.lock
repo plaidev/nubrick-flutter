@@ -1,16 +1,27 @@
 PODS:
   - Flutter (1.0.0)
+  - nativebrik_bridge (0.0.1):
+    - Flutter
+    - Nubrick (= 0.14.1)
+  - Nubrick (0.14.1)
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
+  - nativebrik_bridge (from `.symlinks/plugins/nativebrik_bridge/ios`)
+
+SPEC REPOS:
+  trunk:
+    - Nubrick
 
 EXTERNAL SOURCES:
   Flutter:
     :path: Flutter
 
 SPEC CHECKSUMS:
-  Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  nativebrik_bridge: 07c281be5ad485adf32670ccd554e9e839e4cf7c
+  Nubrick: 4d4a94ddcc67597abea0552deedeff817ac4bc96
 
-PODFILE CHECKSUM: 4305caec6b40dde0ae97be1573c53de1882a07e5
+PODFILE CHECKSUM: 3c63482e143d1b91d2d2560aee9fb04ecc74ac7e
 
 COCOAPODS: 1.16.2
