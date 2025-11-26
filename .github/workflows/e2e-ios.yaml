@@ -29,6 +29,16 @@ jobs:
 
       - name: Enable Swift Package Manager
         run: flutter config --enable-swift-package-manager
+
+      - name: Clean build cache
+        working-directory: e2e
+        run: |
+          flutter clean
+          cd ios
+          rm -rf Pods .symlinks Podfile.lock
+          rm -rf ~/Library/Caches/CocoaPods
+          rm -rf ~/Library/Developer/Xcode/DerivedData
+
       - name: Build iOS
         working-directory: e2e
         run: flutter build ios --simulator
