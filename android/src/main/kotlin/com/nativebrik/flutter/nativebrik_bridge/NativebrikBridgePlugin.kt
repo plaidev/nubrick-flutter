@@ -200,17 +200,22 @@ class NativebrikBridgePlugin: FlutterPlugin, MethodCallHandler {
             }
             "recordCrash" -> {
                 try {
-                    val errorData = call.arguments as Map<*, *>
-                    val exception = errorData["exception"] as String
-                    val stackTrace = errorData["stack"] as String
-
-                    // Create a throwable with the Flutter error information
-                    val throwable = Throwable(exception).apply {
-                        this.stackTrace = parseStackTraceElements(stackTrace)
+                    val errorData = call.arguments as? Map<*, *>
+                    if (errorData == null) {
+                        result.error("CRASH_REPORT_ERROR", "Invalid error data format", null)
+                        return
                     }
 
-                    // Record the crash using the Nativebrik SDK
-                    this.manager.recordCrash(throwable)
+                    val exceptionsList = errorData["exceptions"] as? List<*>
+                    if (exceptionsList == null) {
+                        result.error("CRASH_REPORT_ERROR", "Missing exceptions list", null)
+                        return
+                    }
+
+                    val exceptions = exceptionsList.mapNotNull { it as? Map<*, *> }
+                        .map { it.mapKeys { entry -> entry.key.toString() } }
+                    val flutterSdkVersion = errorData["flutterSdkVersion"] as? String
+                    this.manager.recordFlutterExceptions(exceptions, flutterSdkVersion)
                     result.success("ok")
                 } catch (e: Exception) {
                     result.error("CRASH_REPORT_ERROR", "Failed to record crash: ${e.message}", null)

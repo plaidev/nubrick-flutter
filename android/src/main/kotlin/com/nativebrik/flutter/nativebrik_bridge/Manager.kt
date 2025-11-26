@@ -1,9 +1,13 @@
 package com.nativebrik.flutter.nativebrik_bridge
 
 import android.content.Context
+import io.nubrick.nubrick.FlutterBridgeApi
 import io.nubrick.nubrick.NubrickClient
 import io.nubrick.nubrick.__DO_NOT_USE_THIS_INTERNAL_BRIDGE
+import io.nubrick.nubrick.data.ExceptionRecord
 import io.nubrick.nubrick.data.NotFoundException
+import io.nubrick.nubrick.data.StackFrame
+import io.nubrick.nubrick.data.TrackCrashEvent
 import io.flutter.plugin.platform.PlatformView
 import io.flutter.plugin.platform.PlatformViewFactory
 import io.flutter.plugin.common.StandardMessageCodec
@@ -25,6 +29,7 @@ import kotlinx.coroutines.launch
 
 internal data class ConfigEntity(val variant: RemoteConfigVariant?, val experimentId: String?)
 
+@OptIn(FlutterBridgeApi::class)
 internal class NativebrikBridgeManager(private val binaryMessenger: BinaryMessenger) {
     private var nativebrikClient: NubrickClient? = null
     private var bridgeClient: __DO_NOT_USE_THIS_INTERNAL_BRIDGE? = null
@@ -214,12 +219,54 @@ internal class NativebrikBridgeManager(private val binaryMessenger: BinaryMessen
     }
 
     /**
-     * Records a crash with the given throwable.
+     * Records exceptions from Flutter.
      *
-     * This method forwards the throwable to the Nativebrik SDK for crash reporting.
+     * This method constructs a crash event and forwards it to the Nativebrik SDK for crash reporting
+     * with platform set to "flutter".
      */
-    fun recordCrash(throwable: Throwable) {
-        this.nativebrikClient?.experiment?.record(throwable)
+    fun recordFlutterExceptions(exceptionsList: List<Map<String, Any?>>, flutterSdkVersion: String?) {
+        try {
+            val exceptions = exceptionsList.mapNotNull { exceptionMap ->
+                try {
+                    val type = exceptionMap["type"] as? String
+                    val message = exceptionMap["message"] as? String
+                    val callStacksList = exceptionMap["callStacks"] as? List<*>
+
+                    val callStacks = callStacksList?.mapNotNull { frameMap ->
+                        try {
+                            val frame = frameMap as? Map<*, *>
+                            StackFrame(
+                                fileName = frame?.get("fileName") as? String,
+                                className = frame?.get("className") as? String,
+                                methodName = frame?.get("methodName") as? String,
+                                lineNumber = (frame?.get("lineNumber") as? Number)?.toInt()
+                            )
+                        } catch (e: Exception) {
+                            null
+                        }
+                    }
+
+                    ExceptionRecord(
+                        type = type,
+                        message = message,
+                        callStacks = callStacks
+                    )
+                } catch (e: Exception) {
+                    null
+                }
+            }
+
+            if (exceptions.isNotEmpty()) {
+                val crashEvent = TrackCrashEvent(
+                    exceptions = exceptions,
+                    platform = "flutter",
+                    flutterSdkVersion = flutterSdkVersion
+                )
+                this.nativebrikClient?.experiment?.sendFlutterCrash(crashEvent)
+            }
+        } catch (e: Exception) {
+            // Silently fail to avoid causing crashes in error reporting
+        }
     }
 }
 

@@ -1,3 +1,46 @@
+## 0.14.0
+
+- **Breaking Change**: Crash reporting is now automatic
+    - Crash reporting is enabled by default when you initialize `NativebrikBridge`
+    - Manual crash reporting setup is no longer needed
+    - `NativebrikCrashReport` class is deprecated and will be removed in a future version
+    - To opt-out: `NativebrikBridge("PROJECT_ID", trackCrashes: false)`
+
+- **Migration Guide**:
+    - **Before**:
+      ```dart
+      void main() {
+        runZonedGuarded(() {
+          WidgetsFlutterBinding.ensureInitialized();
+          NativebrikBridge("PROJECT_ID");
+          FlutterError.onError = (errorDetails) {
+            NativebrikCrashReport.instance.recordFlutterError(errorDetails);
+          };
+          PlatformDispatcher.instance.onError = (error, stack) {
+            NativebrikCrashReport.instance.recordPlatformError(error, stack);
+            return true;
+          };
+          runApp(const MyApp());
+        }, (error, stack) {
+          NativebrikCrashReport.instance.recordPlatformError(error, stack);
+        });
+      }
+      ```
+    - **After**:
+      ```dart
+      void main() {
+        WidgetsFlutterBinding.ensureInitialized();
+        NativebrikBridge("PROJECT_ID"); // Crash tracking enabled by default
+        runApp(const MyApp());
+      }
+      ```
+
+- Update Dependencies
+    - iOS: Nubrick 0.13.0 → 0.14.1
+    - Android: Nubrick 0.8.0 → 0.8.2
+    - Removed Yoga dependency (cleaner dependency tree)
+    - Added stack_trace package for improved crash report parsing
+
 ## 0.13.1
 
 - Enhance tooltip feature
@@ -10,12 +53,7 @@
     - io.nubrick:nubrick to 0.8.1
     - Nubrick to 0.14.0
 
-
 ## 0.12.0
-
-- Update iOS dependencies
-    - Bump version to 0.13.0
-    - Restore CocoaPods support
 
 ## 0.11.0
 

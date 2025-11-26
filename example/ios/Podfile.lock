@@ -1,15 +1,30 @@
 PODS:
   - Flutter (1.0.0)
+  - integration_test (0.0.1):
+    - Flutter
+  - nativebrik_bridge (0.0.1):
+    - Flutter
+    - Nubrick (= 0.14.1)
+  - Nubrick (0.14.1)
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
+  - integration_test (from `.symlinks/plugins/integration_test/ios`)
+  - nativebrik_bridge (from `.symlinks/plugins/nativebrik_bridge/ios`)
+
+SPEC REPOS:
+  trunk:
+    - Nubrick
 
 EXTERNAL SOURCES:
   Flutter:
     :path: Flutter
 
 SPEC CHECKSUMS:
-  Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  integration_test: 4a889634ef21a45d28d50d622cf412dc6d9f586e
+  nativebrik_bridge: 07c281be5ad485adf32670ccd554e9e839e4cf7c
+  Nubrick: 4d4a94ddcc67597abea0552deedeff817ac4bc96
 
 PODFILE CHECKSUM: 1959d098c91d8a792531a723c4a9d7e9f6a01e38
 

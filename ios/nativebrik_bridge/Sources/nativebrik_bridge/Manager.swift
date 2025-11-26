@@ -8,7 +8,7 @@
 import Foundation
 import Flutter
 import UIKit
-import Nubrick
+@_spi(FlutterBridge) import Nubrick
 
 struct EmbeddingEntity {
     let uiview: UIView
@@ -281,15 +281,45 @@ class NativebrikBridgeManager {
     }
 
     /**
-     * Records a crash with the given exception.
+     * Sends crash events from Flutter.
      *
-     * This method forwards the exception to the Nativebrik SDK for crash reporting.
+     * This method constructs a crash event and forwards it to the Nativebrik SDK for crash reporting
+     * with platform set to "flutter".
      */
-    func recordCrash(exception: NSException) {
+    func sendFlutterCrash(_ exceptionsList: [[String: Any?]], flutterSdkVersion: String?) {
         guard let nubrickClient = self.nubrickClient else {
             return
         }
-        nubrickClient.experiment.record(exception: exception)
+
+        let exceptions = exceptionsList.compactMap { exceptionMap -> ExceptionRecord? in
+            let type = exceptionMap["type"] as? String
+            let message = exceptionMap["message"] as? String
+            let callStacksList = exceptionMap["callStacks"] as? [[String: Any?]]
+
+            let callStacks = callStacksList?.compactMap { frameMap -> StackFrame? in
+                StackFrame(
+                    fileName: frameMap["fileName"] as? String,
+                    className: frameMap["className"] as? String,
+                    methodName: frameMap["methodName"] as? String,
+                    lineNumber: frameMap["lineNumber"] as? Int
+                )
+            }
+
+            return ExceptionRecord(
+                type: type,
+                message: message,
+                callStacks: callStacks
+            )
+        }
+
+        if !exceptions.isEmpty {
+            let crashEvent = TrackCrashEvent(
+                exceptions: exceptions,
+                platform: "flutter",
+                flutterSdkVersion: flutterSdkVersion
+            )
+            nubrickClient.experiment.sendFlutterCrash(crashEvent)
+        }
     }
 }
 

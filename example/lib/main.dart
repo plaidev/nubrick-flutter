@@ -1,26 +1,13 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'dart:async';
 import 'package:nativebrik_bridge/nativebrik_bridge.dart';
 
 void main() {
-  runZonedGuarded(() {
-    WidgetsFlutterBinding.ensureInitialized();
-    NativebrikBridge("cgv3p3223akg00fod19g");
-    NativebrikBridge.instance?.addEventListener((event) {
-      print("EVENT: ${event.name}");
-    });
-    FlutterError.onError = (errorDetails) {
-      NativebrikCrashReport.instance.recordFlutterError(errorDetails);
-    };
-    PlatformDispatcher.instance.onError = (error, stack) {
-      NativebrikCrashReport.instance.recordPlatformError(error, stack);
-      return true;
-    };
-    runApp(const MyApp());
-  }, (error, stack) {
-    NativebrikCrashReport.instance.recordPlatformError(error, stack);
+  WidgetsFlutterBinding.ensureInitialized();
+  NativebrikBridge("cgv3p3223akg00fod19g");
+  NativebrikBridge.instance?.addEventListener((event) {
+    print("EVENT: ${event.name}");
   });
+  runApp(const MyApp());
 }
 
 class MyApp extends StatefulWidget {

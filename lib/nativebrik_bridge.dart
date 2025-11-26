@@ -1,10 +1,15 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:nativebrik_bridge/crash_report.dart';
 import 'package:nativebrik_bridge/embedding.dart';
 import 'package:nativebrik_bridge/utils/parse_event.dart';
 import 'channel/nativebrik_bridge_platform_interface.dart';
 
 // Export public APIs
-export 'package:nativebrik_bridge/crash_report.dart';
+// Note: Using 'show' to only export deprecated NativebrikCrashReport class.
+// Internal crash reporting functions are not exported. The 'show' triggers a
+// deprecation warning which is temporary until the class is removed in a future version.
+export 'package:nativebrik_bridge/crash_report.dart' show NativebrikCrashReport;
 export 'package:nativebrik_bridge/dispatcher.dart';
 export 'package:nativebrik_bridge/embedding.dart';
 export 'package:nativebrik_bridge/provider.dart';
@@ -23,24 +28,10 @@ export 'package:nativebrik_bridge/anchor/anchor.dart';
 /// ```dart
 /// // Setup Nativebrik SDK
 /// void main() {
-///   runZonedGuarded(() {
 ///     WidgetsFlutterBinding.ensureInitialized();
 ///     // Initialize the bridge with the project ID
 ///     NativebrikBridge("PROJECT ID");
-///     // Set up global error handling
-///     FlutterError.onError = (errorDetails) {
-///       NativebrikCrashReport.instance.recordFlutterError(errorDetails);
-///     };
-///     // Set up platform dispatcher error handling
-///     PlatformDispatcher.instance.onError = (error, stack) {
-///       NativebrikCrashReport.instance.recordPlatformError(error, stack);
-///       return true;
-///     };
 ///     runApp(const YourApp());
-///   }, (error, stack) {
-///     // Record any unhandled errors
-///     NativebrikCrashReport.instance.recordPlatformError(error, stack);
-///   });
 /// }
 /// ```
 class NativebrikBridge {
@@ -48,15 +39,39 @@ class NativebrikBridge {
 
   final String projectId;
   final NativebrikCachePolicy cachePolicy;
+  final bool trackCrashes;
   final List<EventHandler> _listeners = [];
   final List<void Function(String)> _onDispatchListeners = [];
   final MethodChannel _channel = const MethodChannel("nativebrik_bridge");
 
   NativebrikBridge(this.projectId,
-      {this.cachePolicy = const NativebrikCachePolicy()}) {
+      {this.cachePolicy = const NativebrikCachePolicy(),
+      this.trackCrashes = true}) {
     NativebrikBridge.instance = this;
     NativebrikBridgePlatform.instance.connectClient(projectId, cachePolicy);
     _channel.setMethodCallHandler(_handleMethod);
+
+    if (trackCrashes) {
+      // Chain existing error handlers
+      final previousFlutterErrorHandler = FlutterError.onError;
+      FlutterError.onError = (errorDetails) {
+        if (errorDetails.stack != null) {
+          recordCrash(
+            errorDetails.exception,
+            errorDetails.stack!,
+          );
+        }
+        // Call the previous handler if it exists
+        previousFlutterErrorHandler?.call(errorDetails);
+      };
+
+      final previousPlatformErrorHandler = PlatformDispatcher.instance.onError;
+      PlatformDispatcher.instance.onError = (error, stack) {
+        recordCrash(error, stack);
+        // Call the previous handler if it exists, otherwise return true
+        return previousPlatformErrorHandler?.call(error, stack) ?? true;
+      };
+    }
   }
 
   Future<String?> getNativebrikSDKVersion() {
