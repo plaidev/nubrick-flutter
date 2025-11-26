@@ -1,15 +1,14 @@
 {
-  "originHash" : "1f7300e699f4ce38c75534aa1666c115e2e534777b11fea466f5c55db34b1cc4",
   "pins" : [
     {
       "identity" : "nubrick-ios",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/plaidev/nubrick-ios.git",
       "state" : {
-        "revision" : "1235c91b84ada0390f5015224f547b7ce7563cc2",
-        "version" : "0.14.1"
+        "revision" : "58f043163e430204512a4b378be36ba62bb5c704",
+        "version" : "0.14.2"
       }
     }
   ],
-  "version" : 3
+  "version" : 2
 }
