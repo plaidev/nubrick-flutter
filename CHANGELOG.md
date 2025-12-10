@@ -1,3 +1,7 @@
+## 0.14.1
+
+- Fix tooltip display timing issue
+
 ## 0.14.0
 
 - **Breaking Change**: Crash reporting is now automatic
