@@ -66,12 +66,14 @@ class NativebrikTooltipOverlayState extends State<NativebrikTooltipOverlay>
             pages: uiroot.data?.pages,
           ),
         ));
-    await Future.delayed(const Duration(milliseconds: 100));
-    retryUntilTrue(
-      fn: () => _onNextTooltip(destinationId),
-      retries: 30, // 30 * 200 = 6 seconds timeout
-      delay: const Duration(milliseconds: 200),
-    );
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      retryUntilTrue(
+        fn: () => _onNextTooltip(destinationId),
+        retries: 30, // 30 * 200 = 6 seconds timeout
+        delay: const Duration(milliseconds: 200),
+      );
+    });
   }
 
   /// calculate the anchor position, size, tooltip position, size
@@ -95,7 +97,7 @@ class NativebrikTooltipOverlayState extends State<NativebrikTooltipOverlay>
     }
 
     final box = context.findRenderObject() as RenderBox?;
-    if (box == null || !box.hasSize) {
+    if (box == null || !box.hasSize || !box.attached) {
       return null;
     }
 
