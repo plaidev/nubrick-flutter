@@ -1,3 +1,7 @@
+## 0.14.2
+
+- Improve modal display and UI
+
 ## 0.14.1
 
 - Fix tooltip display timing issue
