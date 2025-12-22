@@ -1,3 +1,8 @@
+## 0.14.3
+
+- Update Dependencies
+    - iOS: Nubrick 0.14.3 → 0.14.4
+
 ## 0.14.2
 
 - Improve modal display and UI
