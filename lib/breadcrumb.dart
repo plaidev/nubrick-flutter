@@ -3,6 +3,7 @@ import 'package:nativebrik_bridge/channel/nativebrik_bridge_platform_interface.d
 /// The category of a breadcrumb.
 ///
 /// This categorizes the type of event that occurred.
+/// Based on Sentry's breadcrumb categories.
 enum BreadcrumbCategory {
   /// Screen navigation events
   navigation,
@@ -10,8 +11,8 @@ enum BreadcrumbCategory {
   /// User interaction events (taps, clicks, etc.)
   ui,
 
-  /// Network request events
-  network,
+  /// HTTP request events
+  http,
 
   /// Console log events
   console,
@@ -21,6 +22,8 @@ enum BreadcrumbCategory {
 }
 
 /// The severity level of a breadcrumb.
+///
+/// Based on Sentry's breadcrumb levels.
 enum BreadcrumbLevel {
   /// Debug level
   debug,
@@ -33,6 +36,9 @@ enum BreadcrumbLevel {
 
   /// Error level
   error,
+
+  /// Fatal level
+  fatal,
 }
 
 /// NativebrikBreadcrumb is the main class for recording breadcrumbs.
