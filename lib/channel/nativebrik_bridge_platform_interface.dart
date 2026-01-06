@@ -108,4 +108,12 @@ abstract class NativebrikBridgePlatform extends PlatformInterface {
   Future<void> recordCrash(Map<String, dynamic> errorData) {
     throw UnimplementedError('recordCrash() has not been implemented.');
   }
+
+  /// Records a breadcrumb for crash reporting context.
+  ///
+  /// This method sends the breadcrumb data to the native implementation
+  /// where it will be buffered and sent along with crash reports.
+  Future<void> recordBreadcrumb(Map<String, dynamic> breadcrumbData) {
+    throw UnimplementedError('recordBreadcrumb() has not been implemented.');
+  }
 }
