@@ -36,7 +36,6 @@ class NativebrikTooltipOverlayState extends State<NativebrikTooltipOverlay>
   Offset? _tooltipPosition;
   Size? _tooltipSize;
   bool _isUpdatingPosition = false;
-  bool _isFrameCallbackRegistered = false;
 
   void _onDispatch(String name) async {
     var uiroot = await NativebrikBridgePlatform.instance.connectTooltip(name);
@@ -189,8 +188,8 @@ class NativebrikTooltipOverlayState extends State<NativebrikTooltipOverlay>
       _isAnimateHole = willAnimateHole;
     });
 
-    // register the frame callback when the tooltip is shown
-    _registerFrameCallback();
+    // schedule position updates while the tooltip is shown
+    _schedulePositionUpdate();
 
     return true;
   }
@@ -229,22 +228,15 @@ class NativebrikTooltipOverlayState extends State<NativebrikTooltipOverlay>
     _isUpdatingPosition = false;
   }
 
-  void _registerFrameCallback() {
-    if (_isFrameCallbackRegistered) {
+  void _schedulePositionUpdate() {
+    if (_anchorPosition == null || _currentPage == null) {
       return;
     }
-    _isFrameCallbackRegistered = true;
-    WidgetsBinding.instance.addPersistentFrameCallback(_onFrame);
-  }
-
-  void _onFrame(Duration timestamp) {
-    // do nothing if the tooltip is not shown
-    if (!_isFrameCallbackRegistered ||
-        _anchorPosition == null ||
-        _currentPage == null) {
-      return;
-    }
-    _updateTooltipPosition();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _updateTooltipPosition();
+      _schedulePositionUpdate();
+    });
   }
 
   void _hideTooltip() {
