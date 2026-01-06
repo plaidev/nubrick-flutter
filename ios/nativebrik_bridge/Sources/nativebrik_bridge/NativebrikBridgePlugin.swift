@@ -180,6 +180,16 @@ public class NativebrikBridgePlugin: NSObject, FlutterPlugin {
             } catch {
                 result(FlutterError(code: "CRASH_REPORT_ERROR", message: "Failed to record crash: \(error.localizedDescription)", details: nil))
             }
+
+        // breadcrumb
+        case "recordBreadcrumb":
+            guard let breadcrumbData = call.arguments as? [String: Any] else {
+                result(FlutterError(code: "BREADCRUMB_ERROR", message: "Invalid breadcrumb data", details: nil))
+                return
+            }
+            self.manager.recordBreadcrumb(breadcrumbData)
+            result("ok")
+
         default:
             result(FlutterMethodNotImplemented)
         }
