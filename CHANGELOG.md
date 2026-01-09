@@ -1,3 +1,11 @@
+## 0.14.4
+
+- Improve tooltip display logic
+
+- Update Dependencies
+    - iOS: Nubrick 0.14.4 → 0.14.6
+    - Android: Nubrick 0.8.3 → 0.8.5
+
 ## 0.14.3
 
 - Update Dependencies
