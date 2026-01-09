@@ -285,8 +285,12 @@ class NativebrikBridgeManager {
      *
      * This method constructs a crash event and forwards it to the Nativebrik SDK for crash reporting
      * with platform set to "flutter".
+     *
+     * - Parameter exceptionsList: List of exception records from Flutter
+     * - Parameter flutterSdkVersion: The Flutter SDK version
+     * - Parameter severity: The severity level ("crash" or "warning")
      */
-    func sendFlutterCrash(_ exceptionsList: [[String: Any?]], flutterSdkVersion: String?) {
+    func sendFlutterCrash(_ exceptionsList: [[String: Any?]], flutterSdkVersion: String?, severity: String?) {
         guard let nubrickClient = self.nubrickClient else {
             return
         }
@@ -316,7 +320,8 @@ class NativebrikBridgeManager {
             let crashEvent = TrackCrashEvent(
                 exceptions: exceptions,
                 platform: "flutter",
-                flutterSdkVersion: flutterSdkVersion
+                flutterSdkVersion: flutterSdkVersion,
+                severity: CrashSeverity.from(severity)
             )
             nubrickClient.experiment.sendFlutterCrash(crashEvent)
         }

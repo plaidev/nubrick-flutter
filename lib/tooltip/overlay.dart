@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:nativebrik_bridge/channel/nativebrik_bridge_platform_interface.dart';
+import 'package:nativebrik_bridge/crash_report.dart';
 import 'package:nativebrik_bridge/nativebrik_bridge.dart';
 import 'package:flutter/material.dart';
 import 'package:nativebrik_bridge/utils/random.dart';
@@ -234,7 +235,7 @@ class NativebrikTooltipOverlayState extends State<NativebrikTooltipOverlay>
       return;
     }
     _isFrameCallbackRegistered = true;
-    WidgetsBinding.instance.addPersistentFrameCallback(_onFrame);
+    WidgetsBinding.instance.addPostFrameCallback(_onFrame);
   }
 
   void _onFrame(Duration timestamp) {
@@ -244,7 +245,13 @@ class NativebrikTooltipOverlayState extends State<NativebrikTooltipOverlay>
         _currentPage == null) {
       return;
     }
-    _updateTooltipPosition();
+
+    // try to update the tooltip position
+    try {
+      _updateTooltipPosition();
+    } catch (e, stackTrace) {
+      recordError(e, stackTrace, severity: ErrorSeverity.warning);
+    }
   }
 
   void _hideTooltip() {

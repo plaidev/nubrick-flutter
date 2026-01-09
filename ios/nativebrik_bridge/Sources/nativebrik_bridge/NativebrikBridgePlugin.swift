@@ -175,7 +175,8 @@ public class NativebrikBridgePlugin: NSObject, FlutterPlugin {
 
                 let exceptions = exceptionsList.map { $0 as [String: Any?] }
                 let flutterSdkVersion = errorData["flutterSdkVersion"] as? String
-                self.manager.sendFlutterCrash(exceptions, flutterSdkVersion: flutterSdkVersion)
+                let severity = errorData["severity"] as? String ?? "crash"
+                self.manager.sendFlutterCrash(exceptions, flutterSdkVersion: flutterSdkVersion, severity: severity)
                 result("ok")
             } catch {
                 result(FlutterError(code: "CRASH_REPORT_ERROR", message: "Failed to record crash: \(error.localizedDescription)", details: nil))

@@ -99,30 +99,37 @@ List<_StackFrame> _parseStackTrace(StackTrace? stackTrace) {
     }
   }
 
-/// Records an error and stack trace for crash reporting.
+/// Severity level for error reporting.
+enum ErrorSeverity { crash, warning }
+
+/// Records an error with stack trace at the specified severity level.
 ///
-/// This function is used internally by the SDK for automatic crash reporting.
-Future<void> recordCrash(Object error, StackTrace stackTrace) async {
-    try {
-      final callStacks = _parseStackTrace(stackTrace);
+/// - [error]: The error object to record
+/// - [stackTrace]: The stack trace associated with the error
+/// - [severity]: The severity level (defaults to [ErrorSeverity.crash])
+Future<void> recordError(
+  Object error,
+  StackTrace stackTrace, {
+  ErrorSeverity severity = ErrorSeverity.crash,
+}) async {
+  try {
+    final exceptionRecord = _ExceptionRecord(
+      type: error.runtimeType.toString(),
+      message: error.toString(),
+      callStacks: _parseStackTrace(stackTrace),
+    );
 
-      final exceptionRecord = _ExceptionRecord(
-        type: error.runtimeType.toString(),
-        message: error.toString(),
-        callStacks: callStacks,
-      );
+    final Map<String, dynamic> errorData = {
+      'exceptions': [exceptionRecord.toMap()],
+      'flutterSdkVersion': nativebrikFlutterSdkVersion,
+      'severity': severity.name,
+    };
 
-      final Map<String, dynamic> errorData = {
-        'exceptions': [exceptionRecord.toMap()],
-        'flutterSdkVersion': nativebrikFlutterSdkVersion,
-      };
-
-      await NativebrikBridgePlatform.instance.recordCrash(errorData);
-    } catch (e) {
-      // Silently handle any errors in the crash reporting itself
-      debugPrint('[CrashReport] Error recording crash: $e');
-    }
+    await NativebrikBridgePlatform.instance.recordCrash(errorData);
+  } catch (e) {
+    // Silently handle any errors in the crash reporting itself
   }
+}
 
 /// A class to handle crash reporting in Flutter applications.
 ///
