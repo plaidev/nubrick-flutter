@@ -222,6 +222,15 @@ class NativebrikBridgePlugin: FlutterPlugin, MethodCallHandler {
                     result.error("CRASH_REPORT_ERROR", "Failed to record crash: ${e.message}", null)
                 }
             }
+            "recordBreadcrumb" -> {
+                val breadcrumbData = call.arguments as? Map<*, *>
+                if (breadcrumbData == null) {
+                    result.error("BREADCRUMB_ERROR", "Invalid breadcrumb data", null)
+                    return
+                }
+                this.manager.recordBreadcrumb(breadcrumbData.mapKeys { it.key.toString() })
+                result.success("ok")
+            }
             else -> {
                 result.notImplemented()
             }

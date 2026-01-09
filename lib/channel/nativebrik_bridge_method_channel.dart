@@ -198,4 +198,12 @@ class MethodChannelNativebrikBridge extends NativebrikBridgePlatform {
       errorData,
     );
   }
+
+  @override
+  Future<void> recordBreadcrumb(Map<String, dynamic> breadcrumbData) async {
+    await methodChannel.invokeMethod<void>(
+      'recordBreadcrumb',
+      breadcrumbData,
+    );
+  }
 }
