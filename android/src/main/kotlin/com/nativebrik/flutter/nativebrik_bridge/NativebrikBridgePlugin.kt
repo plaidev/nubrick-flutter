@@ -215,7 +215,8 @@ class NativebrikBridgePlugin: FlutterPlugin, MethodCallHandler {
                     val exceptions = exceptionsList.mapNotNull { it as? Map<*, *> }
                         .map { it.mapKeys { entry -> entry.key.toString() } }
                     val flutterSdkVersion = errorData["flutterSdkVersion"] as? String
-                    this.manager.recordFlutterExceptions(exceptions, flutterSdkVersion)
+                    val severity = errorData["severity"] as? String ?: "crash"
+                    this.manager.recordFlutterExceptions(exceptions, flutterSdkVersion, severity)
                     result.success("ok")
                 } catch (e: Exception) {
                     result.error("CRASH_REPORT_ERROR", "Failed to record crash: ${e.message}", null)

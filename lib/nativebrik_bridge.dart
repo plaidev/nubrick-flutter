@@ -56,7 +56,7 @@ class NativebrikBridge {
       final previousFlutterErrorHandler = FlutterError.onError;
       FlutterError.onError = (errorDetails) {
         if (errorDetails.stack != null) {
-          recordCrash(
+          recordError(
             errorDetails.exception,
             errorDetails.stack!,
           );
@@ -67,7 +67,7 @@ class NativebrikBridge {
 
       final previousPlatformErrorHandler = PlatformDispatcher.instance.onError;
       PlatformDispatcher.instance.onError = (error, stack) {
-        recordCrash(error, stack);
+        recordError(error, stack);
         // Call the previous handler if it exists, otherwise return true
         return previousPlatformErrorHandler?.call(error, stack) ?? true;
       };

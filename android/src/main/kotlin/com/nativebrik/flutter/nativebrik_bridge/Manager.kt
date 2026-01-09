@@ -7,6 +7,7 @@ import io.nubrick.nubrick.__DO_NOT_USE_THIS_INTERNAL_BRIDGE
 import io.nubrick.nubrick.data.ExceptionRecord
 import io.nubrick.nubrick.data.NotFoundException
 import io.nubrick.nubrick.data.StackFrame
+import io.nubrick.nubrick.data.CrashSeverity
 import io.nubrick.nubrick.data.TrackCrashEvent
 import io.flutter.plugin.platform.PlatformView
 import io.flutter.plugin.platform.PlatformViewFactory
@@ -223,8 +224,12 @@ internal class NativebrikBridgeManager(private val binaryMessenger: BinaryMessen
      *
      * This method constructs a crash event and forwards it to the Nativebrik SDK for crash reporting
      * with platform set to "flutter".
+     *
+     * @param exceptionsList List of exception records from Flutter
+     * @param flutterSdkVersion The Flutter SDK version
+     * @param severity The severity level ("crash" or "warning")
      */
-    fun recordFlutterExceptions(exceptionsList: List<Map<String, Any?>>, flutterSdkVersion: String?) {
+    fun recordFlutterExceptions(exceptionsList: List<Map<String, Any?>>, flutterSdkVersion: String?, severity: String?) {
         try {
             val exceptions = exceptionsList.mapNotNull { exceptionMap ->
                 try {
@@ -260,7 +265,8 @@ internal class NativebrikBridgeManager(private val binaryMessenger: BinaryMessen
                 val crashEvent = TrackCrashEvent(
                     exceptions = exceptions,
                     platform = "flutter",
-                    flutterSdkVersion = flutterSdkVersion
+                    flutterSdkVersion = flutterSdkVersion,
+                    severity = CrashSeverity.from(severity)
                 )
                 this.nativebrikClient?.experiment?.sendFlutterCrash(crashEvent)
             }
