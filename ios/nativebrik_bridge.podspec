@@ -11,11 +11,11 @@ A new Flutter plugin project.
                        DESC
   s.homepage         = 'https://nativebrik.com'
   s.license          = { :file => '../LICENSE' }
-  s.author           = { 'Nativebrik Inc' => 'dev.share@nativebrik.com' }
+  s.author           = { 'Nubrick' => 'nubrick-support@plaid.co.jp' }
   s.source           = { :path => '.' }
   s.source_files = 'nativebrik_bridge/Sources/nativebrik_bridge/**/*.swift'
   s.dependency 'Flutter'
-  s.dependency 'Nubrick', '0.14.6'
+  s.dependency 'Nubrick', '0.15.2'
   s.ios.deployment_target = '14.0'
   s.platform = :ios, '14.0'
 
