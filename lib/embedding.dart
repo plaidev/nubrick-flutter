@@ -87,15 +87,15 @@ enum EmbeddingPhase {
 class _EmbeddingState extends State<NativebrikEmbedding> {
   var _phase = EmbeddingPhase.loading;
   final _channelId = generateRandomString(32);
+  late final MethodChannel _embeddingChannel;
   double? _embeddingWidth;
   double? _embeddingHeight;
 
   @override
   void initState() {
     super.initState();
-    final MethodChannel channel =
-        MethodChannel("Nativebrik/Embedding/$_channelId");
-    channel.setMethodCallHandler(_handleMethod);
+    _embeddingChannel = MethodChannel("Nativebrik/Embedding/$_channelId");
+    _embeddingChannel.setMethodCallHandler(_handleMethod);
 
     final variant = widget.variant;
     if (variant != null) {
@@ -109,6 +109,7 @@ class _EmbeddingState extends State<NativebrikEmbedding> {
 
   @override
   void dispose() {
+    _embeddingChannel.setMethodCallHandler(null);
     NativebrikBridgePlatform.instance.disconnectEmbedding(_channelId);
     super.dispose();
   }
@@ -116,6 +117,7 @@ class _EmbeddingState extends State<NativebrikEmbedding> {
   Future<dynamic> _handleMethod(MethodCall call) async {
     switch (call.method) {
       case 'embedding-phase-update':
+        if (!mounted) return Future.value(true);
         String phase = call.arguments as String;
         setState(() {
           _phase = switch (phase) {
@@ -128,6 +130,7 @@ class _EmbeddingState extends State<NativebrikEmbedding> {
         });
         return Future.value(true);
       case 'embedding-size-update':
+        if (!mounted) return Future.value(true);
         final args = Map<String, dynamic>.from(call.arguments);
         setState(() {
           _embeddingWidth = args["width"]?.toDouble();
