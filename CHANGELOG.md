@@ -1,3 +1,9 @@
+## 0.15.0
+
+- Support embedding with dynamic size set through editor
+- Fix an issue regarding image display in iOS
+- Remove deprecated `NativebrikCrashReport` class
+
 ## 0.14.4
 
 - Improve tooltip display logic
