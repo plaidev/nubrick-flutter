@@ -6,10 +6,6 @@ import 'package:nativebrik_bridge/utils/parse_event.dart';
 import 'channel/nativebrik_bridge_platform_interface.dart';
 
 // Export public APIs
-// Note: Using 'show' to only export deprecated NativebrikCrashReport class.
-// Internal crash reporting functions are not exported. The 'show' triggers a
-// deprecation warning which is temporary until the class is removed in a future version.
-export 'package:nativebrik_bridge/crash_report.dart' show NativebrikCrashReport;
 export 'package:nativebrik_bridge/dispatcher.dart';
 export 'package:nativebrik_bridge/embedding.dart';
 export 'package:nativebrik_bridge/provider.dart';

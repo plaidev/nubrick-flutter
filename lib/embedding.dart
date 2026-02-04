@@ -87,6 +87,8 @@ enum EmbeddingPhase {
 class _EmbeddingState extends State<NativebrikEmbedding> {
   var _phase = EmbeddingPhase.loading;
   final _channelId = generateRandomString(32);
+  double? _embeddingWidth;
+  double? _embeddingHeight;
 
   @override
   void initState() {
@@ -125,6 +127,13 @@ class _EmbeddingState extends State<NativebrikEmbedding> {
           };
         });
         return Future.value(true);
+      case 'embedding-size-update':
+        final args = Map<String, dynamic>.from(call.arguments);
+        setState(() {
+          _embeddingWidth = args["width"]?.toDouble();
+          _embeddingHeight = args["height"]?.toDouble();
+        });
+        return Future.value(true);
       case 'on-event':
         if (widget.onEvent == null) return Future.value(false);
         widget.onEvent?.call(parseEvent(call.arguments));
@@ -137,8 +146,8 @@ class _EmbeddingState extends State<NativebrikEmbedding> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: widget.height,
-      width: widget.width,
+      height: widget.height ?? _embeddingHeight,
+      width: widget.width ?? _embeddingWidth,
       child: _renderByPhase(context),
     );
   }
@@ -156,7 +165,7 @@ class _EmbeddingState extends State<NativebrikEmbedding> {
             context, const Center(child: Text("Embedding not found")));
       case EmbeddingPhase.completed:
         return _renderWithBuilder(context,
-            SizedBox(child: _BridgeView(_channelId, widget.arguments)));
+            Center(child: _BridgeView(_channelId, widget.arguments)));
     }
   }
 
