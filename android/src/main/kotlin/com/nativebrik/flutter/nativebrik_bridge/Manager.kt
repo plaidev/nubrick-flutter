@@ -70,8 +70,13 @@ internal class NativebrikBridgeManager(private val binaryMessenger: BinaryMessen
             }
             result.onSuccess {
                 embeddingMap[channelId] = it
+                val size = bridgeClient?.computeInitialSize(it)
                 GlobalScope.launch(Dispatchers.Main) {
                     methodChannel.invokeMethod(EMBEDDING_PHASE_UPDATE_METHOD, "completed")
+                    methodChannel.invokeMethod(EMBEDDING_SIZE_UPDATE_METHOD, mapOf(
+                        "width" to size?.first,
+                        "height" to size?.second,
+                    ))
                 }
             }.onFailure {
                 when (it) {
@@ -129,6 +134,12 @@ internal class NativebrikBridgeManager(private val binaryMessenger: BinaryMessen
             },
             onDismiss = {
                 methodChannel.invokeMethod(ON_DISMISS_TOOLTIP_METHOD, null)
+            },
+            onSizeChange = { width, height ->
+                methodChannel.invokeMethod(EMBEDDING_SIZE_UPDATE_METHOD, mapOf(
+                    "width" to width,
+                    "height" to height,
+                ))
             },
             eventBridge = eventBridge
         )
