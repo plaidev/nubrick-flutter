@@ -69,7 +69,7 @@ class NativebrikBridgeManager {
             return
         }
         let channel = FlutterMethodChannel(name: "Nativebrik/Embedding/\(channelId)", binaryMessenger: messenger)
-        let uiview = nubrickClient.experiment.embeddingUIView(id, arguments: arguments, onEvent: { event in
+        let uiview = nubrickClient.experiment.embeddingForFlutterBridge(id, arguments: arguments, onEvent: { event in
             channel.invokeMethod(ON_EVENT_METHOD, arguments: [
                 "name": event.name as Any?,
                 "deepLink": event.deepLink as Any?,
@@ -80,6 +80,11 @@ class NativebrikBridgeManager {
                         "type": prop.type
                     ]
                 }),
+            ])
+        }, onSizeChange: { width, height in
+            channel.invokeMethod(EMBEDDING_SIZE_UPDATE_METHOD, arguments: [
+                "width": width,
+                "height": height,
             ])
         }) { phase in
             switch phase {

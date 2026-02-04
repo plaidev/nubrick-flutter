@@ -4,6 +4,7 @@ import Nubrick
 
 let EMEBEDDING_VIEW_ID = "nativebrik-embedding-view"
 let EMBEDDING_PHASE_UPDATE_METHOD = "embedding-phase-update"
+let EMBEDDING_SIZE_UPDATE_METHOD = "embedding-size-update"
 let ON_EVENT_METHOD = "on-event"
 let ON_DISPATCH_METHOD = "on-dispatch"
 let ON_NEXT_TOOLTIP_METHOD = "on-next-tooltip"

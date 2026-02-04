@@ -22,6 +22,7 @@ import kotlin.time.toDuration
 internal const val EMBEDDING_VIEW_ID = "nativebrik-embedding-view"
 internal const val OVERLAY_VIEW_ID = "nativebrik-overlay-view"
 internal const val EMBEDDING_PHASE_UPDATE_METHOD = "embedding-phase-update"
+internal const val EMBEDDING_SIZE_UPDATE_METHOD = "embedding-size-update"
 internal const val ON_EVENT_METHOD = "on-event"
 internal const val ON_DISPATCH_METHOD = "on-dispatch"
 internal const val ON_NEXT_TOOLTIP_METHOD = "on-next-tooltip"

@@ -87,13 +87,15 @@ enum EmbeddingPhase {
 class _EmbeddingState extends State<NativebrikEmbedding> {
   var _phase = EmbeddingPhase.loading;
   final _channelId = generateRandomString(32);
+  late final MethodChannel _embeddingChannel;
+  double? _embeddingWidth;
+  double? _embeddingHeight;
 
   @override
   void initState() {
     super.initState();
-    final MethodChannel channel =
-        MethodChannel("Nativebrik/Embedding/$_channelId");
-    channel.setMethodCallHandler(_handleMethod);
+    _embeddingChannel = MethodChannel("Nativebrik/Embedding/$_channelId");
+    _embeddingChannel.setMethodCallHandler(_handleMethod);
 
     final variant = widget.variant;
     if (variant != null) {
@@ -107,6 +109,7 @@ class _EmbeddingState extends State<NativebrikEmbedding> {
 
   @override
   void dispose() {
+    _embeddingChannel.setMethodCallHandler(null);
     NativebrikBridgePlatform.instance.disconnectEmbedding(_channelId);
     super.dispose();
   }
@@ -114,6 +117,7 @@ class _EmbeddingState extends State<NativebrikEmbedding> {
   Future<dynamic> _handleMethod(MethodCall call) async {
     switch (call.method) {
       case 'embedding-phase-update':
+        if (!mounted) return Future.value(true);
         String phase = call.arguments as String;
         setState(() {
           _phase = switch (phase) {
@@ -123,6 +127,14 @@ class _EmbeddingState extends State<NativebrikEmbedding> {
             "completed" => EmbeddingPhase.completed,
             _ => EmbeddingPhase.loading,
           };
+        });
+        return Future.value(true);
+      case 'embedding-size-update':
+        if (!mounted) return Future.value(true);
+        final args = Map<String, dynamic>.from(call.arguments);
+        setState(() {
+          _embeddingWidth = args["width"]?.toDouble();
+          _embeddingHeight = args["height"]?.toDouble();
         });
         return Future.value(true);
       case 'on-event':
@@ -137,8 +149,8 @@ class _EmbeddingState extends State<NativebrikEmbedding> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: widget.height,
-      width: widget.width,
+      height: widget.height ?? _embeddingHeight,
+      width: widget.width ?? _embeddingWidth,
       child: _renderByPhase(context),
     );
   }
@@ -156,7 +168,7 @@ class _EmbeddingState extends State<NativebrikEmbedding> {
             context, const Center(child: Text("Embedding not found")));
       case EmbeddingPhase.completed:
         return _renderWithBuilder(context,
-            SizedBox(child: _BridgeView(_channelId, widget.arguments)));
+            Center(child: _BridgeView(_channelId, widget.arguments)));
     }
   }
 

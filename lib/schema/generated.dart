@@ -2651,6 +2651,8 @@ class UIPageBlockData {
   final UITooltipPlacement? tooltipPlacement;
   final UITooltipTransitionTarget? tooltipTransitionTarget;
   final List<Property>? props;
+  final int? frameWidth;
+  final int? frameHeight;
   final String? query;
 
   UIPageBlockData({
@@ -2669,6 +2671,8 @@ class UIPageBlockData {
     this.tooltipPlacement,
     this.tooltipTransitionTarget,
     this.props,
+    this.frameWidth,
+    this.frameHeight,
     this.query,
   });
 
@@ -2701,6 +2705,8 @@ class UIPageBlockData {
           json['tooltipTransitionTarget']),
       props: ListDecoder.decode(
           json['props'], (element) => Property.decode(element)),
+      frameWidth: IntDecoder.decode(json['frameWidth']),
+      frameHeight: IntDecoder.decode(json['frameHeight']),
       query: StringDecoder.decode(json['query']),
     );
   }
@@ -2723,6 +2729,8 @@ class UIPageBlockData {
       'tooltipPlacement': tooltipPlacement?.encode(),
       'tooltipTransitionTarget': tooltipTransitionTarget?.encode(),
       'props': props?.map((e) => e.encode()).toList(growable: false),
+      'frameWidth': frameWidth,
+      'frameHeight': frameHeight,
       'query': query,
     };
   }
