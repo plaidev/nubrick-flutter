@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nativebrik_bridge/schema/generated.dart';
+import 'package:nubrick_bridge/schema/generated.dart';
 
 void main() {
   group('Enum encode/decode', () {

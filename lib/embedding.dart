@@ -2,10 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:nativebrik_bridge/remote_config.dart';
-import 'package:nativebrik_bridge/utils/random.dart';
-import 'package:nativebrik_bridge/utils/parse_event.dart';
-import './channel/nativebrik_bridge_platform_interface.dart';
+import 'package:nubrick_bridge/remote_config.dart';
+import 'package:nubrick_bridge/utils/random.dart';
+import 'package:nubrick_bridge/utils/parse_event.dart';
+import './channel/nubrick_bridge_platform_interface.dart';
 
 enum EventPayloadType { integer, string, timestamp, unknown }
 
@@ -29,7 +29,7 @@ typedef EmbeddingBuilder = Widget Function(
 
 /// A widget that embeds an experiment.
 ///
-/// - **NativebrikBridge** must be initialized before using this widget.
+/// - **NubrickBridge** must be initialized before using this widget.
 ///
 /// reference: https://docs.nativebrik.com/reference/flutter/nativebrikembedding
 ///
@@ -50,7 +50,7 @@ typedef EmbeddingBuilder = Widget Function(
 /// var variant = await config.fetch();
 /// Embedding("Config Key", variant: variant);
 /// ```
-class NativebrikEmbedding extends StatefulWidget {
+class NubrickEmbedding extends StatefulWidget {
   final String id;
   final double? width;
   final double? height;
@@ -59,9 +59,9 @@ class NativebrikEmbedding extends StatefulWidget {
   final EmbeddingBuilder? builder;
 
   // this is used from remoteconfig.embed
-  final NativebrikRemoteConfigVariant? variant;
+  final NubrickRemoteConfigVariant? variant;
 
-  const NativebrikEmbedding(
+  const NubrickEmbedding(
     this.id, {
     super.key,
     this.width,
@@ -84,7 +84,7 @@ enum EmbeddingPhase {
   completed,
 }
 
-class _EmbeddingState extends State<NativebrikEmbedding> {
+class _EmbeddingState extends State<NubrickEmbedding> {
   var _phase = EmbeddingPhase.loading;
   final _channelId = generateRandomString(32);
   late final MethodChannel _embeddingChannel;
@@ -94,15 +94,15 @@ class _EmbeddingState extends State<NativebrikEmbedding> {
   @override
   void initState() {
     super.initState();
-    _embeddingChannel = MethodChannel("Nativebrik/Embedding/$_channelId");
+    _embeddingChannel = MethodChannel("Nubrick/Embedding/$_channelId");
     _embeddingChannel.setMethodCallHandler(_handleMethod);
 
     final variant = widget.variant;
     if (variant != null) {
-      NativebrikBridgePlatform.instance.connectEmbeddingInRemoteConfigValue(
+      NubrickBridgePlatform.instance.connectEmbeddingInRemoteConfigValue(
           widget.id, variant.channelId, _channelId, widget.arguments);
     } else {
-      NativebrikBridgePlatform.instance
+      NubrickBridgePlatform.instance
           .connectEmbedding(widget.id, _channelId, widget.arguments);
     }
   }
@@ -110,7 +110,7 @@ class _EmbeddingState extends State<NativebrikEmbedding> {
   @override
   void dispose() {
     _embeddingChannel.setMethodCallHandler(null);
-    NativebrikBridgePlatform.instance.disconnectEmbedding(_channelId);
+    NubrickBridgePlatform.instance.disconnectEmbedding(_channelId);
     super.dispose();
   }
 
@@ -188,7 +188,7 @@ class _BridgeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const String viewType = "nativebrik-embedding-view";
+    const String viewType = "nubrick-embedding-view";
     final Map<String, dynamic> creationParams = <String, dynamic>{
       "channelId": channelId,
       "arguments": arguments,

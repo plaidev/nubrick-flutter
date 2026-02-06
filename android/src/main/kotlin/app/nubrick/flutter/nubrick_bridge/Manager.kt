@@ -1,4 +1,4 @@
-package com.nativebrik.flutter.nativebrik_bridge
+package app.nubrick.flutter.nubrick_bridge
 
 import android.content.Context
 import io.nubrick.nubrick.FlutterBridgeApi
@@ -31,8 +31,8 @@ import kotlinx.coroutines.launch
 internal data class ConfigEntity(val variant: RemoteConfigVariant?, val experimentId: String?)
 
 @OptIn(FlutterBridgeApi::class)
-internal class NativebrikBridgeManager(private val binaryMessenger: BinaryMessenger) {
-    private var nativebrikClient: NubrickClient? = null
+internal class NubrickBridgeManager(private val binaryMessenger: BinaryMessenger) {
+    private var nubrickClient: NubrickClient? = null
     private var bridgeClient: __DO_NOT_USE_THIS_INTERNAL_BRIDGE? = null
 
     private var embeddingMap: MutableMap<String, Any?> = mutableMapOf()
@@ -40,26 +40,26 @@ internal class NativebrikBridgeManager(private val binaryMessenger: BinaryMessen
     private var configMap: MutableMap<String, ConfigEntity> = mutableMapOf()
 
     fun setNubrickClient(client: NubrickClient) {
-        this.nativebrikClient = client
+        this.nubrickClient = client
         this.bridgeClient = __DO_NOT_USE_THIS_INTERNAL_BRIDGE(client)
     }
 
     fun getUserId(): String? {
-        return this.nativebrikClient?.user?.id
+        return this.nubrickClient?.user?.id
     }
 
     fun setUserProperties(properties: Map<String, Any>) {
-        this.nativebrikClient?.user?.setProperties(properties)
+        this.nubrickClient?.user?.setProperties(properties)
     }
 
     fun getUserProperties(): Map<String, String>? {
-        return this.nativebrikClient?.user?.getProperties()
+        return this.nubrickClient?.user?.getProperties()
     }
 
     // embedding
     @OptIn(DelicateCoroutinesApi::class)
     fun connectEmbedding(channelId: String, experimentId: String, componentId: String? = null) {
-        val methodChannel = MethodChannel(this.binaryMessenger, "Nativebrik/Embedding/$channelId")
+        val methodChannel = MethodChannel(this.binaryMessenger, "Nubrick/Embedding/$channelId")
         GlobalScope.launch(Dispatchers.IO) {
             val result = bridgeClient?.connectEmbedding(experimentId, componentId)
             if (result == null) {
@@ -106,7 +106,7 @@ internal class NativebrikBridgeManager(private val binaryMessenger: BinaryMessen
         }
         val bridgeClient = this.bridgeClient ?: return
         val methodChannel = remember(channelId) {
-            MethodChannel(this.binaryMessenger, "Nativebrik/Embedding/$channelId")
+            MethodChannel(this.binaryMessenger, "Nubrick/Embedding/$channelId")
         }
         val data = this.embeddingMap[channelId]
         val eventBridge = this.eventBridgeViewMap[channelId]
@@ -147,7 +147,7 @@ internal class NativebrikBridgeManager(private val binaryMessenger: BinaryMessen
 
     @Composable
     fun RenderOverlay() {
-        nativebrikClient?.experiment?.Overlay()
+        nubrickClient?.experiment?.Overlay()
     }
 
     // remote config
@@ -160,7 +160,7 @@ internal class NativebrikBridgeManager(private val binaryMessenger: BinaryMessen
         if (experimentId.isEmpty()) {
             return Result.success("not-found")
         }
-        val client = this.nativebrikClient ?: return Result.success("not-found")
+        val client = this.nubrickClient ?: return Result.success("not-found")
         val config = client.experiment.remoteConfig(experimentId)
         val variant = config.fetch().getOrElse {
             val status = when (it) {
@@ -227,13 +227,13 @@ internal class NativebrikBridgeManager(private val binaryMessenger: BinaryMessen
     }
 
     fun dispatch(name: String) {
-        this.nativebrikClient?.experiment?.dispatch(NubrickEvent(name))
+        this.nubrickClient?.experiment?.dispatch(NubrickEvent(name))
     }
 
     /**
      * Records exceptions from Flutter.
      *
-     * This method constructs a crash event and forwards it to the Nativebrik SDK for crash reporting
+     * This method constructs a crash event and forwards it to the Nubrick SDK for crash reporting
      * with platform set to "flutter".
      *
      * @param exceptionsList List of exception records from Flutter
@@ -279,7 +279,7 @@ internal class NativebrikBridgeManager(private val binaryMessenger: BinaryMessen
                     flutterSdkVersion = flutterSdkVersion,
                     severity = CrashSeverity.from(severity)
                 )
-                this.nativebrikClient?.experiment?.sendFlutterCrash(crashEvent)
+                this.nubrickClient?.experiment?.sendFlutterCrash(crashEvent)
             }
         } catch (e: Exception) {
             // Silently fail to avoid causing crashes in error reporting
@@ -287,13 +287,13 @@ internal class NativebrikBridgeManager(private val binaryMessenger: BinaryMessen
     }
 }
 
-internal class OverlayViewFactory(private val manager: NativebrikBridgeManager): PlatformViewFactory(StandardMessageCodec.INSTANCE) {
+internal class OverlayViewFactory(private val manager: NubrickBridgeManager): PlatformViewFactory(StandardMessageCodec.INSTANCE) {
     override fun create(context: Context, viewId: Int, args: Any?): PlatformView {
         return OverlayView(context, manager)
     }
 }
 
-internal class OverlayView(context: Context, manager: NativebrikBridgeManager): PlatformView {
+internal class OverlayView(context: Context, manager: NubrickBridgeManager): PlatformView {
     private val view: ComposeView
 
     override fun getView(): View {
@@ -311,7 +311,7 @@ internal class OverlayView(context: Context, manager: NativebrikBridgeManager): 
     }
 }
 
-internal class NativeViewFactory(private val manager: NativebrikBridgeManager): PlatformViewFactory(StandardMessageCodec.INSTANCE) {
+internal class NativeViewFactory(private val manager: NubrickBridgeManager): PlatformViewFactory(StandardMessageCodec.INSTANCE) {
     override fun create(context: Context, viewId: Int, args: Any?): PlatformView {
         val creationParams = args as Map<*, *>?
         val channelId = creationParams?.get("channelId") as String
@@ -320,7 +320,7 @@ internal class NativeViewFactory(private val manager: NativebrikBridgeManager): 
     }
 }
 
-internal class NativeView(context: Context, channelId: String, arguments: Any?, manager: NativebrikBridgeManager): PlatformView {
+internal class NativeView(context: Context, channelId: String, arguments: Any?, manager: NubrickBridgeManager): PlatformView {
     private val view: ComposeView
 
     override fun getView(): View {

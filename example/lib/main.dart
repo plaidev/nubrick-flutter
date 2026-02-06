@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:nativebrik_bridge/nativebrik_bridge.dart';
+import 'package:nubrick_bridge/nubrick_bridge.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  NativebrikBridge("cgv3p3223akg00fod19g");
-  NativebrikBridge.instance?.addEventListener((event) {
+  NubrickBridge("cgv3p3223akg00fod19g");
+  NubrickBridge.instance?.addEventListener((event) {
     print("EVENT: ${event.name}");
   });
   runApp(const MyApp());
@@ -35,7 +35,7 @@ class _MyAppState extends State<MyApp> {
     // setState to update our non-existent appearance.
     if (!mounted) return;
 
-    final user = NativebrikUser();
+    final user = NubrickUser();
     var userId = await user.getId();
     await user.setProperties({
       'prefecture': "Tokyo",
@@ -47,7 +47,7 @@ class _MyAppState extends State<MyApp> {
     });
     var properties = await user.getProperties();
 
-    var config = NativebrikRemoteConfig("cnoku4223akg00e5m630");
+    var config = NubrickRemoteConfig("cnoku4223akg00e5m630");
     var variant = await config.fetch();
     var message = await variant.get("message");
 
@@ -63,7 +63,7 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       initialRoute: '/',
       builder: (context, child) {
-        return NativebrikProvider(child: child!);
+        return NubrickProvider(child: child!);
       },
       routes: {
         '/': (context) => PageA(
@@ -98,10 +98,10 @@ class PageA extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            NativebrikEmbedding("TOP_COMPONENT", height: 270, onEvent: (event) {
-              print("Nativebrik Embedding Event: ${event.payload}");
+            NubrickEmbedding("TOP_COMPONENT", height: 270, onEvent: (event) {
+              print("Nubrick Embedding Event: ${event.payload}");
             }),
-            const NativebrikAnchor("TOOLTIP_1", child: Text("Tooltip 1")),
+            const NubrickAnchor("TOOLTIP_1", child: Text("Tooltip 1")),
             const Text("Message:"),
             Text(message),
             const Text("User ID:"),
@@ -110,13 +110,13 @@ class PageA extends StatelessWidget {
             Text(prefecture),
             ElevatedButton(
               onPressed: () {
-                NativebrikDispatcher()
-                    .dispatch(NativebrikEvent("DEMO_ON_CLICK"));
+                NubrickDispatcher()
+                    .dispatch(NubrickEvent("DEMO_ON_CLICK"));
               },
               child: const Text('dispatch custom event'),
             ),
             const SizedBox(height: 200),
-            NativebrikAnchor(
+            NubrickAnchor(
               "TOOLTIP_2",
               child: ElevatedButton(
                 onPressed: () {
@@ -128,7 +128,7 @@ class PageA extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: const NativebrikAnchor(
+      bottomNavigationBar: const NubrickAnchor(
         "NAV_BAR",
         child: CustomBottomNavBar(
           currentIndex: 0,
@@ -152,13 +152,13 @@ class PageB extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const NativebrikAnchor("TOOLTIP_4",
+            const NubrickAnchor("TOOLTIP_4",
                 child: Text('Welcome to Page B!')),
             const SizedBox(height: 20),
           ],
         ),
       ),
-      bottomNavigationBar: const NativebrikAnchor(
+      bottomNavigationBar: const NubrickAnchor(
         "NAV_BAR",
         child: CustomBottomNavBar(
           currentIndex: 1,
@@ -185,14 +185,14 @@ class CustomBottomNavBar extends StatelessWidget {
       currentIndex: currentIndex,
       items: [
         BottomNavigationBarItem(
-          icon: const NativebrikAnchor(
+          icon: const NubrickAnchor(
             "NAV_ITEM_A",
             child: Icon(Icons.home),
           ),
           label: 'Page A',
         ),
         BottomNavigationBarItem(
-          icon: const NativebrikAnchor(
+          icon: const NubrickAnchor(
             "NAV_ITEM_B",
             child: Icon(Icons.business),
           ),

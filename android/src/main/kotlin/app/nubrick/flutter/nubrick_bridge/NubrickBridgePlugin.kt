@@ -1,4 +1,4 @@
-package com.nativebrik.flutter.nativebrik_bridge
+package app.nubrick.flutter.nubrick_bridge
 
 import android.content.Context
 import io.nubrick.nubrick.CachePolicy
@@ -19,8 +19,8 @@ import kotlinx.coroutines.launch
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
-internal const val EMBEDDING_VIEW_ID = "nativebrik-embedding-view"
-internal const val OVERLAY_VIEW_ID = "nativebrik-overlay-view"
+internal const val EMBEDDING_VIEW_ID = "nubrick-embedding-view"
+internal const val OVERLAY_VIEW_ID = "nubrick-overlay-view"
 internal const val EMBEDDING_PHASE_UPDATE_METHOD = "embedding-phase-update"
 internal const val EMBEDDING_SIZE_UPDATE_METHOD = "embedding-size-update"
 internal const val ON_EVENT_METHOD = "on-event"
@@ -28,21 +28,21 @@ internal const val ON_DISPATCH_METHOD = "on-dispatch"
 internal const val ON_NEXT_TOOLTIP_METHOD = "on-next-tooltip"
 internal const val ON_DISMISS_TOOLTIP_METHOD = "on-dismiss-tooltip"
 
-/** NativebrikBridgePlugin */
-class NativebrikBridgePlugin: FlutterPlugin, MethodCallHandler {
+/** NubrickBridgePlugin */
+class NubrickBridgePlugin: FlutterPlugin, MethodCallHandler {
     /// The MethodChannel that will the communication between Flutter and native Android
     ///
     /// This local reference serves to register the plugin with the Flutter Engine and unregister it
     /// when the Flutter Engine is detached from the Activity
     private lateinit var channel : MethodChannel
     private lateinit var context: Context
-    private lateinit var manager: NativebrikBridgeManager
+    private lateinit var manager: NubrickBridgeManager
 
     override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         val messenger = flutterPluginBinding.binaryMessenger
-        manager = NativebrikBridgeManager(messenger)
+        manager = NubrickBridgeManager(messenger)
         context = flutterPluginBinding.applicationContext
-        channel = MethodChannel(messenger, "nativebrik_bridge")
+        channel = MethodChannel(messenger, "nubrick_bridge")
         channel.setMethodCallHandler(this)
 
         flutterPluginBinding.platformViewRegistry.registerViewFactory(
@@ -58,7 +58,7 @@ class NativebrikBridgePlugin: FlutterPlugin, MethodCallHandler {
     @OptIn(DelicateCoroutinesApi::class)
     override fun onMethodCall(call: MethodCall, result: Result) {
         when (call.method) {
-            "getNativebrikSDKVersion" -> {
+            "getNubrickSDKVersion" -> {
                 result.success(VERSION)
             }
             "connectClient" -> {
@@ -75,7 +75,7 @@ class NativebrikBridgePlugin: FlutterPlugin, MethodCallHandler {
                 val cacheTime = cachePolicy["cacheTime"] as Int
                 val staleTime = cachePolicy["staleTime"] as Int
                 val storage = cachePolicy["storage"] as String
-                val nativebrikCachePolicy = CachePolicy(
+                val nubrickCachePolicy = CachePolicy(
                         cacheTime = cacheTime.toDuration(DurationUnit.SECONDS),
                         staleTime = staleTime.toDuration(DurationUnit.SECONDS),
                         storage = if (storage == "inMemory") CacheStorage.IN_MEMORY else CacheStorage.IN_MEMORY
@@ -98,7 +98,7 @@ class NativebrikBridgePlugin: FlutterPlugin, MethodCallHandler {
                                 ))
                             }
                         },
-                        cachePolicy = nativebrikCachePolicy,
+                        cachePolicy = nubrickCachePolicy,
                         onDispatch = { it ->
                             GlobalScope.launch(Dispatchers.Main) {
                                 channel.invokeMethod(ON_DISPATCH_METHOD, mapOf(
@@ -237,12 +237,12 @@ class NativebrikBridgePlugin: FlutterPlugin, MethodCallHandler {
 // Helper method to parse Flutter stack trace into Java stack trace elements
 //
 // Flutter Stack Trace
-// #0      NativebrikDispatcher.dispatch (package:nativebrik_bridge/dispatcher.dart:10:5)
-// #1      _MyAppState.build.<anonymous closure> (package:nativebrik_bridge_example/main.dart:91:42)
+// #0      NubrickDispatcher.dispatch (package:nubrick_bridge/dispatcher.dart:10:5)
+// #1      _MyAppState.build.<anonymous closure> (package:nubrick_bridge_example/main.dart:91:42)
 // ....
 //
 // Kotlin.StackTraceElement
-// StackTraceElement("NativebrikDispatcher", "dispatch", "package:nativebrik_bridge/dispatcher.dart", 10)
+// StackTraceElement("NubrickDispatcher", "dispatch", "package:nubrick_bridge/dispatcher.dart", 10)
 // ...
 fun parseStackTraceElements(stackTraceString: String): Array<StackTraceElement> {
     val lines = stackTraceString.split("\n")

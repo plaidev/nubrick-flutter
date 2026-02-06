@@ -9,14 +9,14 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 
-import 'package:nativebrik_bridge/nativebrik_bridge.dart';
+import 'package:nubrick_bridge/nubrick_bridge.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('getNativebrikSDKVersion test', (WidgetTester tester) async {
-    final NativebrikBridge plugin = NativebrikBridge("projectId");
-    final String? version = await plugin.getNativebrikSDKVersion();
+  testWidgets('getNubrickSDKVersion test', (WidgetTester tester) async {
+    final NubrickBridge plugin = NubrickBridge("projectId");
+    final String? version = await plugin.getNubrickSDKVersion();
     // The version string depends on the host platform running the test, so
     // just assert that some non-empty string is returned.
     expect(version?.isNotEmpty, true);

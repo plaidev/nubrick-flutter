@@ -1,4 +1,4 @@
-name: "Publish Nativebrik Bridge SDK"
+name: "Publish Nubrick Bridge SDK"
 
 on:
   push:

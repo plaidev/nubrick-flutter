@@ -23,7 +23,7 @@ reinstall-android:
 define bump_version
 	@NEW_VERSION=$$(echo "$(VERSION)" | awk -F. '{print $(1)}') && \
 	sed -i '' "s/^version: .*/version: $$NEW_VERSION/" pubspec.yaml && \
-	sed -i '' "s/const String nativebrikFlutterSdkVersion = '.*'/const String nativebrikFlutterSdkVersion = '$$NEW_VERSION'/" lib/version.dart && \
+	sed -i '' "s/const String nubrickFlutterSdkVersion = '.*'/const String nubrickFlutterSdkVersion = '$$NEW_VERSION'/" lib/version.dart && \
 	echo "## $$NEW_VERSION\n\n- \n" | cat - CHANGELOG.md > CHANGELOG.tmp && mv CHANGELOG.tmp CHANGELOG.md;
 	make install
 endef

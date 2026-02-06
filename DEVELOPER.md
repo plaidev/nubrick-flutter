@@ -19,7 +19,7 @@ These commands do the following:
 ## for ios
 
 ```
-cd ./flutter/nativebrik_bridge/example
+cd ./flutter/nubrick_bridge/example
 flutter build ios --no-codesign
 open ios/Runner.xcworkspace
 flutter run
@@ -28,6 +28,6 @@ flutter run
 ## for android
 
 ```
-cd ./flutter/nativebrik_bridge/example
+cd ./flutter/nubrick_bridge/example
 open -a Android\ Studio android ./android
 ```

@@ -2,27 +2,27 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:nativebrik_bridge/nativebrik_bridge.dart';
-import 'package:nativebrik_bridge/schema/generated.dart';
+import 'package:nubrick_bridge/nubrick_bridge.dart';
+import 'package:nubrick_bridge/schema/generated.dart';
 
-import './nativebrik_bridge_platform_interface.dart';
+import './nubrick_bridge_platform_interface.dart';
 
-/// An implementation of [NativebrikBridgePlatform] that uses method channels.
-class MethodChannelNativebrikBridge extends NativebrikBridgePlatform {
+/// An implementation of [NubrickBridgePlatform] that uses method channels.
+class MethodChannelNubrickBridge extends NubrickBridgePlatform {
   /// The method channel used to interact with the native platform.
   @visibleForTesting
-  final methodChannel = const MethodChannel('nativebrik_bridge');
+  final methodChannel = const MethodChannel('nubrick_bridge');
 
   @override
-  Future<String?> getNativebrikSDKVersion() async {
+  Future<String?> getNubrickSDKVersion() async {
     final version =
-        await methodChannel.invokeMethod<String>('getNativebrikSDKVersion');
+        await methodChannel.invokeMethod<String>('getNubrickSDKVersion');
     return version;
   }
 
   @override
   Future<String?> connectClient(
-      String projectId, NativebrikCachePolicy cachePolicy) async {
+      String projectId, NubrickCachePolicy cachePolicy) async {
     final result = await methodChannel.invokeMethod<String>(
       'connectClient',
       <String, dynamic>{

@@ -1,6 +1,6 @@
 //
 //  Manager.swift
-//  nativebrik_bridge
+//  nubrick_bridge
 //
 //  Created by Ryosuke Suzuki on 2024/03/10.
 //
@@ -20,7 +20,7 @@ struct RemoteConfigEntity {
     let variant: RemoteConfigVariant?
 }
 
-class NativebrikBridgeManager {
+class NubrickBridgeManager {
     private var nubrickClient: NubrickClient? = nil
     private var embeddingMaps: [String:EmbeddingEntity]
     private var configMaps: [String:RemoteConfigEntity]
@@ -30,13 +30,13 @@ class NativebrikBridgeManager {
         self.configMaps = [:]
     }
 
-    func setNativebrikClient(nativebrik: NubrickClient) {
+    func setNubrickClient(nubrick: NubrickClient) {
         if self.nubrickClient != nil {
-            return print("NativebrikClient is already set")
+            return print("NubrickClient is already set")
         }
-        self.nubrickClient = nativebrik
+        self.nubrickClient = nubrick
         if let vc = UIApplication.shared.delegate?.window??.rootViewController {
-            let overlay = nativebrik.experiment.overlayViewController()
+            let overlay = nubrick.experiment.overlayViewController()
             vc.addChild(overlay)
             vc.view.addSubview(overlay.view)
         }
@@ -68,7 +68,7 @@ class NativebrikBridgeManager {
         guard let nubrickClient = self.nubrickClient else {
             return
         }
-        let channel = FlutterMethodChannel(name: "Nativebrik/Embedding/\(channelId)", binaryMessenger: messenger)
+        let channel = FlutterMethodChannel(name: "Nubrick/Embedding/\(channelId)", binaryMessenger: messenger)
         let uiview = nubrickClient.experiment.embeddingForFlutterBridge(id, arguments: arguments, onEvent: { event in
             channel.invokeMethod(ON_EVENT_METHOD, arguments: [
                 "name": event.name as Any?,
@@ -159,7 +159,7 @@ class NativebrikBridgeManager {
         guard let variant = entity.variant else {
             return
         }
-        let channel = FlutterMethodChannel(name: "Nativebrik/Embedding/\(embeddingChannelId)", binaryMessenger: messenger)
+        let channel = FlutterMethodChannel(name: "Nubrick/Embedding/\(embeddingChannelId)", binaryMessenger: messenger)
         guard let uiview = variant.getAsUIView(key, arguments: arguments, onEvent: { event in
             channel.invokeMethod(ON_EVENT_METHOD, arguments: [
                 "name": event.name as Any?,
@@ -210,7 +210,7 @@ class NativebrikBridgeManager {
     // tooltip
     func connectTooltip(name: String, onFetch: @escaping (String) -> Void, onError: @escaping (String) -> Void) {
         guard let nubrickClient = self.nubrickClient else {
-            onError("NativebrikClient is not set")
+            onError("NubrickClient is not set")
             return
         }
         Task {
@@ -228,7 +228,7 @@ class NativebrikBridgeManager {
         guard let nubrickClient = self.nubrickClient else {
             return
         }
-        let channel = FlutterMethodChannel(name: "Nativebrik/Embedding/\(channelId)", binaryMessenger: messenger)
+        let channel = FlutterMethodChannel(name: "Nubrick/Embedding/\(channelId)", binaryMessenger: messenger)
         let accessor = nubrickClient.experiment.__do_not_use__render_uiview(
             json: rootBlock,
             onEvent: { event in
@@ -288,7 +288,7 @@ class NativebrikBridgeManager {
     /**
      * Sends crash events from Flutter.
      *
-     * This method constructs a crash event and forwards it to the Nativebrik SDK for crash reporting
+     * This method constructs a crash event and forwards it to the Nubrick SDK for crash reporting
      * with platform set to "flutter".
      *
      * - Parameter exceptionsList: List of exception records from Flutter

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import '../provider.dart';
 
-/// A widget that acts as an anchor point for tooltips or onboarding stories in the Nativebrik dashboard.
+/// A widget that acts as an anchor point for tooltips or onboarding stories in the Nubrick dashboard.
 ///
-/// The [NativebrikAnchor] registers its position and key with the Nativebrik provider, allowing
+/// The [NubrickAnchor] registers its position and key with the Nubrick provider, allowing
 /// external overlays (such as tooltips or onboarding highlights) to be precisely positioned
 /// relative to this widget. This is useful for guiding users through features or workflows
 /// as part of an onboarding experience.
@@ -11,22 +11,22 @@ import '../provider.dart';
 /// reference: https://docs.nativebrik.com/reference/flutter/nativebrikanchor
 ///
 /// Usage:
-/// Wrap any widget you want to highlight with [NativebrikAnchor], providing a unique [id].
-/// The Nativebrik dashboard can then use this anchor to display contextual UI, such as a tooltip
+/// Wrap any widget you want to highlight with [NubrickAnchor], providing a unique [id].
+/// The Nubrick dashboard can then use this anchor to display contextual UI, such as a tooltip
 /// or story step, at the correct location.
 ///
 /// Example:
 /// ```dart
-/// NativebrikAnchor(
+/// NubrickAnchor(
 ///   'unique-feature-id',
 ///   child: MyFeatureWidget(),
 /// )
 /// ```
-class NativebrikAnchor extends StatefulWidget {
+class NubrickAnchor extends StatefulWidget {
   final String id;
   final Widget child;
 
-  const NativebrikAnchor(
+  const NubrickAnchor(
     this.id, {
     super.key,
     required this.child,
@@ -37,14 +37,14 @@ class NativebrikAnchor extends StatefulWidget {
   _AnchorState createState() => _AnchorState();
 }
 
-class _AnchorState extends State<NativebrikAnchor> {
+class _AnchorState extends State<NubrickAnchor> {
   final GlobalKey childKey = GlobalKey();
-  NativebrikProviderState? _provider;
+  NubrickProviderState? _provider;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _provider = context.nativebrikProvider;
+    _provider = context.nubrickProvider;
   }
 
   @override

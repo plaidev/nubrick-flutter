@@ -1,27 +1,27 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
-import 'package:nativebrik_bridge/tooltip/overlay.dart';
+import 'package:nubrick_bridge/tooltip/overlay.dart';
 
-/// NativebrikProvider is the main provider for the Nativebrik SDK.
+/// NubrickProvider is the main provider for the Nativebrik SDK.
 ///
 /// reference: https://docs.nativebrik.com/reference/flutter/nativebrikprovider
 ///
 /// Usage:
 /// ```dart
-/// NativebrikProvider(
+/// NubrickProvider(
 ///   child: App(),
 /// )
 /// ```
-class NativebrikProvider extends StatefulWidget {
+class NubrickProvider extends StatefulWidget {
   final Widget child;
-  const NativebrikProvider({super.key, required this.child});
+  const NubrickProvider({super.key, required this.child});
 
   @override
-  State<NativebrikProvider> createState() => NativebrikProviderState();
+  State<NubrickProvider> createState() => NubrickProviderState();
 }
 
-class NativebrikProviderState extends State<NativebrikProvider> {
+class NubrickProviderState extends State<NubrickProvider> {
   final Map<String, GlobalKey> _keys = {};
 
   /// Get a global key by ID
@@ -46,16 +46,16 @@ class NativebrikProviderState extends State<NativebrikProvider> {
       children: [
         widget.child,
         _render(context),
-        NativebrikTooltipOverlay(keysReference: _keys),
+        NubrickTooltipOverlay(keysReference: _keys),
       ],
     );
   }
 
   Widget _render(BuildContext context) {
-    const String viewType = "nativebrik-overlay-view";
+    const String viewType = "nubrick-overlay-view";
     switch (defaultTargetPlatform) {
       case TargetPlatform.iOS:
-        // overlay view controller will be attached when the nativebrik bridge plugin is intialized.
+        // overlay view controller will be attached when the nubrick bridge plugin is intialized.
         return const SizedBox.shrink();
       case TargetPlatform.android:
         // to support in-app-messeging for android, we need to attach the overlay view into the flutter widget tree.
@@ -75,9 +75,9 @@ class NativebrikProviderState extends State<NativebrikProvider> {
   }
 }
 
-/// Extension to access NativebrikProvider from build context
-extension NativebrikProviderExtension on BuildContext {
-  NativebrikProviderState? get nativebrikProvider {
-    return findAncestorStateOfType<NativebrikProviderState>();
+/// Extension to access NubrickProvider from build context
+extension NubrickProviderExtension on BuildContext {
+  NubrickProviderState? get nubrickProvider {
+    return findAncestorStateOfType<NubrickProviderState>();
   }
 }

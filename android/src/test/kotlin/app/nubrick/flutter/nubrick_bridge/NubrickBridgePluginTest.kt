@@ -1,4 +1,4 @@
-package com.nativebrik.flutter.nativebrik_bridge
+package app.nubrick.flutter.nubrick_bridge
 
 import kotlin.test.assertEquals
 import io.flutter.plugin.common.MethodCall
@@ -15,12 +15,12 @@ import io.nubrick.nubrick.VERSION
  * you can run them directly from IDEs that support JUnit such as Android Studio.
  */
 
-internal class NativebrikBridgePluginTest {
+internal class NubrickBridgePluginTest {
     @Test
-    fun onMethodCall_getNativebrikSDKVersion_returnsExpectedValue() {
-        val plugin = NativebrikBridgePlugin()
+    fun onMethodCall_getNubrickSDKVersion_returnsExpectedValue() {
+        val plugin = NubrickBridgePlugin()
 
-        val call = MethodCall("getNativebrikSDKVersion", null)
+        val call = MethodCall("getNubrickSDKVersion", null)
         val mockResult: MethodChannel.Result = Mockito.mock(MethodChannel.Result::class.java)
         plugin.onMethodCall(call, mockResult)
 
@@ -30,13 +30,13 @@ internal class NativebrikBridgePluginTest {
     @Test
     fun parseStackTraceElements_should_work() {
         val stackTraces = parseStackTraceElements(
-            "#0      NativebrikDispatcher.dispatch (package:nativebrik_bridge/dispatcher.dart:10:5)\n" +
-            "#1      _MyAppState.build.<anonymous closure> (package:nativebrik_bridge_example/main.dart:91:42)"
+            "#0      NubrickDispatcher.dispatch (package:nubrick_bridge/dispatcher.dart:10:5)\n" +
+            "#1      _MyAppState.build.<anonymous closure> (package:nubrick_bridge_example/main.dart:91:42)"
         )
 
         val expected = listOf(
-            StackTraceElement("NativebrikDispatcher", "dispatch", "package:nativebrik_bridge/dispatcher.dart", 10),
-            StackTraceElement("unknown", "unknown", "package:nativebrik_bridge_example/main.dart", 91)
+            StackTraceElement("NubrickDispatcher", "dispatch", "package:nubrick_bridge/dispatcher.dart", 10),
+            StackTraceElement("unknown", "unknown", "package:nubrick_bridge_example/main.dart", 91)
         )
 
         assertEquals(expected.size, stackTraces.size)

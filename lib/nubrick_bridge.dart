@@ -1,50 +1,50 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:nativebrik_bridge/crash_report.dart';
-import 'package:nativebrik_bridge/embedding.dart';
-import 'package:nativebrik_bridge/utils/parse_event.dart';
-import 'channel/nativebrik_bridge_platform_interface.dart';
+import 'package:nubrick_bridge/crash_report.dart';
+import 'package:nubrick_bridge/embedding.dart';
+import 'package:nubrick_bridge/utils/parse_event.dart';
+import 'channel/nubrick_bridge_platform_interface.dart';
 
 // Export public APIs
-export 'package:nativebrik_bridge/dispatcher.dart';
-export 'package:nativebrik_bridge/embedding.dart';
-export 'package:nativebrik_bridge/provider.dart';
-export 'package:nativebrik_bridge/remote_config.dart';
-export 'package:nativebrik_bridge/user.dart';
-export 'package:nativebrik_bridge/anchor/anchor.dart';
+export 'package:nubrick_bridge/dispatcher.dart';
+export 'package:nubrick_bridge/embedding.dart';
+export 'package:nubrick_bridge/provider.dart';
+export 'package:nubrick_bridge/remote_config.dart';
+export 'package:nubrick_bridge/user.dart';
+export 'package:nubrick_bridge/anchor/anchor.dart';
 
-/// A bridge client to the nativebrik SDK.
+/// A bridge client to the nubrick SDK.
 ///
-/// - Initialize the bridge with the project ID before using nativebrik SDK.
+/// - Initialize the bridge with the project ID before using nubrick SDK.
 ///
 /// reference: https://docs.nativebrik.com/reference/flutter/nativebrikbridge
 ///
 /// Usage:
 ///
 /// ```dart
-/// // Setup Nativebrik SDK
+/// // Setup Nubrick SDK
 /// void main() {
 ///     WidgetsFlutterBinding.ensureInitialized();
 ///     // Initialize the bridge with the project ID
-///     NativebrikBridge("PROJECT ID");
+///     NubrickBridge("PROJECT ID");
 ///     runApp(const YourApp());
 /// }
 /// ```
-class NativebrikBridge {
-  static NativebrikBridge? instance;
+class NubrickBridge {
+  static NubrickBridge? instance;
 
   final String projectId;
-  final NativebrikCachePolicy cachePolicy;
+  final NubrickCachePolicy cachePolicy;
   final bool trackCrashes;
   final List<EventHandler> _listeners = [];
   final List<void Function(String)> _onDispatchListeners = [];
-  final MethodChannel _channel = const MethodChannel("nativebrik_bridge");
+  final MethodChannel _channel = const MethodChannel("nubrick_bridge");
 
-  NativebrikBridge(this.projectId,
-      {this.cachePolicy = const NativebrikCachePolicy(),
+  NubrickBridge(this.projectId,
+      {this.cachePolicy = const NubrickCachePolicy(),
       this.trackCrashes = true}) {
-    NativebrikBridge.instance = this;
-    NativebrikBridgePlatform.instance.connectClient(projectId, cachePolicy);
+    NubrickBridge.instance = this;
+    NubrickBridgePlatform.instance.connectClient(projectId, cachePolicy);
     _channel.setMethodCallHandler(_handleMethod);
 
     if (trackCrashes) {
@@ -70,8 +70,8 @@ class NativebrikBridge {
     }
   }
 
-  Future<String?> getNativebrikSDKVersion() {
-    return NativebrikBridgePlatform.instance.getNativebrikSDKVersion();
+  Future<String?> getNubrickSDKVersion() {
+    return NubrickBridgePlatform.instance.getNubrickSDKVersion();
   }
 
   addEventListener(EventHandler listener) {
@@ -112,19 +112,19 @@ class NativebrikBridge {
   }
 }
 
-/// A policy for caching data from the nativebrik SDK.
+/// A policy for caching data from the nubrick SDK.
 ///
 /// - The cache time is the time to live for the cache. default is 1 day.
 /// - The stale time is the time to live for the stale data. default is 0 seconds.
 /// - The storage is the storage for the cache. default is inMemory.
 ///
 /// ```dart
-class NativebrikCachePolicy {
+class NubrickCachePolicy {
   final Duration cacheTime;
   final Duration staleTime;
   final CacheStorage storage;
 
-  const NativebrikCachePolicy(
+  const NubrickCachePolicy(
       {this.cacheTime = const Duration(days: 1),
       this.staleTime = const Duration(seconds: 0),
       this.storage = CacheStorage.inMemory});

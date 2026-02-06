@@ -1,37 +1,37 @@
-import 'package:nativebrik_bridge/schema/generated.dart';
+import 'package:nubrick_bridge/schema/generated.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
-import 'package:nativebrik_bridge/nativebrik_bridge.dart';
+import 'package:nubrick_bridge/nubrick_bridge.dart';
 
-import './nativebrik_bridge_method_channel.dart';
+import './nubrick_bridge_method_channel.dart';
 
-abstract class NativebrikBridgePlatform extends PlatformInterface {
-  /// Constructs a NativebrikBridgePlatform.
-  NativebrikBridgePlatform() : super(token: _token);
+abstract class NubrickBridgePlatform extends PlatformInterface {
+  /// Constructs a NubrickBridgePlatform.
+  NubrickBridgePlatform() : super(token: _token);
 
   static final Object _token = Object();
 
-  static NativebrikBridgePlatform _instance = MethodChannelNativebrikBridge();
+  static NubrickBridgePlatform _instance = MethodChannelNubrickBridge();
 
-  /// The default instance of [NativebrikBridgePlatform] to use.
+  /// The default instance of [NubrickBridgePlatform] to use.
   ///
-  /// Defaults to [MethodChannelNativebrikBridge].
-  static NativebrikBridgePlatform get instance => _instance;
+  /// Defaults to [MethodChannelNubrickBridge].
+  static NubrickBridgePlatform get instance => _instance;
 
   /// Platform-specific implementations should set this with their own
-  /// platform-specific class that extends [NativebrikBridgePlatform] when
+  /// platform-specific class that extends [NubrickBridgePlatform] when
   /// they register themselves.
-  static set instance(NativebrikBridgePlatform instance) {
+  static set instance(NubrickBridgePlatform instance) {
     PlatformInterface.verifyToken(instance, _token);
     _instance = instance;
   }
 
-  Future<String?> getNativebrikSDKVersion() {
+  Future<String?> getNubrickSDKVersion() {
     throw UnimplementedError(
-        'getNativebrikSDKVersion() has not been implemented.');
+        'getNubrickSDKVersion() has not been implemented.');
   }
 
   Future<String?> connectClient(
-      String projectId, NativebrikCachePolicy cachePolicy) {
+      String projectId, NubrickCachePolicy cachePolicy) {
     throw UnimplementedError('connectClient() has not been implemented.');
   }
 

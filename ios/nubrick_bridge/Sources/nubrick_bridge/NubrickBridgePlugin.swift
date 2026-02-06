@@ -2,7 +2,7 @@ import Flutter
 import UIKit
 import Nubrick
 
-let EMEBEDDING_VIEW_ID = "nativebrik-embedding-view"
+let EMEBEDDING_VIEW_ID = "nubrick-embedding-view"
 let EMBEDDING_PHASE_UPDATE_METHOD = "embedding-phase-update"
 let EMBEDDING_SIZE_UPDATE_METHOD = "embedding-size-update"
 let ON_EVENT_METHOD = "on-event"
@@ -10,21 +10,21 @@ let ON_DISPATCH_METHOD = "on-dispatch"
 let ON_NEXT_TOOLTIP_METHOD = "on-next-tooltip"
 let ON_DISMISS_TOOLTIP_METHOD = "on-dismiss-tooltip"
 
-public class NativebrikBridgePlugin: NSObject, FlutterPlugin {
-    private let manager: NativebrikBridgeManager
+public class NubrickBridgePlugin: NSObject, FlutterPlugin {
+    private let manager: NubrickBridgeManager
     private let messenger: FlutterBinaryMessenger
     private let channel: FlutterMethodChannel
-    init(messenger: FlutterBinaryMessenger, manager: NativebrikBridgeManager, channel: FlutterMethodChannel) {
+    init(messenger: FlutterBinaryMessenger, manager: NubrickBridgeManager, channel: FlutterMethodChannel) {
         self.messenger = messenger
         self.manager = manager
         self.channel = channel
         super.init()
     }
     public static func register(with registrar: FlutterPluginRegistrar) {
-        let manager = NativebrikBridgeManager()
+        let manager = NubrickBridgeManager()
         let messenger = registrar.messenger()
-        let channel = FlutterMethodChannel(name: "nativebrik_bridge", binaryMessenger: messenger)
-        let instance = NativebrikBridgePlugin(messenger: messenger, manager: manager, channel: channel)
+        let channel = FlutterMethodChannel(name: "nubrick_bridge", binaryMessenger: messenger)
+        let instance = NubrickBridgePlugin(messenger: messenger, manager: manager, channel: channel)
         registrar.addMethodCallDelegate(instance, channel: channel)
         registrar.register(
             FLNativeViewFactory(messenger: messenger, manager: manager),
@@ -34,7 +34,7 @@ public class NativebrikBridgePlugin: NSObject, FlutterPlugin {
 
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         switch call.method {
-        case "getNativebrikSDKVersion":
+        case "getNubrickSDKVersion":
             result(nubrickSdkVersion)
         case "connectClient":
             let args = call.arguments as! [String:Any]
@@ -43,8 +43,8 @@ public class NativebrikBridgePlugin: NSObject, FlutterPlugin {
             let cacheTime = cachePolicy["cacheTime"] as! Int
             let staleTime = cachePolicy["staleTime"] as! Int
             let storage = cachePolicy["storage"] as! String
-            let nativebrikCachePolicy = NativebrikCachePolicy(cacheTime: TimeInterval(cacheTime), staleTime: TimeInterval(staleTime), storage: storage == "inMemory" ? .INMEMORY : .INMEMORY)
-            self.manager.setNativebrikClient(nativebrik: NubrickClient(
+            let nubrickCachePolicy = NativebrikCachePolicy(cacheTime: TimeInterval(cacheTime), staleTime: TimeInterval(staleTime), storage: storage == "inMemory" ? .INMEMORY : .INMEMORY)
+            self.manager.setNubrickClient(nubrick: NubrickClient(
                 projectId: projectId,
                 onEvent: { [weak self] event in
                     self?.channel.invokeMethod(ON_EVENT_METHOD, arguments: [
@@ -59,7 +59,7 @@ public class NativebrikBridgePlugin: NSObject, FlutterPlugin {
                         }),
                     ])
                 },
-                cachePolicy: nativebrikCachePolicy,
+                cachePolicy: nubrickCachePolicy,
                 onDispatch: { [weak self] event in
                     self?.channel.invokeMethod(ON_DISPATCH_METHOD, arguments: [
                         "name": event.name as Any?,
@@ -171,7 +171,7 @@ public class NativebrikBridgePlugin: NSObject, FlutterPlugin {
             do {
                 guard let errorData = call.arguments as? [String: Any],
                       let exceptionsList = errorData["exceptions"] as? [[String: Any]] else {
-                    throw NSError(domain: "com.nativebrik.flutter", code: 1, userInfo: [NSLocalizedDescriptionKey: "Invalid error data format"])
+                    throw NSError(domain: "app.nubrick.flutter", code: 1, userInfo: [NSLocalizedDescriptionKey: "Invalid error data format"])
                 }
 
                 let exceptions = exceptionsList.map { $0 as [String: Any?] }

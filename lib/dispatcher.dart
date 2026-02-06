@@ -1,32 +1,32 @@
-import 'package:nativebrik_bridge/channel/nativebrik_bridge_platform_interface.dart';
+import 'package:nubrick_bridge/channel/nubrick_bridge_platform_interface.dart';
 
-class NativebrikEvent {
+class NubrickEvent {
   final String name;
-  NativebrikEvent(this.name);
+  NubrickEvent(this.name);
 }
 
-/// NativebrikDispatcher is the main dispatcher for the Nativebrik SDK.
+/// NubrickDispatcher is the main dispatcher for the Nativebrik SDK.
 ///
 /// reference: https://docs.nativebrik.com/reference/flutter/nativebrikdispatcher
 ///
 /// Usage:
 /// ```dart
-/// NativebrikDispatcher.instance.dispatch(NativebrikEvent('event_name'));
+/// NubrickDispatcher.instance.dispatch(NubrickEvent('event_name'));
 /// ```
-class NativebrikDispatcher {
-  static final NativebrikDispatcher _instance = NativebrikDispatcher._();
+class NubrickDispatcher {
+  static final NubrickDispatcher _instance = NubrickDispatcher._();
 
-  /// The singleton instance of [NativebrikDispatcher].
-  static NativebrikDispatcher get instance => _instance;
+  /// The singleton instance of [NubrickDispatcher].
+  static NubrickDispatcher get instance => _instance;
 
-  NativebrikDispatcher._();
+  NubrickDispatcher._();
 
-  /// Creates a new instance of [NativebrikDispatcher].
+  /// Creates a new instance of [NubrickDispatcher].
   ///
-  /// In most cases, you should use [NativebrikDispatcher.instance] instead.
-  factory NativebrikDispatcher() => _instance;
+  /// In most cases, you should use [NubrickDispatcher.instance] instead.
+  factory NubrickDispatcher() => _instance;
 
-  Future<void> dispatch(NativebrikEvent event) {
-    return NativebrikBridgePlatform.instance.dispatch(event.name);
+  Future<void> dispatch(NubrickEvent event) {
+    return NubrickBridgePlatform.instance.dispatch(event.name);
   }
 }

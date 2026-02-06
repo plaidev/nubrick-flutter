@@ -1,4 +1,4 @@
-package com.nativebrik.e2e
+package app.nubrick.e2e
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 

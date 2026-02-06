@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:nativebrik_bridge/schema/generated.dart';
+import 'package:nubrick_bridge/schema/generated.dart';
 
 Offset calculateTooltipPosition({
   required Offset anchorPosition,
