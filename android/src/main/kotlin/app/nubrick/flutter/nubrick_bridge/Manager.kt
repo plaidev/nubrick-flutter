@@ -3,7 +3,7 @@ package app.nubrick.flutter.nubrick_bridge
 import android.content.Context
 import io.nubrick.nubrick.FlutterBridgeApi
 import io.nubrick.nubrick.NubrickClient
-import io.nubrick.nubrick.__DO_NOT_USE_THIS_INTERNAL_BRIDGE
+import io.nubrick.nubrick.FlutterBridge
 import io.nubrick.nubrick.data.ExceptionRecord
 import io.nubrick.nubrick.data.NotFoundException
 import io.nubrick.nubrick.data.StackFrame
@@ -33,7 +33,7 @@ internal data class ConfigEntity(val variant: RemoteConfigVariant?, val experime
 @OptIn(FlutterBridgeApi::class)
 internal class NubrickBridgeManager(private val binaryMessenger: BinaryMessenger) {
     private var nubrickClient: NubrickClient? = null
-    private var bridgeClient: __DO_NOT_USE_THIS_INTERNAL_BRIDGE? = null
+    private var bridgeClient: FlutterBridge? = null
 
     private var embeddingMap: MutableMap<String, Any?> = mutableMapOf()
     private var eventBridgeViewMap: MutableMap<String, UIBlockEventBridgeViewModel> = mutableMapOf()
@@ -41,7 +41,7 @@ internal class NubrickBridgeManager(private val binaryMessenger: BinaryMessenger
 
     fun setNubrickClient(client: NubrickClient) {
         this.nubrickClient = client
-        this.bridgeClient = __DO_NOT_USE_THIS_INTERNAL_BRIDGE(client)
+        this.bridgeClient = FlutterBridge(client)
     }
 
     fun getUserId(): String? {

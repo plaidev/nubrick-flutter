@@ -13,7 +13,7 @@ import UIKit
 struct EmbeddingEntity {
     let uiview: UIView
     let channel: FlutterMethodChannel
-    let accessor: __DO_NOT_USE__NativebrikBridgedViewAccessor?
+    let accessor: NubrickBridgedViewAccessor?
 }
 
 struct RemoteConfigEntity {
@@ -214,7 +214,7 @@ class NubrickBridgeManager {
             return
         }
         Task {
-            let result = await nubrickClient.experiment.__do_not_use__fetch_tooltip_data(trigger: name)
+            let result = await nubrickClient.experiment.fetchTooltipData(trigger: name)
             switch result {
             case .success(let data):
                 onFetch(data)
@@ -229,7 +229,7 @@ class NubrickBridgeManager {
             return
         }
         let channel = FlutterMethodChannel(name: "Nubrick/Embedding/\(channelId)", binaryMessenger: messenger)
-        let accessor = nubrickClient.experiment.__do_not_use__render_uiview(
+        let accessor = nubrickClient.experiment.renderUIView(
             json: rootBlock,
             onEvent: { event in
                 channel.invokeMethod(ON_EVENT_METHOD, arguments: [
