@@ -5,9 +5,9 @@ import Nubrick
 
 class FLNativeViewFactory: NSObject, FlutterPlatformViewFactory {
     let messenger: FlutterBinaryMessenger
-    let manager: NubrickBridgeManager
+    let manager: NubrickFlutterManager
 
-    init(messenger: FlutterBinaryMessenger, manager: NubrickBridgeManager) {
+    init(messenger: FlutterBinaryMessenger, manager: NubrickFlutterManager) {
         self.messenger = messenger
         self.manager = manager
         super.init()
@@ -38,7 +38,7 @@ class FLNativeView: NSObject, FlutterPlatformView {
         frame: CGRect,
         viewIdentifier viewId: Int64,
         arguments args: Any?,
-        manager: NubrickBridgeManager
+        manager: NubrickFlutterManager
     ) {
         self._view = UIView(frame: frame)
         super.init()

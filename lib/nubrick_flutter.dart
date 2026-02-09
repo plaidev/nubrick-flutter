@@ -1,17 +1,17 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:nubrick_bridge/crash_report.dart';
-import 'package:nubrick_bridge/embedding.dart';
-import 'package:nubrick_bridge/utils/parse_event.dart';
-import 'channel/nubrick_bridge_platform_interface.dart';
+import 'package:nubrick_flutter/crash_report.dart';
+import 'package:nubrick_flutter/embedding.dart';
+import 'package:nubrick_flutter/utils/parse_event.dart';
+import 'channel/nubrick_flutter_platform_interface.dart';
 
 // Export public APIs
-export 'package:nubrick_bridge/dispatcher.dart';
-export 'package:nubrick_bridge/embedding.dart';
-export 'package:nubrick_bridge/provider.dart';
-export 'package:nubrick_bridge/remote_config.dart';
-export 'package:nubrick_bridge/user.dart';
-export 'package:nubrick_bridge/anchor/anchor.dart';
+export 'package:nubrick_flutter/dispatcher.dart';
+export 'package:nubrick_flutter/embedding.dart';
+export 'package:nubrick_flutter/provider.dart';
+export 'package:nubrick_flutter/remote_config.dart';
+export 'package:nubrick_flutter/user.dart';
+export 'package:nubrick_flutter/anchor/anchor.dart';
 
 /// A bridge client to the nubrick SDK.
 ///
@@ -26,25 +26,25 @@ export 'package:nubrick_bridge/anchor/anchor.dart';
 /// void main() {
 ///     WidgetsFlutterBinding.ensureInitialized();
 ///     // Initialize the bridge with the project ID
-///     NubrickBridge("PROJECT ID");
+///     NubrickFlutter("PROJECT ID");
 ///     runApp(const YourApp());
 /// }
 /// ```
-class NubrickBridge {
-  static NubrickBridge? instance;
+class NubrickFlutter {
+  static NubrickFlutter? instance;
 
   final String projectId;
   final NubrickCachePolicy cachePolicy;
   final bool trackCrashes;
   final List<EventHandler> _listeners = [];
   final List<void Function(String)> _onDispatchListeners = [];
-  final MethodChannel _channel = const MethodChannel("nubrick_bridge");
+  final MethodChannel _channel = const MethodChannel("nubrick_flutter");
 
-  NubrickBridge(this.projectId,
+  NubrickFlutter(this.projectId,
       {this.cachePolicy = const NubrickCachePolicy(),
       this.trackCrashes = true}) {
-    NubrickBridge.instance = this;
-    NubrickBridgePlatform.instance.connectClient(projectId, cachePolicy);
+    NubrickFlutter.instance = this;
+    NubrickFlutterPlatform.instance.connectClient(projectId, cachePolicy);
     _channel.setMethodCallHandler(_handleMethod);
 
     if (trackCrashes) {
@@ -71,7 +71,7 @@ class NubrickBridge {
   }
 
   Future<String?> getNubrickSDKVersion() {
-    return NubrickBridgePlatform.instance.getNubrickSDKVersion();
+    return NubrickFlutterPlatform.instance.getNubrickSDKVersion();
   }
 
   addEventListener(EventHandler listener) {

@@ -2,12 +2,12 @@
 import PackageDescription
 
 let package = Package(
-    name: "nubrick_bridge",
+    name: "nubrick_flutter",
     platforms: [
         .iOS("13.4")
     ],
     products: [
-        .library(name: "nubrick-bridge", targets: ["nubrick_bridge"])
+        .library(name: "nubrick-flutter", targets: ["nubrick_flutter"])
     ],
     dependencies: [
         .package(
@@ -17,7 +17,7 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "nubrick_bridge",
+            name: "nubrick_flutter",
             dependencies: [
                 .product(name: "Nubrick", package: "nubrick-ios")
             ]

@@ -1,5 +1,5 @@
-import 'package:nubrick_bridge/channel/nubrick_bridge_platform_interface.dart';
-import 'package:nubrick_bridge/utils/random.dart';
+import 'package:nubrick_flutter/channel/nubrick_flutter_platform_interface.dart';
+import 'package:nubrick_flutter/utils/random.dart';
 
 enum RemoteConfigPhase {
   failed,
@@ -9,7 +9,7 @@ enum RemoteConfigPhase {
 
 /// A remote config that can be fetched from nubrick.
 ///
-/// - **NubrickBridge** must be initialized before using this class.
+/// - **NubrickFlutter** must be initialized before using this class.
 /// - Dispose the variant after using it not to leak resources.
 ///
 /// reference: https://docs.nativebrik.com/reference/flutter/nativebrikremoteconfig
@@ -29,7 +29,7 @@ class NubrickRemoteConfig {
   NubrickRemoteConfig(this.id);
 
   Future<NubrickRemoteConfigVariant> fetch() async {
-    var phase = await NubrickBridgePlatform.instance
+    var phase = await NubrickFlutterPlatform.instance
         .connectRemoteConfig(id, _channelId);
     return NubrickRemoteConfigVariant._(
         _channelId, phase ?? RemoteConfigPhase.failed);
@@ -42,7 +42,7 @@ class NubrickRemoteConfigVariant {
   NubrickRemoteConfigVariant._(this.channelId, this.phase);
 
   Future<String?> get(String key) async {
-    return await NubrickBridgePlatform.instance
+    return await NubrickFlutterPlatform.instance
         .getRemoteConfigValue(channelId, key);
   }
 
@@ -62,6 +62,6 @@ class NubrickRemoteConfigVariant {
   }
 
   Future<void> dispose() async {
-    await NubrickBridgePlatform.instance.disconnectEmbedding(channelId);
+    await NubrickFlutterPlatform.instance.disconnectEmbedding(channelId);
   }
 }

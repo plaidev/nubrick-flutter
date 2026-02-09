@@ -1,4 +1,4 @@
-name: "Publish Nubrick Bridge SDK"
+name: "Publish Nubrick Flutter SDK"
 
 on:
   push:

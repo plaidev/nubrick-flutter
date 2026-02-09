@@ -1,4 +1,4 @@
-import 'package:nubrick_bridge/embedding.dart';
+import 'package:nubrick_flutter/embedding.dart';
 
 EventPayloadType _parseEventPayloadType(dynamic type) {
   switch (type) {

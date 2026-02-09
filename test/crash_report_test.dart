@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nubrick_bridge/crash_report.dart';
+import 'package:nubrick_flutter/crash_report.dart';
 import 'package:stack_trace/stack_trace.dart';
 
 void main() {
@@ -29,7 +29,7 @@ void main() {
     test('parses stack trace with package path containing slash', () {
       // Simulate a stack trace string with package path
       const stackTraceString = '''
-#0      main.<anonymous closure> (package:nubrick_bridge/crash_report_test.dart:120:9)
+#0      main.<anonymous closure> (package:nubrick_flutter/crash_report_test.dart:120:9)
 #1      _rootRun (dart:async/zone.dart:1428:47)
 #2      _CustomZone.run (dart:async/zone.dart:1328:19)
 ''';
@@ -41,7 +41,7 @@ void main() {
       final uriString = firstFrame.uri.toString();
 
       // Verify URI parsing
-      expect(uriString, contains('package:nubrick_bridge'));
+      expect(uriString, contains('package:nubrick_flutter'));
       expect(uriString, contains('/'));
 
       // Test URI splitting logic (simulating what crash_report.dart does)
@@ -54,7 +54,7 @@ void main() {
         fileName = uriString.substring(slashIndex + 1);
       }
 
-      expect(className, 'package:nubrick_bridge');
+      expect(className, 'package:nubrick_flutter');
       expect(fileName, 'crash_report_test.dart');
     });
 

@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
-import 'package:nubrick_bridge/tooltip/overlay.dart';
+import 'package:nubrick_flutter/tooltip/overlay.dart';
 
 /// NubrickProvider is the main provider for the Nativebrik SDK.
 ///

@@ -1,26 +1,26 @@
-import 'package:nubrick_bridge/schema/generated.dart';
+import 'package:nubrick_flutter/schema/generated.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
-import 'package:nubrick_bridge/nubrick_bridge.dart';
+import 'package:nubrick_flutter/nubrick_flutter.dart';
 
-import './nubrick_bridge_method_channel.dart';
+import './nubrick_flutter_method_channel.dart';
 
-abstract class NubrickBridgePlatform extends PlatformInterface {
-  /// Constructs a NubrickBridgePlatform.
-  NubrickBridgePlatform() : super(token: _token);
+abstract class NubrickFlutterPlatform extends PlatformInterface {
+  /// Constructs a NubrickFlutterPlatform.
+  NubrickFlutterPlatform() : super(token: _token);
 
   static final Object _token = Object();
 
-  static NubrickBridgePlatform _instance = MethodChannelNubrickBridge();
+  static NubrickFlutterPlatform _instance = MethodChannelNubrickFlutter();
 
-  /// The default instance of [NubrickBridgePlatform] to use.
+  /// The default instance of [NubrickFlutterPlatform] to use.
   ///
-  /// Defaults to [MethodChannelNubrickBridge].
-  static NubrickBridgePlatform get instance => _instance;
+  /// Defaults to [MethodChannelNubrickFlutter].
+  static NubrickFlutterPlatform get instance => _instance;
 
   /// Platform-specific implementations should set this with their own
-  /// platform-specific class that extends [NubrickBridgePlatform] when
+  /// platform-specific class that extends [NubrickFlutterPlatform] when
   /// they register themselves.
-  static set instance(NubrickBridgePlatform instance) {
+  static set instance(NubrickFlutterPlatform instance) {
     PlatformInterface.verifyToken(instance, _token);
     _instance = instance;
   }

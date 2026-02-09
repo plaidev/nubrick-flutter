@@ -9,13 +9,13 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 
-import 'package:nubrick_bridge/nubrick_bridge.dart';
+import 'package:nubrick_flutter/nubrick_flutter.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets('getNubrickSDKVersion test', (WidgetTester tester) async {
-    final NubrickBridge plugin = NubrickBridge("projectId");
+    final NubrickFlutter plugin = NubrickFlutter("projectId");
     final String? version = await plugin.getNubrickSDKVersion();
     // The version string depends on the host platform running the test, so
     // just assert that some non-empty string is returned.

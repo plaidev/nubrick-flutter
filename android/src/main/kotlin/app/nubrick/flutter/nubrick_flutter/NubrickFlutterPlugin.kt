@@ -1,4 +1,4 @@
-package app.nubrick.flutter.nubrick_bridge
+package app.nubrick.flutter.nubrick_flutter
 
 import android.content.Context
 import io.nubrick.nubrick.CachePolicy
@@ -28,21 +28,21 @@ internal const val ON_DISPATCH_METHOD = "on-dispatch"
 internal const val ON_NEXT_TOOLTIP_METHOD = "on-next-tooltip"
 internal const val ON_DISMISS_TOOLTIP_METHOD = "on-dismiss-tooltip"
 
-/** NubrickBridgePlugin */
-class NubrickBridgePlugin: FlutterPlugin, MethodCallHandler {
+/** NubrickFlutterPlugin */
+class NubrickFlutterPlugin: FlutterPlugin, MethodCallHandler {
     /// The MethodChannel that will the communication between Flutter and native Android
     ///
     /// This local reference serves to register the plugin with the Flutter Engine and unregister it
     /// when the Flutter Engine is detached from the Activity
     private lateinit var channel : MethodChannel
     private lateinit var context: Context
-    private lateinit var manager: NubrickBridgeManager
+    private lateinit var manager: NubrickFlutterManager
 
     override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         val messenger = flutterPluginBinding.binaryMessenger
-        manager = NubrickBridgeManager(messenger)
+        manager = NubrickFlutterManager(messenger)
         context = flutterPluginBinding.applicationContext
-        channel = MethodChannel(messenger, "nubrick_bridge")
+        channel = MethodChannel(messenger, "nubrick_flutter")
         channel.setMethodCallHandler(this)
 
         flutterPluginBinding.platformViewRegistry.registerViewFactory(
@@ -237,12 +237,12 @@ class NubrickBridgePlugin: FlutterPlugin, MethodCallHandler {
 // Helper method to parse Flutter stack trace into Java stack trace elements
 //
 // Flutter Stack Trace
-// #0      NubrickDispatcher.dispatch (package:nubrick_bridge/dispatcher.dart:10:5)
-// #1      _MyAppState.build.<anonymous closure> (package:nubrick_bridge_example/main.dart:91:42)
+// #0      NubrickDispatcher.dispatch (package:nubrick_flutter/dispatcher.dart:10:5)
+// #1      _MyAppState.build.<anonymous closure> (package:nubrick_flutter_example/main.dart:91:42)
 // ....
 //
 // Kotlin.StackTraceElement
-// StackTraceElement("NubrickDispatcher", "dispatch", "package:nubrick_bridge/dispatcher.dart", 10)
+// StackTraceElement("NubrickDispatcher", "dispatch", "package:nubrick_flutter/dispatcher.dart", 10)
 // ...
 fun parseStackTraceElements(stackTraceString: String): Array<StackTraceElement> {
     val lines = stackTraceString.split("\n")

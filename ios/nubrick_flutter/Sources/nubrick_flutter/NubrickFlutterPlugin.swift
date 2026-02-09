@@ -10,21 +10,21 @@ let ON_DISPATCH_METHOD = "on-dispatch"
 let ON_NEXT_TOOLTIP_METHOD = "on-next-tooltip"
 let ON_DISMISS_TOOLTIP_METHOD = "on-dismiss-tooltip"
 
-public class NubrickBridgePlugin: NSObject, FlutterPlugin {
-    private let manager: NubrickBridgeManager
+public class NubrickFlutterPlugin: NSObject, FlutterPlugin {
+    private let manager: NubrickFlutterManager
     private let messenger: FlutterBinaryMessenger
     private let channel: FlutterMethodChannel
-    init(messenger: FlutterBinaryMessenger, manager: NubrickBridgeManager, channel: FlutterMethodChannel) {
+    init(messenger: FlutterBinaryMessenger, manager: NubrickFlutterManager, channel: FlutterMethodChannel) {
         self.messenger = messenger
         self.manager = manager
         self.channel = channel
         super.init()
     }
     public static func register(with registrar: FlutterPluginRegistrar) {
-        let manager = NubrickBridgeManager()
+        let manager = NubrickFlutterManager()
         let messenger = registrar.messenger()
-        let channel = FlutterMethodChannel(name: "nubrick_bridge", binaryMessenger: messenger)
-        let instance = NubrickBridgePlugin(messenger: messenger, manager: manager, channel: channel)
+        let channel = FlutterMethodChannel(name: "nubrick_flutter", binaryMessenger: messenger)
+        let instance = NubrickFlutterPlugin(messenger: messenger, manager: manager, channel: channel)
         registrar.addMethodCallDelegate(instance, channel: channel)
         registrar.register(
             FLNativeViewFactory(messenger: messenger, manager: manager),

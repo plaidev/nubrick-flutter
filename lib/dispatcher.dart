@@ -1,4 +1,4 @@
-import 'package:nubrick_bridge/channel/nubrick_bridge_platform_interface.dart';
+import 'package:nubrick_flutter/channel/nubrick_flutter_platform_interface.dart';
 
 class NubrickEvent {
   final String name;
@@ -27,6 +27,6 @@ class NubrickDispatcher {
   factory NubrickDispatcher() => _instance;
 
   Future<void> dispatch(NubrickEvent event) {
-    return NubrickBridgePlatform.instance.dispatch(event.name);
+    return NubrickFlutterPlatform.instance.dispatch(event.name);
   }
 }

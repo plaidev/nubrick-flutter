@@ -1,16 +1,16 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
-import 'package:nubrick_bridge/channel/nubrick_bridge_platform_interface.dart';
-import 'package:nubrick_bridge/crash_report.dart';
-import 'package:nubrick_bridge/nubrick_bridge.dart';
+import 'package:nubrick_flutter/channel/nubrick_flutter_platform_interface.dart';
+import 'package:nubrick_flutter/crash_report.dart';
+import 'package:nubrick_flutter/nubrick_flutter.dart';
 import 'package:flutter/material.dart';
-import 'package:nubrick_bridge/utils/random.dart';
-import 'package:nubrick_bridge/utils/tooltip_position.dart';
-import 'package:nubrick_bridge/schema/generated.dart' as schema;
-import 'package:nubrick_bridge/utils/tooltip_animation.dart';
-import 'package:nubrick_bridge/utils/retry.dart';
-import 'package:nubrick_bridge/utils/transparent_pointer.dart';
+import 'package:nubrick_flutter/utils/random.dart';
+import 'package:nubrick_flutter/utils/tooltip_position.dart';
+import 'package:nubrick_flutter/schema/generated.dart' as schema;
+import 'package:nubrick_flutter/utils/tooltip_animation.dart';
+import 'package:nubrick_flutter/utils/retry.dart';
+import 'package:nubrick_flutter/utils/transparent_pointer.dart';
 
 /// @warning This is the internal overlay view for the tooltip.
 ///
@@ -40,7 +40,7 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay>
   bool _isFrameCallbackRegistered = false;
 
   void _onDispatch(String name) async {
-    var uiroot = await NubrickBridgePlatform.instance.connectTooltip(name);
+    var uiroot = await NubrickFlutterPlatform.instance.connectTooltip(name);
     if (uiroot == null) {
       return;
     }
@@ -58,7 +58,7 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay>
     if (destinationId == null) {
       return;
     }
-    await NubrickBridgePlatform.instance.connectTooltipEmbedding(
+    await NubrickFlutterPlatform.instance.connectTooltipEmbedding(
         _channelId,
         schema.UIRootBlock(
           id: generateRandomString(16),
@@ -256,7 +256,7 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay>
 
   void _hideTooltip() {
     if (_channelId.isNotEmpty) {
-      NubrickBridgePlatform.instance.disconnectTooltipEmbedding(_channelId);
+      NubrickFlutterPlatform.instance.disconnectTooltipEmbedding(_channelId);
     }
     setState(() {
       _anchorPosition = null;
@@ -287,7 +287,7 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay>
     if (_channelId.isEmpty) {
       return;
     }
-    NubrickBridgePlatform.instance
+    NubrickFlutterPlatform.instance
         .callTooltipEmbeddingDispatch(_channelId, onTrigger);
   }
 
@@ -315,14 +315,14 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay>
     final MethodChannel channel =
         MethodChannel("Nubrick/Embedding/$_channelId");
     channel.setMethodCallHandler(_handleMethod);
-    NubrickBridge.instance?.addOnDispatchListener(_onDispatch);
+    NubrickFlutter.instance?.addOnDispatchListener(_onDispatch);
   }
 
   @override
   void dispose() {
-    NubrickBridge.instance?.removeOnDispatchListener(_onDispatch);
+    NubrickFlutter.instance?.removeOnDispatchListener(_onDispatch);
     if (_channelId.isNotEmpty) {
-      NubrickBridgePlatform.instance.disconnectTooltipEmbedding(_channelId);
+      NubrickFlutterPlatform.instance.disconnectTooltipEmbedding(_channelId);
     }
     super.dispose();
   }

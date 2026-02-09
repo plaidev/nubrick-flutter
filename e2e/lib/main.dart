@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nubrick_bridge/nubrick_bridge.dart';
+import 'package:nubrick_flutter/nubrick_flutter.dart';
 
 void main() {
   runApp(const MyApp());
@@ -13,7 +13,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final nubrick = NubrickBridge("ckto7v223akg00ag3jsg");
+  final nubrick = NubrickFlutter("ckto7v223akg00ag3jsg");
   String _message = "Not Found";
 
   @override

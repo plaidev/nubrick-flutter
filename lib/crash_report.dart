@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
-import 'package:nubrick_bridge/channel/nubrick_bridge_platform_interface.dart';
-import 'package:nubrick_bridge/version.dart';
+import 'package:nubrick_flutter/channel/nubrick_flutter_platform_interface.dart';
+import 'package:nubrick_flutter/version.dart';
 import 'package:stack_trace/stack_trace.dart';
 
 /// Represents a single stack frame in a crash report.
@@ -59,8 +59,8 @@ List<_StackFrame> _parseStackTrace(StackTrace? stackTrace) {
     try {
       final trace = Trace.from(stackTrace);
       final frames = trace.frames.map((frame) {
-        // Flutter/Dart stack traces have URIs like "package:nubrick_bridge/nubrick_bridge.dart"
-        // Split on first '/' to get module name (package:nubrick_bridge) and file name (nubrick_bridge.dart)
+        // Flutter/Dart stack traces have URIs like "package:nubrick_flutter/nubrick_flutter.dart"
+        // Split on first '/' to get module name (package:nubrick_flutter) and file name (nubrick_flutter.dart)
         String uriString = frame.uri.toString();
         String? className;
         String? fileName;
@@ -125,7 +125,7 @@ Future<void> recordError(
       'severity': severity.name,
     };
 
-    await NubrickBridgePlatform.instance.recordCrash(errorData);
+    await NubrickFlutterPlatform.instance.recordCrash(errorData);
   } catch (e) {
     // Silently handle any errors in the crash reporting itself
   }
@@ -134,11 +134,11 @@ Future<void> recordError(
 /// A class to handle crash reporting in Flutter applications.
 ///
 /// **DEPRECATED**: Crash reporting is now handled automatically by the SDK.
-/// Simply initialize NubrickBridge and crash reporting will be enabled by default.
+/// Simply initialize NubrickFlutter and crash reporting will be enabled by default.
 ///
 /// If you need to disable crash reporting, use:
 /// ```dart
-/// NubrickBridge("PROJECT_ID", trackCrashes: false);
+/// NubrickFlutter("PROJECT_ID", trackCrashes: false);
 /// ```
 @Deprecated(
   'Crash reporting is now automatic. '

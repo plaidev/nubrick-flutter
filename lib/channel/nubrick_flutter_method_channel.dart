@@ -2,16 +2,16 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:nubrick_bridge/nubrick_bridge.dart';
-import 'package:nubrick_bridge/schema/generated.dart';
+import 'package:nubrick_flutter/nubrick_flutter.dart';
+import 'package:nubrick_flutter/schema/generated.dart';
 
-import './nubrick_bridge_platform_interface.dart';
+import './nubrick_flutter_platform_interface.dart';
 
-/// An implementation of [NubrickBridgePlatform] that uses method channels.
-class MethodChannelNubrickBridge extends NubrickBridgePlatform {
+/// An implementation of [NubrickFlutterPlatform] that uses method channels.
+class MethodChannelNubrickFlutter extends NubrickFlutterPlatform {
   /// The method channel used to interact with the native platform.
   @visibleForTesting
-  final methodChannel = const MethodChannel('nubrick_bridge');
+  final methodChannel = const MethodChannel('nubrick_flutter');
 
   @override
   Future<String?> getNubrickSDKVersion() async {

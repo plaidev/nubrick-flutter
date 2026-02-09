@@ -1,4 +1,4 @@
-name: nubrick_bridge
+name: nubrick_flutter
 description: "Nubrick bridge sdk for flutter"
 version: 0.15.0
 homepage: "https://nubrick.app"
@@ -23,7 +23,7 @@ flutter:
   plugin:
     platforms:
       android:
-        package: app.nubrick.flutter.nubrick_bridge
-        pluginClass: NubrickBridgePlugin
+        package: app.nubrick.flutter.nubrick_flutter
+        pluginClass: NubrickFlutterPlugin
       ios:
-        pluginClass: NubrickBridgePlugin
+        pluginClass: NubrickFlutterPlugin

@@ -2,10 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:nubrick_bridge/remote_config.dart';
-import 'package:nubrick_bridge/utils/random.dart';
-import 'package:nubrick_bridge/utils/parse_event.dart';
-import './channel/nubrick_bridge_platform_interface.dart';
+import 'package:nubrick_flutter/remote_config.dart';
+import 'package:nubrick_flutter/utils/random.dart';
+import 'package:nubrick_flutter/utils/parse_event.dart';
+import './channel/nubrick_flutter_platform_interface.dart';
 
 enum EventPayloadType { integer, string, timestamp, unknown }
 
@@ -29,7 +29,7 @@ typedef EmbeddingBuilder = Widget Function(
 
 /// A widget that embeds an experiment.
 ///
-/// - **NubrickBridge** must be initialized before using this widget.
+/// - **NubrickFlutter** must be initialized before using this widget.
 ///
 /// reference: https://docs.nativebrik.com/reference/flutter/nativebrikembedding
 ///
@@ -99,10 +99,10 @@ class _EmbeddingState extends State<NubrickEmbedding> {
 
     final variant = widget.variant;
     if (variant != null) {
-      NubrickBridgePlatform.instance.connectEmbeddingInRemoteConfigValue(
+      NubrickFlutterPlatform.instance.connectEmbeddingInRemoteConfigValue(
           widget.id, variant.channelId, _channelId, widget.arguments);
     } else {
-      NubrickBridgePlatform.instance
+      NubrickFlutterPlatform.instance
           .connectEmbedding(widget.id, _channelId, widget.arguments);
     }
   }
@@ -110,7 +110,7 @@ class _EmbeddingState extends State<NubrickEmbedding> {
   @override
   void dispose() {
     _embeddingChannel.setMethodCallHandler(null);
-    NubrickBridgePlatform.instance.disconnectEmbedding(_channelId);
+    NubrickFlutterPlatform.instance.disconnectEmbedding(_channelId);
     super.dispose();
   }
 

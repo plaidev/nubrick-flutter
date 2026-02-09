@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:nubrick_bridge/nubrick_bridge.dart';
+import 'package:nubrick_flutter/nubrick_flutter.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  NubrickBridge("cgv3p3223akg00fod19g");
-  NubrickBridge.instance?.addEventListener((event) {
+  NubrickFlutter("cgv3p3223akg00fod19g");
+  NubrickFlutter.instance?.addEventListener((event) {
     print("EVENT: ${event.name}");
   });
   runApp(const MyApp());

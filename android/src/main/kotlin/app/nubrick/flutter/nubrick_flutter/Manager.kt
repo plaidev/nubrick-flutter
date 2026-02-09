@@ -1,4 +1,4 @@
-package app.nubrick.flutter.nubrick_bridge
+package app.nubrick.flutter.nubrick_flutter
 
 import android.content.Context
 import io.nubrick.nubrick.FlutterBridgeApi
@@ -31,7 +31,7 @@ import kotlinx.coroutines.launch
 internal data class ConfigEntity(val variant: RemoteConfigVariant?, val experimentId: String?)
 
 @OptIn(FlutterBridgeApi::class)
-internal class NubrickBridgeManager(private val binaryMessenger: BinaryMessenger) {
+internal class NubrickFlutterManager(private val binaryMessenger: BinaryMessenger) {
     private var nubrickClient: NubrickClient? = null
     private var bridgeClient: FlutterBridge? = null
 
@@ -287,13 +287,13 @@ internal class NubrickBridgeManager(private val binaryMessenger: BinaryMessenger
     }
 }
 
-internal class OverlayViewFactory(private val manager: NubrickBridgeManager): PlatformViewFactory(StandardMessageCodec.INSTANCE) {
+internal class OverlayViewFactory(private val manager: NubrickFlutterManager): PlatformViewFactory(StandardMessageCodec.INSTANCE) {
     override fun create(context: Context, viewId: Int, args: Any?): PlatformView {
         return OverlayView(context, manager)
     }
 }
 
-internal class OverlayView(context: Context, manager: NubrickBridgeManager): PlatformView {
+internal class OverlayView(context: Context, manager: NubrickFlutterManager): PlatformView {
     private val view: ComposeView
 
     override fun getView(): View {
@@ -311,7 +311,7 @@ internal class OverlayView(context: Context, manager: NubrickBridgeManager): Pla
     }
 }
 
-internal class NativeViewFactory(private val manager: NubrickBridgeManager): PlatformViewFactory(StandardMessageCodec.INSTANCE) {
+internal class NativeViewFactory(private val manager: NubrickFlutterManager): PlatformViewFactory(StandardMessageCodec.INSTANCE) {
     override fun create(context: Context, viewId: Int, args: Any?): PlatformView {
         val creationParams = args as Map<*, *>?
         val channelId = creationParams?.get("channelId") as String
@@ -320,7 +320,7 @@ internal class NativeViewFactory(private val manager: NubrickBridgeManager): Pla
     }
 }
 
-internal class NativeView(context: Context, channelId: String, arguments: Any?, manager: NubrickBridgeManager): PlatformView {
+internal class NativeView(context: Context, channelId: String, arguments: Any?, manager: NubrickFlutterManager): PlatformView {
     private val view: ComposeView
 
     override fun getView(): View {

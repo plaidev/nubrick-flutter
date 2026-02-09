@@ -1,4 +1,4 @@
-package app.nubrick.flutter.nubrick_bridge
+package app.nubrick.flutter.nubrick_flutter
 
 import kotlin.test.assertEquals
 import io.flutter.plugin.common.MethodCall
@@ -15,10 +15,10 @@ import io.nubrick.nubrick.VERSION
  * you can run them directly from IDEs that support JUnit such as Android Studio.
  */
 
-internal class NubrickBridgePluginTest {
+internal class NubrickFlutterPluginTest {
     @Test
     fun onMethodCall_getNubrickSDKVersion_returnsExpectedValue() {
-        val plugin = NubrickBridgePlugin()
+        val plugin = NubrickFlutterPlugin()
 
         val call = MethodCall("getNubrickSDKVersion", null)
         val mockResult: MethodChannel.Result = Mockito.mock(MethodChannel.Result::class.java)
@@ -30,13 +30,13 @@ internal class NubrickBridgePluginTest {
     @Test
     fun parseStackTraceElements_should_work() {
         val stackTraces = parseStackTraceElements(
-            "#0      NubrickDispatcher.dispatch (package:nubrick_bridge/dispatcher.dart:10:5)\n" +
-            "#1      _MyAppState.build.<anonymous closure> (package:nubrick_bridge_example/main.dart:91:42)"
+            "#0      NubrickDispatcher.dispatch (package:nubrick_flutter/dispatcher.dart:10:5)\n" +
+            "#1      _MyAppState.build.<anonymous closure> (package:nubrick_flutter_example/main.dart:91:42)"
         )
 
         val expected = listOf(
-            StackTraceElement("NubrickDispatcher", "dispatch", "package:nubrick_bridge/dispatcher.dart", 10),
-            StackTraceElement("unknown", "unknown", "package:nubrick_bridge_example/main.dart", 91)
+            StackTraceElement("NubrickDispatcher", "dispatch", "package:nubrick_flutter/dispatcher.dart", 10),
+            StackTraceElement("unknown", "unknown", "package:nubrick_flutter_example/main.dart", 91)
         )
 
         assertEquals(expected.size, stackTraces.size)

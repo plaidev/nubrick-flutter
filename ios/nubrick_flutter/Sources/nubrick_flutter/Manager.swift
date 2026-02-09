@@ -1,6 +1,6 @@
 //
 //  Manager.swift
-//  nubrick_bridge
+//  nubrick_flutter
 //
 //  Created by Ryosuke Suzuki on 2024/03/10.
 //
@@ -20,7 +20,7 @@ struct RemoteConfigEntity {
     let variant: RemoteConfigVariant?
 }
 
-class NubrickBridgeManager {
+class NubrickFlutterManager {
     private var nubrickClient: NubrickClient? = nil
     private var embeddingMaps: [String:EmbeddingEntity]
     private var configMaps: [String:RemoteConfigEntity]

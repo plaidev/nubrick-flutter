@@ -1,9 +1,9 @@
 #
 # To learn more about a Podspec see http://guides.cocoapods.org/syntax/podspec.html.
-# Run `pod lib lint nubrick_bridge.podspec` to validate before publishing.
+# Run `pod lib lint nubrick_flutter.podspec` to validate before publishing.
 #
 Pod::Spec.new do |s|
-  s.name             = 'nubrick_bridge'
+  s.name             = 'nubrick_flutter'
   s.version          = '0.0.1'
   s.summary          = 'A new Flutter plugin project.'
   s.description      = <<-DESC
@@ -13,7 +13,7 @@ A new Flutter plugin project.
   s.license          = { :file => '../LICENSE' }
   s.author           = { 'Nubrick' => 'nubrick-support@plaid.co.jp' }
   s.source           = { :path => '.' }
-  s.source_files = 'nubrick_bridge/Sources/nubrick_bridge/**/*.swift'
+  s.source_files = 'nubrick_flutter/Sources/nubrick_flutter/**/*.swift'
   s.dependency 'Flutter'
   s.dependency 'Nubrick', '0.16.1'
   s.ios.deployment_target = '14.0'
