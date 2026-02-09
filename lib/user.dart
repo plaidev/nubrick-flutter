@@ -1,6 +1,6 @@
-import 'package:nativebrik_bridge/channel/nativebrik_bridge_platform_interface.dart';
+import 'package:nubrick_flutter/channel/nubrick_flutter_platform_interface.dart';
 
-/// A class to handle NativebrikUser.
+/// A class to handle NubrickUser.
 ///
 /// reference: https://docs.nativebrik.com/reference/flutter/nativebrikuser
 ///
@@ -8,7 +8,7 @@ import 'package:nativebrik_bridge/channel/nativebrik_bridge_platform_interface.d
 /// ```dart
 /// // Set Custom User Properties
 /// // Values support [String], [int], [double], [DateTime], [bool].
-/// NativebrikUser.instance.setProperties({
+/// NubrickUser.instance.setProperties({
 ///   'prefecture': 'Tokyo',
 ///   'test_user': true,
 ///   'environment': const bool.fromEnvironment('dart.vm.product')
@@ -16,26 +16,26 @@ import 'package:nativebrik_bridge/channel/nativebrik_bridge_platform_interface.d
 ///       : 'development',
 /// });
 /// ```
-class NativebrikUser {
-  static final NativebrikUser _instance = NativebrikUser._();
+class NubrickUser {
+  static final NubrickUser _instance = NubrickUser._();
 
-  /// The singleton instance of [NativebrikUser].
-  static NativebrikUser get instance => _instance;
+  /// The singleton instance of [NubrickUser].
+  static NubrickUser get instance => _instance;
 
   /// Private constructor for singleton pattern.
-  NativebrikUser._();
+  NubrickUser._();
 
-  /// Creates a new instance of [NativebrikUser].
+  /// Creates a new instance of [NubrickUser].
   ///
-  /// In most cases, you should use [NativebrikUser.instance] instead.
-  factory NativebrikUser() => _instance;
+  /// In most cases, you should use [NubrickUser.instance] instead.
+  factory NubrickUser() => _instance;
 
   /// Retrieves the current user ID.
   ///
   /// Returns a [Future] that completes with the user ID as a [String],
   /// or `null` if no user ID is set.
   Future<String?> getId() async {
-    return await NativebrikBridgePlatform.instance.getUserId();
+    return await NubrickFlutterPlatform.instance.getUserId();
   }
 
   /// Sets user properties for the current user.
@@ -45,7 +45,7 @@ class NativebrikUser {
   ///
   /// Returns a [Future] that completes when the properties have been set.
   Future<void> setProperties(Map<String, dynamic> properties) async {
-    await NativebrikBridgePlatform.instance.setUserProperties(properties);
+    await NubrickFlutterPlatform.instance.setUserProperties(properties);
   }
 
   /// Retrieves the current user's properties.
@@ -54,6 +54,6 @@ class NativebrikUser {
   /// where both keys and values are [String]s. Returns `null` if no
   /// properties are set or if the user is not identified.
   Future<Map<String, String>?> getProperties() async {
-    return await NativebrikBridgePlatform.instance.getUserProperties();
+    return await NubrickFlutterPlatform.instance.getUserProperties();
   }
 }

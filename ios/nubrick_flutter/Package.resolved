@@ -1,0 +1,14 @@
+{
+  "pins" : [
+    {
+      "identity" : "nubrick-ios",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/plaidev/nubrick-ios.git",
+      "state" : {
+        "revision" : "fa985036af2d3e532c67a44eb95069b1c9a3baa0",
+        "version" : "0.16.1"
+      }
+    }
+  ],
+  "version" : 2
+}

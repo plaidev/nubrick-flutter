@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
-import 'package:nativebrik_bridge/channel/nativebrik_bridge_platform_interface.dart';
-import 'package:nativebrik_bridge/version.dart';
+import 'package:nubrick_flutter/channel/nubrick_flutter_platform_interface.dart';
+import 'package:nubrick_flutter/version.dart';
 import 'package:stack_trace/stack_trace.dart';
 
 /// Represents a single stack frame in a crash report.
@@ -59,8 +59,8 @@ List<_StackFrame> _parseStackTrace(StackTrace? stackTrace) {
     try {
       final trace = Trace.from(stackTrace);
       final frames = trace.frames.map((frame) {
-        // Flutter/Dart stack traces have URIs like "package:nativebrik_bridge/nativebrik_bridge.dart"
-        // Split on first '/' to get module name (package:nativebrik_bridge) and file name (nativebrik_bridge.dart)
+        // Flutter/Dart stack traces have URIs like "package:nubrick_flutter/nubrick_flutter.dart"
+        // Split on first '/' to get module name (package:nubrick_flutter) and file name (nubrick_flutter.dart)
         String uriString = frame.uri.toString();
         String? className;
         String? fileName;
@@ -121,11 +121,11 @@ Future<void> recordError(
 
     final Map<String, dynamic> errorData = {
       'exceptions': [exceptionRecord.toMap()],
-      'flutterSdkVersion': nativebrikFlutterSdkVersion,
+      'flutterSdkVersion': nubrickFlutterSdkVersion,
       'severity': severity.name,
     };
 
-    await NativebrikBridgePlatform.instance.recordCrash(errorData);
+    await NubrickFlutterPlatform.instance.recordCrash(errorData);
   } catch (e) {
     // Silently handle any errors in the crash reporting itself
   }
@@ -134,25 +134,25 @@ Future<void> recordError(
 /// A class to handle crash reporting in Flutter applications.
 ///
 /// **DEPRECATED**: Crash reporting is now handled automatically by the SDK.
-/// Simply initialize NativebrikBridge and crash reporting will be enabled by default.
+/// Simply initialize NubrickFlutter and crash reporting will be enabled by default.
 ///
 /// If you need to disable crash reporting, use:
 /// ```dart
-/// NativebrikBridge("PROJECT_ID", trackCrashes: false);
+/// NubrickFlutter("PROJECT_ID", trackCrashes: false);
 /// ```
 @Deprecated(
   'Crash reporting is now automatic. '
   'Remove manual crash reporting setup and the SDK will handle it automatically. '
   'This class will be removed in a future version.'
 )
-class NativebrikCrashReport {
-  static final NativebrikCrashReport _instance = NativebrikCrashReport._();
+class NubrickCrashReport {
+  static final NubrickCrashReport _instance = NubrickCrashReport._();
 
-  static NativebrikCrashReport get instance => _instance;
+  static NubrickCrashReport get instance => _instance;
 
-  NativebrikCrashReport._();
+  NubrickCrashReport._();
 
-  factory NativebrikCrashReport() => _instance;
+  factory NubrickCrashReport() => _instance;
 
   @Deprecated(
     'Crash reporting is now automatic. '

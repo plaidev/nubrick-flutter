@@ -1,32 +1,32 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
-import 'package:nativebrik_bridge/channel/nativebrik_bridge_platform_interface.dart';
-import 'package:nativebrik_bridge/crash_report.dart';
-import 'package:nativebrik_bridge/nativebrik_bridge.dart';
+import 'package:nubrick_flutter/channel/nubrick_flutter_platform_interface.dart';
+import 'package:nubrick_flutter/crash_report.dart';
+import 'package:nubrick_flutter/nubrick_flutter.dart';
 import 'package:flutter/material.dart';
-import 'package:nativebrik_bridge/utils/random.dart';
-import 'package:nativebrik_bridge/utils/tooltip_position.dart';
-import 'package:nativebrik_bridge/schema/generated.dart' as schema;
-import 'package:nativebrik_bridge/utils/tooltip_animation.dart';
-import 'package:nativebrik_bridge/utils/retry.dart';
-import 'package:nativebrik_bridge/utils/transparent_pointer.dart';
+import 'package:nubrick_flutter/utils/random.dart';
+import 'package:nubrick_flutter/utils/tooltip_position.dart';
+import 'package:nubrick_flutter/schema/generated.dart' as schema;
+import 'package:nubrick_flutter/utils/tooltip_animation.dart';
+import 'package:nubrick_flutter/utils/retry.dart';
+import 'package:nubrick_flutter/utils/transparent_pointer.dart';
 
 /// @warning This is the internal overlay view for the tooltip.
 ///
 /// DO NOT USE THIS CLASS DIRECTLY.
 ///
-/// Use [NativebrikProvider] instead.
-class NativebrikTooltipOverlay extends StatefulWidget {
+/// Use [NubrickProvider] instead.
+class NubrickTooltipOverlay extends StatefulWidget {
   final Map<String, GlobalKey> keysReference;
-  const NativebrikTooltipOverlay({super.key, required this.keysReference});
+  const NubrickTooltipOverlay({super.key, required this.keysReference});
 
   @override
-  State<NativebrikTooltipOverlay> createState() =>
-      NativebrikTooltipOverlayState();
+  State<NubrickTooltipOverlay> createState() =>
+      NubrickTooltipOverlayState();
 }
 
-class NativebrikTooltipOverlayState extends State<NativebrikTooltipOverlay>
+class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay>
     with TickerProviderStateMixin {
   schema.UIRootBlock? _rootBlock;
   final String _channelId = generateRandomString(16);
@@ -40,7 +40,7 @@ class NativebrikTooltipOverlayState extends State<NativebrikTooltipOverlay>
   bool _isFrameCallbackRegistered = false;
 
   void _onDispatch(String name) async {
-    var uiroot = await NativebrikBridgePlatform.instance.connectTooltip(name);
+    var uiroot = await NubrickFlutterPlatform.instance.connectTooltip(name);
     if (uiroot == null) {
       return;
     }
@@ -58,7 +58,7 @@ class NativebrikTooltipOverlayState extends State<NativebrikTooltipOverlay>
     if (destinationId == null) {
       return;
     }
-    await NativebrikBridgePlatform.instance.connectTooltipEmbedding(
+    await NubrickFlutterPlatform.instance.connectTooltipEmbedding(
         _channelId,
         schema.UIRootBlock(
           id: generateRandomString(16),
@@ -256,7 +256,7 @@ class NativebrikTooltipOverlayState extends State<NativebrikTooltipOverlay>
 
   void _hideTooltip() {
     if (_channelId.isNotEmpty) {
-      NativebrikBridgePlatform.instance.disconnectTooltipEmbedding(_channelId);
+      NubrickFlutterPlatform.instance.disconnectTooltipEmbedding(_channelId);
     }
     setState(() {
       _anchorPosition = null;
@@ -287,7 +287,7 @@ class NativebrikTooltipOverlayState extends State<NativebrikTooltipOverlay>
     if (_channelId.isEmpty) {
       return;
     }
-    NativebrikBridgePlatform.instance
+    NubrickFlutterPlatform.instance
         .callTooltipEmbeddingDispatch(_channelId, onTrigger);
   }
 
@@ -313,16 +313,16 @@ class NativebrikTooltipOverlayState extends State<NativebrikTooltipOverlay>
   void initState() {
     super.initState();
     final MethodChannel channel =
-        MethodChannel("Nativebrik/Embedding/$_channelId");
+        MethodChannel("Nubrick/Embedding/$_channelId");
     channel.setMethodCallHandler(_handleMethod);
-    NativebrikBridge.instance?.addOnDispatchListener(_onDispatch);
+    NubrickFlutter.instance?.addOnDispatchListener(_onDispatch);
   }
 
   @override
   void dispose() {
-    NativebrikBridge.instance?.removeOnDispatchListener(_onDispatch);
+    NubrickFlutter.instance?.removeOnDispatchListener(_onDispatch);
     if (_channelId.isNotEmpty) {
-      NativebrikBridgePlatform.instance.disconnectTooltipEmbedding(_channelId);
+      NubrickFlutterPlatform.instance.disconnectTooltipEmbedding(_channelId);
     }
     super.dispose();
   }
@@ -447,7 +447,7 @@ class NativebrikTooltipOverlayState extends State<NativebrikTooltipOverlay>
     if (_channelId.isEmpty) {
       return const SizedBox.shrink();
     }
-    const String viewType = "nativebrik-embedding-view";
+    const String viewType = "nubrick-embedding-view";
     final Map<String, dynamic> creationParams = <String, dynamic>{
       "channelId": _channelId,
       "arguments": {},

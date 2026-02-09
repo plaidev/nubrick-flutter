@@ -1,0 +1,61 @@
+import Foundation
+import Flutter
+import UIKit
+import Nubrick
+
+class FLNativeViewFactory: NSObject, FlutterPlatformViewFactory {
+    let messenger: FlutterBinaryMessenger
+    let manager: NubrickFlutterManager
+
+    init(messenger: FlutterBinaryMessenger, manager: NubrickFlutterManager) {
+        self.messenger = messenger
+        self.manager = manager
+        super.init()
+    }
+
+    func create(
+        withFrame frame: CGRect,
+        viewIdentifier viewId: Int64,
+        arguments args: Any?
+    ) -> FlutterPlatformView {
+        return FLNativeView(
+            frame: frame,
+            viewIdentifier: viewId,
+            arguments: args,
+            manager: self.manager
+        )
+    }
+
+    public func createArgsCodec() -> FlutterMessageCodec & NSObjectProtocol {
+        return FlutterStandardMessageCodec.sharedInstance()
+    }
+}
+
+class FLNativeView: NSObject, FlutterPlatformView {
+    private var _view: UIView
+
+    init(
+        frame: CGRect,
+        viewIdentifier viewId: Int64,
+        arguments args: Any?,
+        manager: NubrickFlutterManager
+    ) {
+        self._view = UIView(frame: frame)
+        super.init()
+
+        guard let args = args as? [String:Any] else {
+            return
+        }
+        guard let channelId = args["channelId"] as? String else {
+            return
+        }
+        guard let entity = manager.getEmbeddingEntity(channelId: channelId) else {
+            return
+        }
+        self._view = entity.uiview
+    }
+
+    func view() -> UIView {
+        return _view
+    }
+}

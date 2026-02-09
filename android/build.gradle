@@ -1,4 +1,4 @@
-group 'com.nativebrik.flutter.nativebrik_bridge'
+group 'app.nubrick.flutter.nubrick_flutter'
 version '1.0-SNAPSHOT'
 
 buildscript {
@@ -26,7 +26,7 @@ apply plugin: 'kotlin-android'
 
 android {
     if (project.android.hasProperty("namespace")) {
-        namespace 'com.nativebrik.flutter.nativebrik_bridge'
+        namespace 'app.nubrick.flutter.nubrick_flutter'
     }
 
     compileSdk 34
@@ -58,7 +58,7 @@ android {
     }
 
     dependencies {
-        implementation 'io.nubrick:nubrick:0.9.0'
+        implementation 'io.nubrick:nubrick:0.9.1'
         implementation 'androidx.activity:activity-compose:1.8.2'
         testImplementation 'org.jetbrains.kotlin:kotlin-test'
         testImplementation 'org.mockito:mockito-core:5.0.0'

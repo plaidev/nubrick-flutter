@@ -1,3 +1,9 @@
+## 0.16.0
+
+- **New package:** `nubrick_flutter` (renamed from `nativebrik_bridge`)
+- Update iOS dependency: Nubrick 0.15.3 → 0.16.1
+- Update Android dependency: Nubrick 0.9.0 → 0.9.1
+
 ## 0.15.0
 
 - Support embedding with dynamic size set through editor

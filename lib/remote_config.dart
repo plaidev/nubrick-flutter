@@ -1,5 +1,5 @@
-import 'package:nativebrik_bridge/channel/nativebrik_bridge_platform_interface.dart';
-import 'package:nativebrik_bridge/utils/random.dart';
+import 'package:nubrick_flutter/channel/nubrick_flutter_platform_interface.dart';
+import 'package:nubrick_flutter/utils/random.dart';
 
 enum RemoteConfigPhase {
   failed,
@@ -7,42 +7,42 @@ enum RemoteConfigPhase {
   completed,
 }
 
-/// A remote config that can be fetched from nativebrik.
+/// A remote config that can be fetched from nubrick.
 ///
-/// - **NativebrikBridge** must be initialized before using this class.
+/// - **NubrickFlutter** must be initialized before using this class.
 /// - Dispose the variant after using it not to leak resources.
 ///
 /// reference: https://docs.nativebrik.com/reference/flutter/nativebrikremoteconfig
 ///
 /// Usage:
 /// ```dart
-/// final config = NativebrikRemoteConfig("ID OR CUSTOM ID");
+/// final config = NubrickRemoteConfig("ID OR CUSTOM ID");
 /// final variant = await config.fetch();
 /// final phase = variant.phase;
 /// final value = await variant.get("KEY");
 /// await variant.dispose();
 /// ```
 ///
-class NativebrikRemoteConfig {
+class NubrickRemoteConfig {
   final String id;
   final _channelId = generateRandomString(32);
-  NativebrikRemoteConfig(this.id);
+  NubrickRemoteConfig(this.id);
 
-  Future<NativebrikRemoteConfigVariant> fetch() async {
-    var phase = await NativebrikBridgePlatform.instance
+  Future<NubrickRemoteConfigVariant> fetch() async {
+    var phase = await NubrickFlutterPlatform.instance
         .connectRemoteConfig(id, _channelId);
-    return NativebrikRemoteConfigVariant._(
+    return NubrickRemoteConfigVariant._(
         _channelId, phase ?? RemoteConfigPhase.failed);
   }
 }
 
-class NativebrikRemoteConfigVariant {
+class NubrickRemoteConfigVariant {
   final String channelId;
   final RemoteConfigPhase phase;
-  NativebrikRemoteConfigVariant._(this.channelId, this.phase);
+  NubrickRemoteConfigVariant._(this.channelId, this.phase);
 
   Future<String?> get(String key) async {
-    return await NativebrikBridgePlatform.instance
+    return await NubrickFlutterPlatform.instance
         .getRemoteConfigValue(channelId, key);
   }
 
@@ -62,6 +62,6 @@ class NativebrikRemoteConfigVariant {
   }
 
   Future<void> dispose() async {
-    await NativebrikBridgePlatform.instance.disconnectEmbedding(channelId);
+    await NubrickFlutterPlatform.instance.disconnectEmbedding(channelId);
   }
 }

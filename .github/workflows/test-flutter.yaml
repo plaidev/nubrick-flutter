@@ -1,4 +1,4 @@
-name: "[flutter] Test Nativebrik SDK"
+name: "[flutter] Test Nubrick SDK"
 
 on:
   workflow_dispatch:
@@ -33,7 +33,7 @@ jobs:
           PUBSPEC_VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //' | tr -d ' ')
 
           # Extract version from lib/version.dart
-          VERSION_DART=$(grep 'const String nativebrikFlutterSdkVersion' lib/version.dart | sed "s/.*'\(.*\)'.*/\1/")
+          VERSION_DART=$(grep 'const String nubrickFlutterSdkVersion' lib/version.dart | sed "s/.*'\(.*\)'.*/\1/")
 
           echo "pubspec.yaml version: $PUBSPEC_VERSION"
           echo "lib/version.dart version: $VERSION_DART"

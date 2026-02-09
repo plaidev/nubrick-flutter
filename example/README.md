@@ -1,6 +1,6 @@
-# nativebrik_bridge_example
+# nubrick_flutter_example
 
-Demonstrates how to use the nativebrik_bridge plugin.
+Demonstrates how to use the nubrick_flutter plugin.
 
 ## Getting Started
 

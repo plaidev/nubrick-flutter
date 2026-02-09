@@ -1,7 +1,7 @@
-name: nativebrik_bridge
-description: "Nativebrik bridge sdk for flutter"
-version: 0.15.0
-homepage: "https://nativebrik.com"
+name: nubrick_flutter
+description: "Nubrick bridge sdk for flutter"
+version: 0.16.0
+homepage: "https://nubrick.app"
 repository: "https://github.com/plaidev/nubrick-flutter"
 
 environment:
@@ -23,7 +23,7 @@ flutter:
   plugin:
     platforms:
       android:
-        package: com.nativebrik.flutter.nativebrik_bridge
-        pluginClass: NativebrikBridgePlugin
+        package: app.nubrick.flutter.nubrick_flutter
+        pluginClass: NubrickFlutterPlugin
       ios:
-        pluginClass: NativebrikBridgePlugin
+        pluginClass: NubrickFlutterPlugin
