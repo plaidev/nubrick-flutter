@@ -15,7 +15,7 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets('getNubrickSDKVersion test', (WidgetTester tester) async {
-    final NubrickFlutter plugin = NubrickFlutter("projectId");
+    final Nubrick plugin = Nubrick("projectId");
     final String? version = await plugin.getNubrickSDKVersion();
     // The version string depends on the host platform running the test, so
     // just assert that some non-empty string is returned.

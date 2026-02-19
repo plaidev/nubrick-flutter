@@ -1,3 +1,7 @@
+## 0.16.1
+
+- Rename SDK main class from NubrickFlutter to Nubrick
+
 ## 0.16.0
 
 - **New package:** `nubrick_flutter` (renamed from `nativebrik_bridge`)

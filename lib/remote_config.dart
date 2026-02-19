@@ -9,7 +9,7 @@ enum RemoteConfigPhase {
 
 /// A remote config that can be fetched from nubrick.
 ///
-/// - **NubrickFlutter** must be initialized before using this class.
+/// - **Nubrick** must be initialized before using this class.
 /// - Dispose the variant after using it not to leak resources.
 ///
 /// reference: https://docs.nativebrik.com/reference/flutter/nativebrikremoteconfig

@@ -26,12 +26,12 @@ export 'package:nubrick_flutter/anchor/anchor.dart';
 /// void main() {
 ///     WidgetsFlutterBinding.ensureInitialized();
 ///     // Initialize the bridge with the project ID
-///     NubrickFlutter("PROJECT ID");
+///     Nubrick("PROJECT ID");
 ///     runApp(const YourApp());
 /// }
 /// ```
-class NubrickFlutter {
-  static NubrickFlutter? instance;
+class Nubrick {
+  static Nubrick? instance;
 
   final String projectId;
   final NubrickCachePolicy cachePolicy;
@@ -40,10 +40,10 @@ class NubrickFlutter {
   final List<void Function(String)> _onDispatchListeners = [];
   final MethodChannel _channel = const MethodChannel("nubrick_flutter");
 
-  NubrickFlutter(this.projectId,
+  Nubrick(this.projectId,
       {this.cachePolicy = const NubrickCachePolicy(),
       this.trackCrashes = true}) {
-    NubrickFlutter.instance = this;
+    Nubrick.instance = this;
     NubrickFlutterPlatform.instance.connectClient(projectId, cachePolicy);
     _channel.setMethodCallHandler(_handleMethod);
 

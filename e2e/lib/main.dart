@@ -13,7 +13,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final nubrick = NubrickFlutter("ckto7v223akg00ag3jsg");
+  final nubrick = Nubrick("ckto7v223akg00ag3jsg");
   String _message = "Not Found";
 
   @override

@@ -315,12 +315,12 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay>
     final MethodChannel channel =
         MethodChannel("Nubrick/Embedding/$_channelId");
     channel.setMethodCallHandler(_handleMethod);
-    NubrickFlutter.instance?.addOnDispatchListener(_onDispatch);
+    Nubrick.instance?.addOnDispatchListener(_onDispatch);
   }
 
   @override
   void dispose() {
-    NubrickFlutter.instance?.removeOnDispatchListener(_onDispatch);
+    Nubrick.instance?.removeOnDispatchListener(_onDispatch);
     if (_channelId.isNotEmpty) {
       NubrickFlutterPlatform.instance.disconnectTooltipEmbedding(_channelId);
     }
