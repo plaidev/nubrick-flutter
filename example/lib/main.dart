@@ -3,8 +3,8 @@ import 'package:nubrick_flutter/nubrick_flutter.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  NubrickFlutter("cgv3p3223akg00fod19g");
-  NubrickFlutter.instance?.addEventListener((event) {
+  Nubrick("cgv3p3223akg00fod19g");
+  Nubrick.instance?.addEventListener((event) {
     print("EVENT: ${event.name}");
   });
   runApp(const MyApp());

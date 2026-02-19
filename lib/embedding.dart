@@ -29,7 +29,7 @@ typedef EmbeddingBuilder = Widget Function(
 
 /// A widget that embeds an experiment.
 ///
-/// - **NubrickFlutter** must be initialized before using this widget.
+/// - **Nubrick** must be initialized before using this widget.
 ///
 /// reference: https://docs.nativebrik.com/reference/flutter/nativebrikembedding
 ///

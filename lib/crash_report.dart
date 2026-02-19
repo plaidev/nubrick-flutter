@@ -134,11 +134,11 @@ Future<void> recordError(
 /// A class to handle crash reporting in Flutter applications.
 ///
 /// **DEPRECATED**: Crash reporting is now handled automatically by the SDK.
-/// Simply initialize NubrickFlutter and crash reporting will be enabled by default.
+/// Simply initialize Nubrick and crash reporting will be enabled by default.
 ///
 /// If you need to disable crash reporting, use:
 /// ```dart
-/// NubrickFlutter("PROJECT_ID", trackCrashes: false);
+/// Nubrick("PROJECT_ID", trackCrashes: false);
 /// ```
 @Deprecated(
   'Crash reporting is now automatic. '
