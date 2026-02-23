@@ -5,9 +5,9 @@ class NubrickEvent {
   NubrickEvent(this.name);
 }
 
-/// NubrickDispatcher is the main dispatcher for the Nativebrik SDK.
+/// NubrickDispatcher is the main dispatcher for the Nubrick SDK.
 ///
-/// reference: https://docs.nativebrik.com/reference/flutter/nativebrikdispatcher
+/// reference: https://docs.nubrick.app/reference/flutter/nubrickdispatcher
 ///
 /// Usage:
 /// ```dart

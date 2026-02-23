@@ -2,7 +2,7 @@ import 'package:nubrick_flutter/channel/nubrick_flutter_platform_interface.dart'
 
 /// A class to handle NubrickUser.
 ///
-/// reference: https://docs.nativebrik.com/reference/flutter/nativebrikuser
+/// reference: https://docs.nubrick.app/reference/flutter/nubrickuser
 ///
 /// Usage:
 /// ```dart

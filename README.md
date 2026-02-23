@@ -6,4 +6,4 @@
 
 documentations
 
-https://docs.nativebrik.com
+https://docs.nubrick.app

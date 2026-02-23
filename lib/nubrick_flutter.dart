@@ -17,7 +17,7 @@ export 'package:nubrick_flutter/anchor/anchor.dart';
 ///
 /// - Initialize the bridge with the project ID before using nubrick SDK.
 ///
-/// reference: https://docs.nativebrik.com/reference/flutter/nativebrikbridge
+/// reference: https://docs.nubrick.app/reference/flutter/nubrick
 ///
 /// Usage:
 ///
