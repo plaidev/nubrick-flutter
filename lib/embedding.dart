@@ -31,7 +31,7 @@ typedef EmbeddingBuilder = Widget Function(
 ///
 /// - **Nubrick** must be initialized before using this widget.
 ///
-/// reference: https://docs.nativebrik.com/reference/flutter/nativebrikembedding
+/// reference: https://docs.nubrick.app/reference/flutter/nubrickembedding
 ///
 /// Usage:
 /// ```dart

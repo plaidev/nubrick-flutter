@@ -8,7 +8,7 @@ import '../provider.dart';
 /// relative to this widget. This is useful for guiding users through features or workflows
 /// as part of an onboarding experience.
 ///
-/// reference: https://docs.nativebrik.com/reference/flutter/nativebrikanchor
+/// reference: https://docs.nubrick.app/reference/flutter/nubrickanchor
 ///
 /// Usage:
 /// Wrap any widget you want to highlight with [NubrickAnchor], providing a unique [id].

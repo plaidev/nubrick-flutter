@@ -12,7 +12,7 @@ enum RemoteConfigPhase {
 /// - **Nubrick** must be initialized before using this class.
 /// - Dispose the variant after using it not to leak resources.
 ///
-/// reference: https://docs.nativebrik.com/reference/flutter/nativebrikremoteconfig
+/// reference: https://docs.nubrick.app/reference/flutter/nubrickremoteconfig
 ///
 /// Usage:
 /// ```dart
