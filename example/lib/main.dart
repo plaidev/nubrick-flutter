@@ -4,8 +4,9 @@ import 'package:nubrick_flutter/nubrick_flutter.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   Nubrick("cgv3p3223akg00fod19g");
+  // Global event listener
   Nubrick.instance?.addEventListener((event) {
-    print("EVENT: ${event.name}");
+    print("Global Event: ${event.name}");
   });
   runApp(const MyApp());
 }
@@ -99,7 +100,8 @@ class PageA extends StatelessWidget {
         child: Column(
           children: [
             NubrickEmbedding("TOP_COMPONENT", height: 270, onEvent: (event) {
-              print("Nubrick Embedding Event: ${event.payload}");
+              // Per-embedding event listener for events from this specific embedding.
+              print("Embedding Event: ${event.name} ${event.payload}");
             }),
             const NubrickAnchor("TOOLTIP_1", child: Text("Tooltip 1")),
             const Text("Message:"),
