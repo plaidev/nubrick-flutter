@@ -1,3 +1,8 @@
+## 0.16.2
+
+- Add support for priority setting for modal and tooltip
+- Update docs links with new nubrick.app domain
+
 ## 0.16.1
 
 - Rename SDK main class from NubrickFlutter to Nubrick
