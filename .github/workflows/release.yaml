@@ -11,7 +11,6 @@ on:
 permissions:
   contents: write
   pull-requests: write
-  id-token: write
 
 concurrency:
   group: release
@@ -23,8 +22,6 @@ jobs:
     environment:
       name: Only Main
     timeout-minutes: 15
-    outputs:
-      merge_sha: ${{ steps.create_pr.outputs.merge_sha }}
 
     defaults:
       run:
@@ -117,7 +114,7 @@ jobs:
             sleep 5
           done
 
-      - name: Create tag and publish release
+      - name: Create tag and GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
           MERGE_SHA: ${{ steps.create_pr.outputs.merge_sha }}
@@ -132,35 +129,3 @@ jobs:
             --title "$TAG" \
             --target "$MERGE_SHA" \
             --generate-notes
-
-      - name: Set up Dart SDK
-        uses: dart-lang/setup-dart@e51d8e571e22473a2ddebf0ef8a2123f0ab2c02c
-
-      - name: Set up Flutter
-        uses: ./.github/actions/setup-flutter
-
-      - name: Install dependencies
-        run: dart pub get
-
-      - name: Publish to pub.dev
-        run: dart pub publish -f
-
-  test:
-    needs: release
-    uses: ./.github/workflows/test-flutter.yaml
-    with:
-      ref: ${{ needs.release.outputs.merge_sha }}
-
-  e2e-android:
-    needs: release
-    uses: ./.github/workflows/e2e-android.yaml
-    secrets: inherit
-    with:
-      ref: ${{ needs.release.outputs.merge_sha }}
-
-  e2e-ios:
-    needs: release
-    uses: ./.github/workflows/e2e-ios.yaml
-    secrets: inherit
-    with:
-      ref: ${{ needs.release.outputs.merge_sha }}
