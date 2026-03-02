@@ -132,22 +132,6 @@ class MethodChannelNubrickFlutter extends NubrickFlutterPlatform {
   }
 
   @override
-  Future<UIRootBlock?> connectTooltip(String name) async {
-    final result = await methodChannel.invokeMethod<String>(
-      'connectTooltip',
-      name,
-    );
-    if (result == null) {
-      return null;
-    }
-    if (result.startsWith("error")) {
-      return null;
-    }
-    var decoded = UIRootBlock.decode(jsonDecode(result));
-    return decoded;
-  }
-
-  @override
   Future<String?> connectTooltipEmbedding(
       String channelId, UIRootBlock rootBlock) async {
     var json = jsonEncode(rootBlock.encode());

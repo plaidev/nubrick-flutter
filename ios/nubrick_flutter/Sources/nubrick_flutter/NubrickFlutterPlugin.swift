@@ -1,6 +1,6 @@
 import Flutter
 import UIKit
-import Nubrick
+@_spi(FlutterBridge) import Nubrick
 
 let EMEBEDDING_VIEW_ID = "nubrick-embedding-view"
 let EMBEDDING_PHASE_UPDATE_METHOD = "embedding-phase-update"
@@ -64,6 +64,9 @@ public class NubrickFlutterPlugin: NSObject, FlutterPlugin {
                     self?.channel.invokeMethod(ON_DISPATCH_METHOD, arguments: [
                         "name": event.name as Any?,
                     ])
+                },
+                onTooltip: { [weak self] data in
+                    self?.channel.invokeMethod("on-tooltip", arguments: data)
                 }
             ))
             result("ok")
@@ -130,18 +133,6 @@ public class NubrickFlutterPlugin: NSObject, FlutterPlugin {
             result("ok")
 
         // tooltip
-        case "connectTooltip":
-            let name = call.arguments as! String
-            self.manager.connectTooltip(
-                name: name,
-                onFetch: { data in
-                    result(data)
-                },
-                onError: { error in
-                    result("error: \(error)")
-                }
-            )
-
         case "connectTooltipEmbedding":
             let args = call.arguments as! [String:Any]
             let channelId = args["channelId"] as! String

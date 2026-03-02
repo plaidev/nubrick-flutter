@@ -2,10 +2,10 @@ PODS:
   - Flutter (1.0.0)
   - integration_test (0.0.1):
     - Flutter
-  - Nubrick (0.16.1)
+  - Nubrick (0.16.2)
   - nubrick_flutter (0.0.1):
     - Flutter
-    - Nubrick (= 0.16.1)
+    - Nubrick (= 0.16.2)
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
@@ -27,8 +27,8 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
   integration_test: 4a889634ef21a45d28d50d622cf412dc6d9f586e
-  Nubrick: b8772f25af520d0238f3919d7606613600cf3bc0
-  nubrick_flutter: f4735f6a99e99adc9c55e203f6407b954b339afd
+  Nubrick: 7d48a42516086c1d39e8a3d88164499fe4604180
+  nubrick_flutter: bdcb972b4d731fab2c796b0c9f4ddcfa254907ad
 
 PODFILE CHECKSUM: 1959d098c91d8a792531a723c4a9d7e9f6a01e38
 

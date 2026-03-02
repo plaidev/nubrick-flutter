@@ -76,10 +76,6 @@ abstract class NubrickFlutterPlatform extends PlatformInterface {
         'connectEmbeddingInRemoteConfigValue() has not been implemented.');
   }
 
-  Future<UIRootBlock?> connectTooltip(String name) {
-    throw UnimplementedError('connectTooltip() has not been implemented.');
-  }
-
   Future<String?> connectTooltipEmbedding(
       String channelId, UIRootBlock rootBlock) {
     throw UnimplementedError(

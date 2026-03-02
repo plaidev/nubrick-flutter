@@ -38,6 +38,7 @@ class Nubrick {
   final bool trackCrashes;
   final List<EventHandler> _listeners = [];
   final List<void Function(String)> _onDispatchListeners = [];
+  final List<void Function(String)> _onTooltipListeners = [];
   final MethodChannel _channel = const MethodChannel("nubrick_flutter");
 
   Nubrick(this.projectId,
@@ -90,19 +91,35 @@ class Nubrick {
     _onDispatchListeners.remove(listener);
   }
 
+  void addOnTooltipListener(void Function(String) listener) {
+    _onTooltipListeners.add(listener);
+  }
+
+  void removeOnTooltipListener(void Function(String) listener) {
+    _onTooltipListeners.remove(listener);
+  }
+
   Future<dynamic> _handleMethod(MethodCall call) async {
     switch (call.method) {
       case 'on-event':
         final event = parseEvent(call.arguments);
-        for (var listener in _listeners) {
+        for (var listener in List.of(_listeners)) {
           listener(event);
         }
         return Future.value(true);
       case 'on-dispatch':
         final name = call.arguments["name"] as String?;
         if (name != null) {
-          for (var listener in _onDispatchListeners) {
+          for (var listener in List.of(_onDispatchListeners)) {
             listener(name);
+          }
+        }
+        return Future.value(true);
+      case 'on-tooltip':
+        final data = call.arguments as String?;
+        if (data != null) {
+          for (var listener in List.of(_onTooltipListeners)) {
+            listener(data);
           }
         }
         return Future.value(true);

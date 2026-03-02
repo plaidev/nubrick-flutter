@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
@@ -39,8 +41,8 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay>
   bool _isUpdatingPosition = false;
   bool _isFrameCallbackRegistered = false;
 
-  void _onDispatch(String name) async {
-    var uiroot = await NubrickFlutterPlatform.instance.connectTooltip(name);
+  void _onTooltip(String data) async {
+    var uiroot = schema.UIRootBlock.decode(jsonDecode(data));
     if (uiroot == null) {
       return;
     }
@@ -315,12 +317,12 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay>
     final MethodChannel channel =
         MethodChannel("Nubrick/Embedding/$_channelId");
     channel.setMethodCallHandler(_handleMethod);
-    Nubrick.instance?.addOnDispatchListener(_onDispatch);
+    Nubrick.instance?.addOnTooltipListener(_onTooltip);
   }
 
   @override
   void dispose() {
-    Nubrick.instance?.removeOnDispatchListener(_onDispatch);
+    Nubrick.instance?.removeOnTooltipListener(_onTooltip);
     if (_channelId.isNotEmpty) {
       NubrickFlutterPlatform.instance.disconnectTooltipEmbedding(_channelId);
     }

@@ -208,22 +208,6 @@ class NubrickFlutterManager {
     }
 
     // tooltip
-    func connectTooltip(name: String, onFetch: @escaping (String) -> Void, onError: @escaping (String) -> Void) {
-        guard let nubrickClient = self.nubrickClient else {
-            onError("NubrickClient is not set")
-            return
-        }
-        Task {
-            let result = await nubrickClient.experiment.fetchTooltipData(trigger: name)
-            switch result {
-            case .success(let data):
-                onFetch(data)
-            case .failure(let error):
-                onError(error.localizedDescription)
-            }
-        }
-    }
-
     func connectTooltipEmbedding(channelId: String, rootBlock: String, messenger: FlutterBinaryMessenger) {
         guard let nubrickClient = self.nubrickClient else {
             return

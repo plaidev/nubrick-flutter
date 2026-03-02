@@ -4,6 +4,7 @@ import android.content.Context
 import io.nubrick.nubrick.CachePolicy
 import io.nubrick.nubrick.CacheStorage
 import io.nubrick.nubrick.Config
+import io.nubrick.nubrick.FlutterBridgeApi
 import io.nubrick.nubrick.VERSION
 import io.nubrick.nubrick.NubrickClient
 
@@ -80,7 +81,8 @@ class NubrickFlutterPlugin: FlutterPlugin, MethodCallHandler {
                         staleTime = staleTime.toDuration(DurationUnit.SECONDS),
                         storage = if (storage == "inMemory") CacheStorage.IN_MEMORY else CacheStorage.IN_MEMORY
                     )
-                val client = NubrickClient(
+                @OptIn(FlutterBridgeApi::class)
+                val client = NubrickClient.create(
                     Config(
                         projectId,
                         onEvent = { it ->
@@ -106,7 +108,12 @@ class NubrickFlutterPlugin: FlutterPlugin, MethodCallHandler {
                                 ))
                             }
                         }
-                    ), context)
+                    ), context,
+                    onTooltip = { data ->
+                        GlobalScope.launch(Dispatchers.Main) {
+                            channel.invokeMethod("on-tooltip", data)
+                        }
+                    })
                 this.manager.setNubrickClient(client)
                 result.success("ok")
             }
@@ -165,16 +172,6 @@ class NubrickFlutterPlugin: FlutterPlugin, MethodCallHandler {
             }
 
             // tooltip
-            "connectTooltip" -> {
-                val name = call.arguments as String
-                GlobalScope.launch {
-                    manager.connectTooltip(name = name).onSuccess {
-                        result.success(it)
-                    }.onFailure {
-                        result.success("error: ${it.message}")
-                    }
-                }
-            }
             "connectTooltipEmbedding" -> {
                 val channelId = call.argument<String>("channelId") as String
                 val rootBlock = call.argument<String>("json") as String

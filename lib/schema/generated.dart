@@ -752,6 +752,7 @@ class ExperimentConfig {
   final ExperimentFrequency? frequency;
   final DateTime? startedAt;
   final DateTime? endedAt;
+  final int? priority;
 
   ExperimentConfig({
     this.id,
@@ -764,6 +765,7 @@ class ExperimentConfig {
     this.frequency,
     this.startedAt,
     this.endedAt,
+    this.priority,
   });
 
   static ExperimentConfig? decode(dynamic json) {
@@ -789,6 +791,7 @@ class ExperimentConfig {
       frequency: ExperimentFrequency.decode(json['frequency']),
       startedAt: DateTimeDecoder.decode(json['startedAt']),
       endedAt: DateTimeDecoder.decode(json['endedAt']),
+      priority: IntDecoder.decode(json['priority']),
     );
   }
 
@@ -808,6 +811,7 @@ class ExperimentConfig {
       'frequency': frequency?.encode(),
       'startedAt': startedAt,
       'endedAt': endedAt,
+      'priority': priority,
     };
   }
 }
