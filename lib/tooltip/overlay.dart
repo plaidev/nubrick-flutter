@@ -66,6 +66,8 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
   bool _isTooltipFlowActive = false;
   // Tracks current in-flight next-tooltip target to dedupe duplicate requests.
   String? _pendingNextTooltipPageId;
+  String? _currentTooltipExperimentId;
+  bool _didAppendCurrentTooltipHistory = false;
 
   bool _isAnchorOnCurrentRoute(BuildContext context) {
     final route = ModalRoute.of(context);
@@ -160,7 +162,8 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
       return;
     }
 
-    var uiroot = schema.UIRootBlock.decode(jsonDecode(data));
+    final decodedData = jsonDecode(data);
+    var uiroot = schema.UIRootBlock.decode(decodedData);
     if (uiroot == null) {
       return;
     }
@@ -189,6 +192,10 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
     _isTooltipFlowActive = true;
     _consecutiveFullyOffscreenFrames = 0;
     _consecutiveUnresolvableDataFrames = 0;
+    _currentTooltipExperimentId = decodedData is Map<String, dynamic>
+        ? decodedData["experimentId"] as String?
+        : null;
+    _didAppendCurrentTooltipHistory = false;
     _currentTooltipFlowId += 1;
     final flowId = _currentTooltipFlowId;
     final transitionId = _nextTooltipTransitionId();
@@ -354,6 +361,17 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
     _consecutiveFullyOffscreenFrames = 0;
     _consecutiveUnresolvableDataFrames = 0;
     _pendingNextTooltipPageId = null;
+    if (!_didAppendCurrentTooltipHistory) {
+      final experimentId = _currentTooltipExperimentId;
+      if (experimentId != null && experimentId.isNotEmpty) {
+        _didAppendCurrentTooltipHistory = true;
+        NubrickFlutterPlatform.instance
+            .appendTooltipExperimentHistory(experimentId)
+            .catchError((e, stackTrace) {
+          recordError(e, stackTrace, severity: ErrorSeverity.warning);
+        });
+      }
+    }
 
     // register the frame callback when the tooltip is shown
     _registerFrameCallback();
@@ -478,6 +496,8 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
     _isTransitioningToNextTooltip = false;
     _isTooltipFlowActive = false;
     _pendingNextTooltipPageId = null;
+    _currentTooltipExperimentId = null;
+    _didAppendCurrentTooltipHistory = false;
     if (_channelId.isNotEmpty) {
       NubrickFlutterPlatform.instance.disconnectTooltipEmbedding(_channelId);
     }

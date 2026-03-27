@@ -150,6 +150,11 @@ public class NubrickFlutterPlugin: NSObject, FlutterPlugin {
             let channelId = call.arguments as! String
             self.manager.disconnectTooltipEmbedding(channelId: channelId)
             result("ok")
+        case "appendTooltipExperimentHistory":
+            let args = call.arguments as! [String: Any]
+            let experimentId = args["experimentId"] as! String
+            self.manager.appendTooltipExperimentHistory(experimentId: experimentId)
+            result("ok")
 
         // trigger
         case "dispatch":

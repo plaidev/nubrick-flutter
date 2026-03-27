@@ -167,6 +167,16 @@ class MethodChannelNubrickFlutter extends NubrickFlutterPlatform {
   }
 
   @override
+  Future<void> appendTooltipExperimentHistory(String experimentId) async {
+    await methodChannel.invokeMethod<void>(
+      'appendTooltipExperimentHistory',
+      <String, dynamic>{
+        'experimentId': experimentId,
+      },
+    );
+  }
+
+  @override
   Future<String?> dispatch(String name) async {
     final result = await methodChannel.invokeMethod<String>(
       'dispatch',
