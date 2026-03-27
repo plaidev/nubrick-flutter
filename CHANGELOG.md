@@ -1,3 +1,8 @@
+## 0.16.3
+
+- Hide tooltip when anchor disappears / goes off screen
+- Improve display of tooltip and during transition to next tooltip
+
 ## 0.16.2
 
 - Add support for priority setting for modal and tooltip
