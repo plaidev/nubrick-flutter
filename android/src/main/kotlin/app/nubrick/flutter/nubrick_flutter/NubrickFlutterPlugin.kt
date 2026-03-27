@@ -109,9 +109,12 @@ class NubrickFlutterPlugin: FlutterPlugin, MethodCallHandler {
                             }
                         }
                     ), context,
-                    onTooltip = { data ->
+                    onTooltip = { data, experimentId ->
                         GlobalScope.launch(Dispatchers.Main) {
-                            channel.invokeMethod("on-tooltip", data)
+                            channel.invokeMethod("on-tooltip", mapOf(
+                                "data" to data,
+                                "experimentId" to experimentId,
+                            ))
                         }
                     })
                 this.manager.setNubrickClient(client)
@@ -189,6 +192,11 @@ class NubrickFlutterPlugin: FlutterPlugin, MethodCallHandler {
             "disconnectTooltipEmbedding" -> {
                 val channelId = call.arguments as String
                 this.manager.disconnectTooltip(channelId)
+            }
+            "appendTooltipExperimentHistory" -> {
+                val experimentId = call.argument<String>("experimentId") as String
+                this.manager.appendTooltipExperimentHistory(experimentId)
+                result.success("ok")
             }
 
             "dispatch" -> {

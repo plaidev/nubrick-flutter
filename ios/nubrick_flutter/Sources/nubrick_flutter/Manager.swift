@@ -261,6 +261,13 @@ class NubrickFlutterManager {
         self.embeddingMaps[channelId] = nil
     }
 
+    func appendTooltipExperimentHistory(experimentId: String) {
+        guard !experimentId.isEmpty else {
+            return
+        }
+        self.nubrickClient?.experiment.appendTooltipExperimentHistory(experimentId: experimentId)
+    }
+
     // trigger
     func dispatch(name: String) {
         guard let nubrickClient = self.nubrickClient else {
@@ -316,4 +323,3 @@ class NubrickFlutterManager {
         }
     }
 }
-

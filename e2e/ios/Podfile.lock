@@ -1,28 +1,15 @@
 PODS:
   - Flutter (1.0.0)
-  - Nubrick (0.16.2)
-  - nubrick_flutter (0.0.1):
-    - Flutter
-    - Nubrick (= 0.16.2)
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
-  - nubrick_flutter (from `.symlinks/plugins/nubrick_flutter/ios`)
-
-SPEC REPOS:
-  trunk:
-    - Nubrick
 
 EXTERNAL SOURCES:
   Flutter:
     :path: Flutter
-  nubrick_flutter:
-    :path: ".symlinks/plugins/nubrick_flutter/ios"
 
 SPEC CHECKSUMS:
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
-  Nubrick: 7d48a42516086c1d39e8a3d88164499fe4604180
-  nubrick_flutter: bdcb972b4d731fab2c796b0c9f4ddcfa254907ad
 
 PODFILE CHECKSUM: 3c63482e143d1b91d2d2560aee9fb04ecc74ac7e
 

@@ -66,6 +66,8 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
   bool _isTooltipFlowActive = false;
   // Tracks current in-flight next-tooltip target to dedupe duplicate requests.
   String? _pendingNextTooltipPageId;
+  String? _currentTooltipExperimentId;
+  bool _didAppendCurrentTooltipHistory = false;
 
   bool _isAnchorOnCurrentRoute(BuildContext context) {
     final route = ModalRoute.of(context);
@@ -129,12 +131,13 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
     _isFrameLoopActive = false;
     _consecutiveFullyOffscreenFrames = 0;
     _consecutiveUnresolvableDataFrames = 0;
-    _isTransitioningToNextTooltip = true;
-    if (_anchorPosition == null &&
-        _anchorSize == null &&
-        _tooltipPosition == null &&
-        _tooltipSize == null &&
-        _currentPage == null) {
+    final wasTooltipVisible = _anchorPosition != null &&
+        _anchorSize != null &&
+        _tooltipPosition != null &&
+        _tooltipSize != null &&
+        _currentPage != null;
+    _isTransitioningToNextTooltip = wasTooltipVisible;
+    if (!wasTooltipVisible) {
       return;
     }
     setState(() {
@@ -152,7 +155,7 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
     return _currentTooltipTransitionId;
   }
 
-  void _onTooltip(String data) async {
+  void _onTooltip(String data, String? experimentId) async {
     // Ignore re-entrant tooltip events during an active flow.
     // A new flow starts only after native sends dismiss/next and _hideTooltip
     // resets this flag.
@@ -160,7 +163,8 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
       return;
     }
 
-    var uiroot = schema.UIRootBlock.decode(jsonDecode(data));
+    final decodedData = jsonDecode(data);
+    var uiroot = schema.UIRootBlock.decode(decodedData);
     if (uiroot == null) {
       return;
     }
@@ -189,6 +193,8 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
     _isTooltipFlowActive = true;
     _consecutiveFullyOffscreenFrames = 0;
     _consecutiveUnresolvableDataFrames = 0;
+    _currentTooltipExperimentId = experimentId;
+    _didAppendCurrentTooltipHistory = false;
     _currentTooltipFlowId += 1;
     final flowId = _currentTooltipFlowId;
     final transitionId = _nextTooltipTransitionId();
@@ -354,6 +360,17 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
     _consecutiveFullyOffscreenFrames = 0;
     _consecutiveUnresolvableDataFrames = 0;
     _pendingNextTooltipPageId = null;
+    if (!_didAppendCurrentTooltipHistory) {
+      final experimentId = _currentTooltipExperimentId;
+      if (experimentId != null && experimentId.isNotEmpty) {
+        _didAppendCurrentTooltipHistory = true;
+        NubrickFlutterPlatform.instance
+            .appendTooltipExperimentHistory(experimentId)
+            .catchError((e, stackTrace) {
+          recordError(e, stackTrace, severity: ErrorSeverity.warning);
+        });
+      }
+    }
 
     // register the frame callback when the tooltip is shown
     _registerFrameCallback();
@@ -478,6 +495,8 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
     _isTransitioningToNextTooltip = false;
     _isTooltipFlowActive = false;
     _pendingNextTooltipPageId = null;
+    _currentTooltipExperimentId = null;
+    _didAppendCurrentTooltipHistory = false;
     if (_channelId.isNotEmpty) {
       NubrickFlutterPlatform.instance.disconnectTooltipEmbedding(_channelId);
     }

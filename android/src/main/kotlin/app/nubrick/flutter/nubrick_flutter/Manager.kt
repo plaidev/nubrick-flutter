@@ -214,6 +214,11 @@ internal class NubrickFlutterManager(private val binaryMessenger: BinaryMessenge
         eventBridgeViewMap.remove(channelId)
     }
 
+    fun appendTooltipExperimentHistory(experimentId: String) {
+        if (experimentId.isEmpty()) return
+        this.nubrickClient?.experiment?.appendTooltipExperimentHistory(experimentId)
+    }
+
     fun dispatch(name: String) {
         this.nubrickClient?.experiment?.dispatch(NubrickEvent(name))
     }

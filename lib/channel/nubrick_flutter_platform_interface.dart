@@ -93,6 +93,11 @@ abstract class NubrickFlutterPlatform extends PlatformInterface {
         'disconnectTooltipEmbedding() has not been implemented.');
   }
 
+  Future<void> appendTooltipExperimentHistory(String experimentId) {
+    throw UnimplementedError(
+        'appendTooltipExperimentHistory() has not been implemented.');
+  }
+
   Future<String?> dispatch(String name) {
     throw UnimplementedError('dispatch() has not been implemented.');
   }
