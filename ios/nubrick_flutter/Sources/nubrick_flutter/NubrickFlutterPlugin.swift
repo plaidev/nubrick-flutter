@@ -65,8 +65,11 @@ public class NubrickFlutterPlugin: NSObject, FlutterPlugin {
                         "name": event.name as Any?,
                     ])
                 },
-                onTooltip: { [weak self] data in
-                    self?.channel.invokeMethod("on-tooltip", arguments: data)
+                onTooltip: { [weak self] data, experimentId in
+                    self?.channel.invokeMethod("on-tooltip", arguments: [
+                        "data": data,
+                        "experimentId": experimentId,
+                    ])
                 }
             ))
             result("ok")

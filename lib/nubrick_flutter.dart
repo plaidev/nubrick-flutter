@@ -38,7 +38,7 @@ class Nubrick {
   final bool trackCrashes;
   final List<EventHandler> _listeners = [];
   final List<void Function(String)> _onDispatchListeners = [];
-  final List<void Function(String)> _onTooltipListeners = [];
+  final List<void Function(String, String?)> _onTooltipListeners = [];
   final MethodChannel _channel = const MethodChannel("nubrick_flutter");
 
   Nubrick(this.projectId,
@@ -91,11 +91,11 @@ class Nubrick {
     _onDispatchListeners.remove(listener);
   }
 
-  void addOnTooltipListener(void Function(String) listener) {
+  void addOnTooltipListener(void Function(String, String?) listener) {
     _onTooltipListeners.add(listener);
   }
 
-  void removeOnTooltipListener(void Function(String) listener) {
+  void removeOnTooltipListener(void Function(String, String?) listener) {
     _onTooltipListeners.remove(listener);
   }
 
@@ -116,10 +116,18 @@ class Nubrick {
         }
         return Future.value(true);
       case 'on-tooltip':
-        final data = call.arguments as String?;
+        String? data;
+        String? experimentId;
+        final args = call.arguments;
+        if (args is String) {
+          data = args;
+        } else if (args is Map) {
+          data = args["data"] as String?;
+          experimentId = args["experimentId"] as String?;
+        }
         if (data != null) {
           for (var listener in List.of(_onTooltipListeners)) {
-            listener(data);
+            listener(data, experimentId);
           }
         }
         return Future.value(true);

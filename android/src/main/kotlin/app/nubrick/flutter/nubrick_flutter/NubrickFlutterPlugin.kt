@@ -109,9 +109,12 @@ class NubrickFlutterPlugin: FlutterPlugin, MethodCallHandler {
                             }
                         }
                     ), context,
-                    onTooltip = { data ->
+                    onTooltip = { data, experimentId ->
                         GlobalScope.launch(Dispatchers.Main) {
-                            channel.invokeMethod("on-tooltip", data)
+                            channel.invokeMethod("on-tooltip", mapOf(
+                                "data" to data,
+                                "experimentId" to experimentId,
+                            ))
                         }
                     })
                 this.manager.setNubrickClient(client)

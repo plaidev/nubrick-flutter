@@ -131,12 +131,13 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
     _isFrameLoopActive = false;
     _consecutiveFullyOffscreenFrames = 0;
     _consecutiveUnresolvableDataFrames = 0;
-    _isTransitioningToNextTooltip = true;
-    if (_anchorPosition == null &&
-        _anchorSize == null &&
-        _tooltipPosition == null &&
-        _tooltipSize == null &&
-        _currentPage == null) {
+    final wasTooltipVisible = _anchorPosition != null &&
+        _anchorSize != null &&
+        _tooltipPosition != null &&
+        _tooltipSize != null &&
+        _currentPage != null;
+    _isTransitioningToNextTooltip = wasTooltipVisible;
+    if (!wasTooltipVisible) {
       return;
     }
     setState(() {
@@ -154,7 +155,7 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
     return _currentTooltipTransitionId;
   }
 
-  void _onTooltip(String data) async {
+  void _onTooltip(String data, String? experimentId) async {
     // Ignore re-entrant tooltip events during an active flow.
     // A new flow starts only after native sends dismiss/next and _hideTooltip
     // resets this flag.
@@ -192,9 +193,7 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
     _isTooltipFlowActive = true;
     _consecutiveFullyOffscreenFrames = 0;
     _consecutiveUnresolvableDataFrames = 0;
-    _currentTooltipExperimentId = decodedData is Map<String, dynamic>
-        ? decodedData["experimentId"] as String?
-        : null;
+    _currentTooltipExperimentId = experimentId;
     _didAppendCurrentTooltipHistory = false;
     _currentTooltipFlowId += 1;
     final flowId = _currentTooltipFlowId;
