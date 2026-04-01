@@ -16,8 +16,8 @@ A new Flutter plugin project.
   s.source_files = 'nubrick_flutter/Sources/nubrick_flutter/**/*.swift'
   s.dependency 'Flutter'
   s.dependency 'Nubrick', '0.16.4'
-  s.ios.deployment_target = '14.0'
-  s.platform = :ios, '14.0'
+  s.ios.deployment_target = '15.0'
+  s.platform = :ios, '15.0'
 
   # Flutter.framework does not contain a i386 slice.
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386' }
