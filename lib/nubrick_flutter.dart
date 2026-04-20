@@ -4,6 +4,7 @@ import 'package:nubrick_flutter/crash_report.dart';
 import 'package:nubrick_flutter/embedding.dart';
 import 'package:nubrick_flutter/utils/parse_event.dart';
 import 'channel/nubrick_flutter_platform_interface.dart';
+import 'package:nubrick_flutter/version.dart';
 
 // Export public APIs
 export 'package:nubrick_flutter/dispatcher.dart';
@@ -71,8 +72,8 @@ class Nubrick {
     }
   }
 
-  Future<String?> getNubrickSDKVersion() {
-    return NubrickFlutterPlatform.instance.getNubrickSDKVersion();
+  String getNubrickSDKVersion() {
+    return nubrickFlutterSdkVersion;
   }
 
   addEventListener(EventHandler listener) {

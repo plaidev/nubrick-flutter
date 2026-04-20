@@ -1874,7 +1874,7 @@ extension TriggerEventNameDefsExtension on TriggerEventNameDefs {
 }
 
 class TriggerSetting {
-  final UIBlockEventDispatcher? onTrigger;
+  final UIBlockAction? onTrigger;
   final TriggerEventDef? trigger;
 
   TriggerSetting({
@@ -1891,7 +1891,7 @@ class TriggerSetting {
     }
 
     return TriggerSetting(
-      onTrigger: UIBlockEventDispatcher.decode(json['onTrigger']),
+      onTrigger: UIBlockAction.decode(json['onTrigger']),
       trigger: TriggerEventDef.decode(json['trigger']),
     );
   }
@@ -2103,7 +2103,8 @@ class UIBlockUISwitchInputBlock implements UIBlock {
   }
 }
 
-class UIBlockEventDispatcher {
+class UIBlockAction {
+  final String? eventName;
   final String? name;
   final String? destinationPageId;
   final String? deepLink;
@@ -2112,7 +2113,8 @@ class UIBlockEventDispatcher {
   final ApiHttpRequest? httpRequest;
   final ApiHttpResponseAssertion? httpResponseAssertion;
 
-  UIBlockEventDispatcher({
+  UIBlockAction({
+    this.eventName,
     this.name,
     this.destinationPageId,
     this.deepLink,
@@ -2122,7 +2124,7 @@ class UIBlockEventDispatcher {
     this.httpResponseAssertion,
   });
 
-  static UIBlockEventDispatcher? decode(dynamic json) {
+  static UIBlockAction? decode(dynamic json) {
     if (json == null) {
       return null;
     }
@@ -2130,7 +2132,8 @@ class UIBlockEventDispatcher {
       return null;
     }
 
-    return UIBlockEventDispatcher(
+    return UIBlockAction(
+      eventName: StringDecoder.decode(json['eventName']),
       name: StringDecoder.decode(json['name']),
       destinationPageId: StringDecoder.decode(json['destinationPageId']),
       deepLink: StringDecoder.decode(json['deepLink']),
@@ -2146,7 +2149,8 @@ class UIBlockEventDispatcher {
 
   Map<String, dynamic> encode() {
     return {
-      '__typename': 'UIBlockEventDispatcher',
+      '__typename': 'UIBlockAction',
+      'eventName': eventName,
       'name': name,
       'destinationPageId': destinationPageId,
       'deepLink': deepLink,
@@ -2194,7 +2198,7 @@ class UICarouselBlockData {
   final List<UIBlock>? children;
   final FrameData? frame;
   final int? gap;
-  final UIBlockEventDispatcher? onClick;
+  final UIBlockAction? onClick;
 
   UICarouselBlockData({
     this.children,
@@ -2216,7 +2220,7 @@ class UICarouselBlockData {
           json['children'], (element) => UIBlock.decode(element)),
       frame: FrameData.decode(json['frame']),
       gap: IntDecoder.decode(json['gap']),
-      onClick: UIBlockEventDispatcher.decode(json['onClick']),
+      onClick: UIBlockAction.decode(json['onClick']),
     );
   }
 
@@ -2277,7 +2281,7 @@ class UICollectionBlockData {
   final bool? pageControl;
   final bool? autoScroll;
   final double? autoScrollInterval;
-  final UIBlockEventDispatcher? onClick;
+  final UIBlockAction? onClick;
 
   UICollectionBlockData({
     this.children,
@@ -2319,7 +2323,7 @@ class UICollectionBlockData {
       pageControl: BooleanDecoder.decode(json['pageControl']),
       autoScroll: BooleanDecoder.decode(json['autoScroll']),
       autoScrollInterval: FloatDecoder.decode(json['autoScrollInterval']),
-      onClick: UIBlockEventDispatcher.decode(json['onClick']),
+      onClick: UIBlockAction.decode(json['onClick']),
     );
   }
 
@@ -2384,7 +2388,7 @@ class UIFlexContainerBlockData {
   final int? gap;
   final FrameData? frame;
   final Overflow? overflow;
-  final UIBlockEventDispatcher? onClick;
+  final UIBlockAction? onClick;
 
   UIFlexContainerBlockData({
     this.children,
@@ -2414,7 +2418,7 @@ class UIFlexContainerBlockData {
       gap: IntDecoder.decode(json['gap']),
       frame: FrameData.decode(json['frame']),
       overflow: OverflowExtension.decode(json['overflow']),
-      onClick: UIBlockEventDispatcher.decode(json['onClick']),
+      onClick: UIBlockAction.decode(json['onClick']),
     );
   }
 
@@ -2469,7 +2473,7 @@ class UIImageBlockData {
   final String? src;
   final ImageContentMode? contentMode;
   final FrameData? frame;
-  final UIBlockEventDispatcher? onClick;
+  final UIBlockAction? onClick;
 
   UIImageBlockData({
     this.src,
@@ -2490,7 +2494,7 @@ class UIImageBlockData {
       src: StringDecoder.decode(json['src']),
       contentMode: ImageContentModeExtension.decode(json['contentMode']),
       frame: FrameData.decode(json['frame']),
-      onClick: UIBlockEventDispatcher.decode(json['onClick']),
+      onClick: UIBlockAction.decode(json['onClick']),
     );
   }
 
@@ -3074,7 +3078,7 @@ class UITextBlockData {
   final FontWeight? weight;
   final int? maxLines;
   final FrameData? frame;
-  final UIBlockEventDispatcher? onClick;
+  final UIBlockAction? onClick;
 
   UITextBlockData({
     this.value,
@@ -3103,7 +3107,7 @@ class UITextBlockData {
       weight: FontWeightExtension.decode(json['weight']),
       maxLines: IntDecoder.decode(json['maxLines']),
       frame: FrameData.decode(json['frame']),
-      onClick: UIBlockEventDispatcher.decode(json['onClick']),
+      onClick: UIBlockAction.decode(json['onClick']),
     );
   }
 

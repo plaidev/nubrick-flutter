@@ -147,7 +147,7 @@ class MethodChannelNubrickFlutter extends NubrickFlutterPlatform {
 
   @override
   Future<void> callTooltipEmbeddingDispatch(
-      String channelId, UIBlockEventDispatcher event) async {
+      String channelId, UIBlockAction event) async {
     await methodChannel.invokeMethod<void>(
       'callTooltipEmbeddingDispatch',
       <String, dynamic>{
