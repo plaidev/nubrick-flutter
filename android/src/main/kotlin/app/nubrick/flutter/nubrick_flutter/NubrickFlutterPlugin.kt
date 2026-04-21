@@ -1,12 +1,11 @@
+@file:OptIn(FlutterBridgeApi::class)
+
 package app.nubrick.flutter.nubrick_flutter
 
 import android.content.Context
-import io.nubrick.nubrick.CachePolicy
-import io.nubrick.nubrick.CacheStorage
-import io.nubrick.nubrick.Config
-import io.nubrick.nubrick.FlutterBridgeApi
-import io.nubrick.nubrick.VERSION
-import io.nubrick.nubrick.NubrickClient
+import app.nubrick.nubrick.Config
+import app.nubrick.nubrick.FlutterBridgeApi
+import app.nubrick.nubrick.NubrickSDK
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodCall
@@ -17,8 +16,6 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import kotlin.time.DurationUnit
-import kotlin.time.toDuration
 
 internal const val EMBEDDING_VIEW_ID = "nubrick-embedding-view"
 internal const val OVERLAY_VIEW_ID = "nubrick-overlay-view"
@@ -59,30 +56,14 @@ class NubrickFlutterPlugin: FlutterPlugin, MethodCallHandler {
     @OptIn(DelicateCoroutinesApi::class)
     override fun onMethodCall(call: MethodCall, result: Result) {
         when (call.method) {
-            "getNubrickSDKVersion" -> {
-                result.success(VERSION)
-            }
             "connectClient" -> {
                 val projectId = call.argument<String>("projectId") as String
                 if (projectId.isEmpty()) {
                     result.success("no")
                     return
                 }
-                val cachePolicy = call.argument<Map<String, *>>("cachePolicy") as Map<String, *>
-                if (cachePolicy.isEmpty()) {
-                    result.success("no")
-                    return
-                }
-                val cacheTime = cachePolicy["cacheTime"] as Int
-                val staleTime = cachePolicy["staleTime"] as Int
-                val storage = cachePolicy["storage"] as String
-                val nubrickCachePolicy = CachePolicy(
-                        cacheTime = cacheTime.toDuration(DurationUnit.SECONDS),
-                        staleTime = staleTime.toDuration(DurationUnit.SECONDS),
-                        storage = if (storage == "inMemory") CacheStorage.IN_MEMORY else CacheStorage.IN_MEMORY
-                    )
-                @OptIn(FlutterBridgeApi::class)
-                val client = NubrickClient.create(
+                NubrickSDK.initialize(
+                    context,
                     Config(
                         projectId,
                         onEvent = { it ->
@@ -100,7 +81,6 @@ class NubrickFlutterPlugin: FlutterPlugin, MethodCallHandler {
                                 ))
                             }
                         },
-                        cachePolicy = nubrickCachePolicy,
                         onDispatch = { it ->
                             GlobalScope.launch(Dispatchers.Main) {
                                 channel.invokeMethod(ON_DISPATCH_METHOD, mapOf(
@@ -108,7 +88,7 @@ class NubrickFlutterPlugin: FlutterPlugin, MethodCallHandler {
                                 ))
                             }
                         }
-                    ), context,
+                    ),
                     onTooltip = { data, experimentId ->
                         GlobalScope.launch(Dispatchers.Main) {
                             channel.invokeMethod("on-tooltip", mapOf(
@@ -117,7 +97,6 @@ class NubrickFlutterPlugin: FlutterPlugin, MethodCallHandler {
                             ))
                         }
                     })
-                this.manager.setNubrickClient(client)
                 result.success("ok")
             }
             "getUserId" -> {

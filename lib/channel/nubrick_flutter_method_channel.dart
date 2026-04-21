@@ -14,20 +14,11 @@ class MethodChannelNubrickFlutter extends NubrickFlutterPlatform {
   final methodChannel = const MethodChannel('nubrick_flutter');
 
   @override
-  Future<String?> getNubrickSDKVersion() async {
-    final version =
-        await methodChannel.invokeMethod<String>('getNubrickSDKVersion');
-    return version;
-  }
-
-  @override
-  Future<String?> connectClient(
-      String projectId, NubrickCachePolicy cachePolicy) async {
+  Future<String?> connectClient(String projectId) async {
     final result = await methodChannel.invokeMethod<String>(
       'connectClient',
       <String, dynamic>{
         'projectId': projectId,
-        'cachePolicy': cachePolicy.toObject(),
       },
     );
     return result;
@@ -147,7 +138,7 @@ class MethodChannelNubrickFlutter extends NubrickFlutterPlatform {
 
   @override
   Future<void> callTooltipEmbeddingDispatch(
-      String channelId, UIBlockEventDispatcher event) async {
+      String channelId, UIBlockAction event) async {
     await methodChannel.invokeMethod<void>(
       'callTooltipEmbeddingDispatch',
       <String, dynamic>{

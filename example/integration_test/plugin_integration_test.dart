@@ -14,11 +14,8 @@ import 'package:nubrick_flutter/nubrick_flutter.dart';
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('getNubrickSDKVersion test', (WidgetTester tester) async {
+  testWidgets('Nubrick initializes', (WidgetTester tester) async {
     final Nubrick plugin = Nubrick("projectId");
-    final String? version = await plugin.getNubrickSDKVersion();
-    // The version string depends on the host platform running the test, so
-    // just assert that some non-empty string is returned.
-    expect(version?.isNotEmpty, true);
+    expect(plugin.projectId, "projectId");
   });
 }

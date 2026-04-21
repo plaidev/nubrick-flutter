@@ -20,8 +20,16 @@ struct RemoteConfigEntity {
     let variant: RemoteConfigVariant?
 }
 
+// Flutter's StandardMessageCodec delivers arguments as [String: Any], but the iOS SDK expects
+// NubrickArguments ([String: any Sendable]). The cast is ok to do because all codec types
+// (String, NSNumber, FlutterStandardTypedData, NSArray, NSDictionary, NSNull) are Sendable.
+private func toNubrickArguments(_ args: [String: Any]?) -> NubrickArguments? {
+    args?.mapValues { $0 as! any Sendable }
+}
+
+@MainActor
 class NubrickFlutterManager {
-    private var nubrickClient: NubrickClient? = nil
+    private var initialized = false
     private var embeddingMaps: [String:EmbeddingEntity]
     private var configMaps: [String:RemoteConfigEntity]
 
@@ -30,46 +38,45 @@ class NubrickFlutterManager {
         self.configMaps = [:]
     }
 
-    func setNubrickClient(nubrick: NubrickClient) {
-        if self.nubrickClient != nil {
-            return print("NubrickClient is already set")
-        }
-        self.nubrickClient = nubrick
-        if let vc = UIApplication.shared.delegate?.window??.rootViewController {
-            let overlay = nubrick.experiment.overlayViewController()
-            vc.addChild(overlay)
-            vc.view.addSubview(overlay.view)
+    func initialize(
+        projectId: String,
+        onEvent: (@Sendable (_ event: ComponentEvent) -> Void)? = nil,
+        onDispatch: ((_ event: NubrickEvent) -> Void)? = nil,
+        onTooltip: ((_ data: String, _ experimentId: String) -> Void)? = nil
+    ) {
+        NubrickBridge.initialize(
+            projectId: projectId,
+            onEvent: onEvent,
+            onDispatch: onDispatch,
+            onTooltip: onTooltip
+        )
+
+        if !self.initialized {
+            self.initialized = true
+            if let vc = UIApplication.shared.delegate?.window??.rootViewController {
+                let overlay = NubrickSDK.overlayViewController()
+                vc.addChild(overlay)
+                vc.view.addSubview(overlay.view)
+            }
         }
     }
 
     func getUserId() -> String? {
-        guard let nubrickClient = self.nubrickClient else {
-            return nil
-        }
-        return nubrickClient.user.id
+        return NubrickSDK.getUserId()
     }
 
     func setUserProperties(properties: [String: Any]) {
-        guard let nubrickClient = self.nubrickClient else {
-            return
-        }
-        nubrickClient.user.setProperties(properties)
+        NubrickSDK.setUserProperties(properties)
     }
 
     func getUserProperties() -> [String: String]? {
-        guard let nubrickClient = self.nubrickClient else {
-            return nil
-        }
-        return nubrickClient.user.getProperties()
+        return NubrickSDK.getUserProperties()
     }
 
     // embedding
-    func connectEmbedding(id: String, channelId: String, arguments: Any?, messenger: FlutterBinaryMessenger) {
-        guard let nubrickClient = self.nubrickClient else {
-            return
-        }
+    func connectEmbedding(id: String, channelId: String, arguments: [String: Any]?, messenger: FlutterBinaryMessenger) {
         let channel = FlutterMethodChannel(name: "Nubrick/Embedding/\(channelId)", binaryMessenger: messenger)
-        let uiview = nubrickClient.experiment.embeddingForFlutterBridge(id, arguments: arguments, onEvent: { event in
+        let uiview = NubrickBridge.embeddingForFlutterBridge(id, arguments: toNubrickArguments(arguments), onEvent: { event in
             channel.invokeMethod(ON_EVENT_METHOD, arguments: [
                 "name": event.name as Any?,
                 "deepLink": event.deepLink as Any?,
@@ -94,7 +101,7 @@ class NubrickFlutterManager {
             case .notFound:
                 channel.invokeMethod(EMBEDDING_PHASE_UPDATE_METHOD, arguments: "not-found")
                 return UIView()
-            case .failed:
+            case .failed(_):
                 channel.invokeMethod(EMBEDDING_PHASE_UPDATE_METHOD, arguments: "failed")
                 return UIView()
             case .loading:
@@ -121,29 +128,28 @@ class NubrickFlutterManager {
     }
 
     // remote config
-    func connectRemoteConfig(id: String, channelId: String, onPhase:  @escaping ((RemoteConfigPhase) -> Void)) {
-        guard let nubrickClient = self.nubrickClient else {
-            return
-        }
+    func connectRemoteConfig(id: String, channelId: String, onPhase:  @escaping (@Sendable (RemoteConfigPhase) -> Void)) {
         let entity = RemoteConfigEntity(variant: nil)
         self.configMaps[channelId] = entity
 
-        nubrickClient.experiment.remoteConfig(id) { phase in
-            switch phase {
-            case .completed(let config):
-                if self.configMaps[channelId] == nil {
-                    // disconnected already
-                    return
+        NubrickSDK.remoteConfig(id) { [weak self] phase in
+            Task { @MainActor in
+                guard let self else { return }
+                switch phase {
+                case .completed(let config):
+                    if self.configMaps[channelId] == nil {
+                        return
+                    }
+                    let entity = RemoteConfigEntity(variant: config)
+                    self.configMaps[channelId] = entity
+                    onPhase(phase)
+                case .notFound:
+                    onPhase(phase)
+                case .failed(_):
+                    onPhase(phase)
+                case .loading:
+                    break
                 }
-                let entity = RemoteConfigEntity(variant: config)
-                self.configMaps[channelId] = entity
-                onPhase(phase)
-            case .notFound:
-                onPhase(phase)
-            case .failed:
-                onPhase(phase)
-            default:
-                break
             }
         }
     }
@@ -152,7 +158,7 @@ class NubrickFlutterManager {
         self.configMaps[channelId] = nil
     }
 
-    func connectEmbeddingInRemoteConfigValue(key: String, channelId: String, arguments: Any?, embeddingChannelId: String, messenger: FlutterBinaryMessenger) {
+    func connectEmbeddingInRemoteConfigValue(key: String, channelId: String, arguments: [String: Any]?, embeddingChannelId: String, messenger: FlutterBinaryMessenger) {
         guard let entity = self.configMaps[channelId] else {
             return
         }
@@ -160,7 +166,7 @@ class NubrickFlutterManager {
             return
         }
         let channel = FlutterMethodChannel(name: "Nubrick/Embedding/\(embeddingChannelId)", binaryMessenger: messenger)
-        guard let uiview = variant.getAsUIView(key, arguments: arguments, onEvent: { event in
+        guard let uiview = variant.getAsUIView(key, arguments: toNubrickArguments(arguments), onEvent: { event in
             channel.invokeMethod(ON_EVENT_METHOD, arguments: [
                 "name": event.name as Any?,
                 "deepLink": event.deepLink as Any?,
@@ -180,7 +186,7 @@ class NubrickFlutterManager {
             case .notFound:
                 channel.invokeMethod(EMBEDDING_PHASE_UPDATE_METHOD, arguments: "not-found")
                 return UIView()
-            case .failed:
+            case .failed(_):
                 channel.invokeMethod(EMBEDDING_PHASE_UPDATE_METHOD, arguments: "failed")
                 return UIView()
             case .loading:
@@ -209,11 +215,8 @@ class NubrickFlutterManager {
 
     // tooltip
     func connectTooltipEmbedding(channelId: String, rootBlock: String, messenger: FlutterBinaryMessenger) {
-        guard let nubrickClient = self.nubrickClient else {
-            return
-        }
         let channel = FlutterMethodChannel(name: "Nubrick/Embedding/\(channelId)", binaryMessenger: messenger)
-        let accessor = nubrickClient.experiment.renderUIView(
+        let accessor = NubrickBridge.renderUIView(
             json: rootBlock,
             onEvent: { event in
                 channel.invokeMethod(ON_EVENT_METHOD, arguments: [
@@ -253,7 +256,7 @@ class NubrickFlutterManager {
             return
         }
         do {
-            try accessor.dispatch(event: event)
+            try accessor.dispatchAction(event)
         } catch {}
     }
 
@@ -265,15 +268,12 @@ class NubrickFlutterManager {
         guard !experimentId.isEmpty else {
             return
         }
-        self.nubrickClient?.experiment.appendTooltipExperimentHistory(experimentId: experimentId)
+        NubrickSDK.appendTooltipExperimentHistory(experimentId: experimentId)
     }
 
     // trigger
     func dispatch(name: String) {
-        guard let nubrickClient = self.nubrickClient else {
-            return
-        }
-        nubrickClient.experiment.dispatch(NubrickEvent(name))
+        NubrickSDK.dispatch(NubrickEvent(name))
     }
 
     /**
@@ -287,10 +287,6 @@ class NubrickFlutterManager {
      * - Parameter severity: The severity level ("crash" or "warning")
      */
     func sendFlutterCrash(_ exceptionsList: [[String: Any?]], flutterSdkVersion: String?, severity: String?) {
-        guard let nubrickClient = self.nubrickClient else {
-            return
-        }
-
         let exceptions = exceptionsList.compactMap { exceptionMap -> ExceptionRecord? in
             let type = exceptionMap["type"] as? String
             let message = exceptionMap["message"] as? String
@@ -319,7 +315,7 @@ class NubrickFlutterManager {
                 flutterSdkVersion: flutterSdkVersion,
                 severity: CrashSeverity.from(severity)
             )
-            nubrickClient.experiment.sendFlutterCrash(crashEvent)
+            NubrickSDK.sendFlutterCrash(crashEvent)
         }
     }
 }

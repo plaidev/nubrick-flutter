@@ -34,18 +34,15 @@ class Nubrick {
   static Nubrick? instance;
 
   final String projectId;
-  final NubrickCachePolicy cachePolicy;
   final bool trackCrashes;
   final List<EventHandler> _listeners = [];
   final List<void Function(String)> _onDispatchListeners = [];
   final List<void Function(String, String?)> _onTooltipListeners = [];
   final MethodChannel _channel = const MethodChannel("nubrick_flutter");
 
-  Nubrick(this.projectId,
-      {this.cachePolicy = const NubrickCachePolicy(),
-      this.trackCrashes = true}) {
+  Nubrick(this.projectId, {this.trackCrashes = true}) {
     Nubrick.instance = this;
-    NubrickFlutterPlatform.instance.connectClient(projectId, cachePolicy);
+    NubrickFlutterPlatform.instance.connectClient(projectId);
     _channel.setMethodCallHandler(_handleMethod);
 
     if (trackCrashes) {
@@ -69,10 +66,6 @@ class Nubrick {
         return previousPlatformErrorHandler?.call(error, stack) ?? true;
       };
     }
-  }
-
-  Future<String?> getNubrickSDKVersion() {
-    return NubrickFlutterPlatform.instance.getNubrickSDKVersion();
   }
 
   addEventListener(EventHandler listener) {
@@ -137,32 +130,3 @@ class Nubrick {
   }
 }
 
-/// A policy for caching data from the nubrick SDK.
-///
-/// - The cache time is the time to live for the cache. default is 1 day.
-/// - The stale time is the time to live for the stale data. default is 0 seconds.
-/// - The storage is the storage for the cache. default is inMemory.
-///
-/// ```dart
-class NubrickCachePolicy {
-  final Duration cacheTime;
-  final Duration staleTime;
-  final CacheStorage storage;
-
-  const NubrickCachePolicy(
-      {this.cacheTime = const Duration(days: 1),
-      this.staleTime = const Duration(seconds: 0),
-      this.storage = CacheStorage.inMemory});
-
-  Map<String, dynamic> toObject() {
-    return {
-      'cacheTime': cacheTime.inSeconds,
-      'staleTime': staleTime.inSeconds,
-      'storage': storage.name,
-    };
-  }
-}
-
-enum CacheStorage {
-  inMemory,
-}

@@ -10,6 +10,7 @@ let ON_DISPATCH_METHOD = "on-dispatch"
 let ON_NEXT_TOOLTIP_METHOD = "on-next-tooltip"
 let ON_DISMISS_TOOLTIP_METHOD = "on-dismiss-tooltip"
 
+@MainActor
 public class NubrickFlutterPlugin: NSObject, FlutterPlugin {
     private let manager: NubrickFlutterManager
     private let messenger: FlutterBinaryMessenger
@@ -34,17 +35,10 @@ public class NubrickFlutterPlugin: NSObject, FlutterPlugin {
 
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         switch call.method {
-        case "getNubrickSDKVersion":
-            result(nubrickSdkVersion)
         case "connectClient":
             let args = call.arguments as! [String:Any]
             let projectId = args["projectId"] as! String
-            let cachePolicy = args["cachePolicy"] as! [String:Any]
-            let cacheTime = cachePolicy["cacheTime"] as! Int
-            let staleTime = cachePolicy["staleTime"] as! Int
-            let storage = cachePolicy["storage"] as! String
-            let nubrickCachePolicy = NubrickCachePolicy(cacheTime: TimeInterval(cacheTime), staleTime: TimeInterval(staleTime), storage: storage == "inMemory" ? .INMEMORY : .INMEMORY)
-            self.manager.setNubrickClient(nubrick: NubrickClient(
+            self.manager.initialize(
                 projectId: projectId,
                 onEvent: { [weak self] event in
                     self?.channel.invokeMethod(ON_EVENT_METHOD, arguments: [
@@ -59,7 +53,6 @@ public class NubrickFlutterPlugin: NSObject, FlutterPlugin {
                         }),
                     ])
                 },
-                cachePolicy: nubrickCachePolicy,
                 onDispatch: { [weak self] event in
                     self?.channel.invokeMethod(ON_DISPATCH_METHOD, arguments: [
                         "name": event.name as Any?,
@@ -71,7 +64,7 @@ public class NubrickFlutterPlugin: NSObject, FlutterPlugin {
                         "experimentId": experimentId,
                     ])
                 }
-            ))
+            )
             result("ok")
 
         // user
@@ -91,7 +84,7 @@ public class NubrickFlutterPlugin: NSObject, FlutterPlugin {
             let args = call.arguments as! [String:Any]
             let id = args["id"] as! String
             let channelId = args["channelId"] as! String
-            let arguments = args["arguments"] as Any?
+            let arguments = args["arguments"] as? [String: Any]
             self.manager.connectEmbedding(id: id, channelId: channelId, arguments: arguments, messenger: self.messenger)
             result("ok")
         case "disconnectEmbedding":
@@ -108,7 +101,7 @@ public class NubrickFlutterPlugin: NSObject, FlutterPlugin {
                 switch phase {
                 case .completed:
                     result("completed")
-                case .failed:
+                case .failed(_):
                     result("failed")
                 case .notFound:
                     result("not-found")
@@ -131,7 +124,7 @@ public class NubrickFlutterPlugin: NSObject, FlutterPlugin {
             let key = args["key"] as! String
             let channelId = args["channelId"] as! String
             let embeddingChannelId = args["embeddingChannelId"] as! String
-            let arguments = args["arguments"] as Any?
+            let arguments = args["arguments"] as? [String: Any]
             self.manager.connectEmbeddingInRemoteConfigValue(key: key, channelId: channelId, arguments: arguments, embeddingChannelId: embeddingChannelId, messenger: self.messenger)
             result("ok")
 

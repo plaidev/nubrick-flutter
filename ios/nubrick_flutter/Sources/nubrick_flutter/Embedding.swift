@@ -3,6 +3,7 @@ import Flutter
 import UIKit
 import Nubrick
 
+@MainActor
 class FLNativeViewFactory: NSObject, FlutterPlatformViewFactory {
     let messenger: FlutterBinaryMessenger
     let manager: NubrickFlutterManager
@@ -31,6 +32,7 @@ class FLNativeViewFactory: NSObject, FlutterPlatformViewFactory {
     }
 }
 
+@MainActor
 class FLNativeView: NSObject, FlutterPlatformView {
     private var _view: UIView
 

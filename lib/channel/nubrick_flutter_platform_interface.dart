@@ -25,13 +25,7 @@ abstract class NubrickFlutterPlatform extends PlatformInterface {
     _instance = instance;
   }
 
-  Future<String?> getNubrickSDKVersion() {
-    throw UnimplementedError(
-        'getNubrickSDKVersion() has not been implemented.');
-  }
-
-  Future<String?> connectClient(
-      String projectId, NubrickCachePolicy cachePolicy) {
+  Future<String?> connectClient(String projectId) {
     throw UnimplementedError('connectClient() has not been implemented.');
   }
 
@@ -83,7 +77,7 @@ abstract class NubrickFlutterPlatform extends PlatformInterface {
   }
 
   Future<void> callTooltipEmbeddingDispatch(
-      String channelId, UIBlockEventDispatcher event) {
+      String channelId, UIBlockAction event) {
     throw UnimplementedError(
         'callTooltipEmbeddingDispatch() has not been implemented.');
   }

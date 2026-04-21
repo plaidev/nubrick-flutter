@@ -1,14 +1,16 @@
+@file:OptIn(FlutterBridgeApi::class)
+
 package app.nubrick.flutter.nubrick_flutter
 
 import android.content.Context
-import io.nubrick.nubrick.FlutterBridgeApi
-import io.nubrick.nubrick.NubrickClient
-import io.nubrick.nubrick.FlutterBridge
-import io.nubrick.nubrick.data.ExceptionRecord
-import io.nubrick.nubrick.data.NotFoundException
-import io.nubrick.nubrick.data.StackFrame
-import io.nubrick.nubrick.data.CrashSeverity
-import io.nubrick.nubrick.data.TrackCrashEvent
+import app.nubrick.nubrick.FlutterBridgeApi
+import app.nubrick.nubrick.FlutterBridge
+import app.nubrick.nubrick.NubrickSDK
+import app.nubrick.nubrick.data.ExceptionRecord
+import app.nubrick.nubrick.data.NotFoundException
+import app.nubrick.nubrick.data.StackFrame
+import app.nubrick.nubrick.data.CrashSeverity
+import app.nubrick.nubrick.data.TrackCrashEvent
 import io.flutter.plugin.platform.PlatformView
 import io.flutter.plugin.platform.PlatformViewFactory
 import io.flutter.plugin.common.StandardMessageCodec
@@ -18,9 +20,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
-import io.nubrick.nubrick.NubrickEvent
-import io.nubrick.nubrick.component.bridge.UIBlockEventBridgeViewModel
-import io.nubrick.nubrick.remoteconfig.RemoteConfigVariant
+import app.nubrick.nubrick.NubrickEvent
+import app.nubrick.nubrick.NubrickProvider
+import app.nubrick.nubrick.component.bridge.UIBlockActionBridge
+import app.nubrick.nubrick.remoteconfig.RemoteConfigVariant
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -30,30 +33,21 @@ import kotlinx.coroutines.launch
 
 internal data class ConfigEntity(val variant: RemoteConfigVariant?, val experimentId: String?)
 
-@OptIn(FlutterBridgeApi::class)
 internal class NubrickFlutterManager(private val binaryMessenger: BinaryMessenger) {
-    private var nubrickClient: NubrickClient? = null
-    private var bridgeClient: FlutterBridge? = null
-
     private var embeddingMap: MutableMap<String, Any?> = mutableMapOf()
-    private var eventBridgeViewMap: MutableMap<String, UIBlockEventBridgeViewModel> = mutableMapOf()
+    private var eventBridgeViewMap: MutableMap<String, UIBlockActionBridge> = mutableMapOf()
     private var configMap: MutableMap<String, ConfigEntity> = mutableMapOf()
 
-    fun setNubrickClient(client: NubrickClient) {
-        this.nubrickClient = client
-        this.bridgeClient = FlutterBridge(client)
-    }
-
     fun getUserId(): String? {
-        return this.nubrickClient?.user?.id
+        return NubrickSDK.getUserId()
     }
 
     fun setUserProperties(properties: Map<String, Any>) {
-        this.nubrickClient?.user?.setProperties(properties)
+        NubrickSDK.setUserProperties(properties)
     }
 
     fun getUserProperties(): Map<String, String>? {
-        return this.nubrickClient?.user?.getProperties()
+        return NubrickSDK.getUserProperties()
     }
 
     // embedding
@@ -61,16 +55,10 @@ internal class NubrickFlutterManager(private val binaryMessenger: BinaryMessenge
     fun connectEmbedding(channelId: String, experimentId: String, componentId: String? = null) {
         val methodChannel = MethodChannel(this.binaryMessenger, "Nubrick/Embedding/$channelId")
         GlobalScope.launch(Dispatchers.IO) {
-            val result = bridgeClient?.connectEmbedding(experimentId, componentId)
-            if (result == null) {
-                GlobalScope.launch(Dispatchers.Main) {
-                    methodChannel.invokeMethod(EMBEDDING_PHASE_UPDATE_METHOD, "not-found")
-                }
-                return@launch
-            }
+            val result = FlutterBridge.connectEmbedding(experimentId, componentId)
             result.onSuccess {
                 embeddingMap[channelId] = it
-                val size = bridgeClient?.computeInitialSize(it)
+                val size = FlutterBridge.computeInitialSize(it)
                 GlobalScope.launch(Dispatchers.Main) {
                     methodChannel.invokeMethod(EMBEDDING_PHASE_UPDATE_METHOD, "completed")
                     methodChannel.invokeMethod(EMBEDDING_SIZE_UPDATE_METHOD, mapOf(
@@ -104,13 +92,12 @@ internal class NubrickFlutterManager(private val binaryMessenger: BinaryMessenge
         if (channelId.isEmpty()) {
             return
         }
-        val bridgeClient = this.bridgeClient ?: return
         val methodChannel = remember(channelId) {
             MethodChannel(this.binaryMessenger, "Nubrick/Embedding/$channelId")
         }
         val data = this.embeddingMap[channelId]
         val eventBridge = this.eventBridgeViewMap[channelId]
-        bridgeClient.render(
+        FlutterBridge.render(
             modifier,
             arguments,
             data,
@@ -147,7 +134,7 @@ internal class NubrickFlutterManager(private val binaryMessenger: BinaryMessenge
 
     @Composable
     fun RenderOverlay() {
-        nubrickClient?.experiment?.Overlay()
+        NubrickProvider {}
     }
 
     // remote config
@@ -160,9 +147,10 @@ internal class NubrickFlutterManager(private val binaryMessenger: BinaryMessenge
         if (experimentId.isEmpty()) {
             return Result.success("not-found")
         }
-        val client = this.nubrickClient ?: return Result.success("not-found")
-        val config = client.experiment.remoteConfig(experimentId)
-        val variant = config.fetch().getOrElse {
+        val remoteConfig = NubrickSDK.remoteConfig(experimentId).getOrElse {
+            return Result.success("not-found")
+        }
+        val variant = remoteConfig.fetch().getOrElse {
             val status = when (it) {
                 is NotFoundException -> "not-found"
                 else -> "failed"
@@ -172,7 +160,7 @@ internal class NubrickFlutterManager(private val binaryMessenger: BinaryMessenge
         if (this.configMap[channelId] != null) {
             this.configMap[channelId] = ConfigEntity(variant, variant.experimentId)
         }
-        return Result.success("competed")
+        return Result.success("completed")
     }
 
     fun disconnectRemoteConfig(channelId: String) {
@@ -199,7 +187,7 @@ internal class NubrickFlutterManager(private val binaryMessenger: BinaryMessenge
     fun connectTooltipEmbedding(channelId: String, rootBlock: String) {
         if (channelId.isEmpty()) return
         embeddingMap[channelId] = rootBlock
-        eventBridgeViewMap[channelId] = UIBlockEventBridgeViewModel()
+        eventBridgeViewMap[channelId] = UIBlockActionBridge()
     }
 
     suspend fun callTooltipEmbeddingDispatch(channelId: String, event: String) {
@@ -216,11 +204,11 @@ internal class NubrickFlutterManager(private val binaryMessenger: BinaryMessenge
 
     fun appendTooltipExperimentHistory(experimentId: String) {
         if (experimentId.isEmpty()) return
-        this.nubrickClient?.experiment?.appendTooltipExperimentHistory(experimentId)
+        NubrickSDK.appendTooltipExperimentHistory(experimentId)
     }
 
     fun dispatch(name: String) {
-        this.nubrickClient?.experiment?.dispatch(NubrickEvent(name))
+        NubrickSDK.dispatch(NubrickEvent(name))
     }
 
     /**
@@ -272,7 +260,7 @@ internal class NubrickFlutterManager(private val binaryMessenger: BinaryMessenge
                     flutterSdkVersion = flutterSdkVersion,
                     severity = CrashSeverity.from(severity)
                 )
-                this.nubrickClient?.experiment?.sendFlutterCrash(crashEvent)
+                NubrickSDK.sendFlutterCrash(crashEvent)
             }
         } catch (e: Exception) {
             // Silently fail to avoid causing crashes in error reporting
