@@ -1,3 +1,8 @@
+## 0.17.0
+
+- Update internal dependencies
+- Remove Cache Policy and SDK version APIs
+
 ## 0.16.3
 
 - Hide tooltip when anchor disappears / goes off screen
