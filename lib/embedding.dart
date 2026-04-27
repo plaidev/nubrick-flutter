@@ -161,11 +161,9 @@ class _EmbeddingState extends State<NubrickEmbedding> {
         return _renderWithBuilder(
             context, const Center(child: CircularProgressIndicator()));
       case EmbeddingPhase.failed:
-        return _renderWithBuilder(
-            context, const Center(child: Text("Failed to load embedding")));
+        return _renderWithBuilder(context, const SizedBox.shrink());
       case EmbeddingPhase.notFound:
-        return _renderWithBuilder(
-            context, const Center(child: Text("Embedding not found")));
+        return _renderWithBuilder(context, const SizedBox.shrink());
       case EmbeddingPhase.completed:
         return _renderWithBuilder(context,
             Center(child: _BridgeView(_channelId, widget.arguments)));
