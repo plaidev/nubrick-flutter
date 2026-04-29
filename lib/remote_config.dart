@@ -62,6 +62,6 @@ class NubrickRemoteConfigVariant {
   }
 
   Future<void> dispose() async {
-    await NubrickFlutterPlatform.instance.disconnectEmbedding(channelId);
+    await NubrickFlutterPlatform.instance.disconnectRemoteConfig(channelId);
   }
 }
