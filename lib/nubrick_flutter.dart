@@ -62,8 +62,8 @@ class Nubrick {
       final previousPlatformErrorHandler = PlatformDispatcher.instance.onError;
       PlatformDispatcher.instance.onError = (error, stack) {
         recordError(error, stack);
-        // Call the previous handler if it exists, otherwise return true
-        return previousPlatformErrorHandler?.call(error, stack) ?? true;
+        // Call the previous handler if it exists, otherwise return false to indicate the error was not handled
+        return previousPlatformErrorHandler?.call(error, stack) ?? false;
       };
     }
   }
