@@ -58,7 +58,7 @@ android {
     }
 
     dependencies {
-        implementation 'app.nubrick:nubrick:0.12.1'
+        implementation 'app.nubrick:nubrick:0.13.0'
         implementation 'androidx.activity:activity-compose:1.8.2'
         testImplementation 'org.jetbrains.kotlin:kotlin-test'
         testImplementation 'org.mockito:mockito-core:5.0.0'

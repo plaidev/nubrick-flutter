@@ -20,6 +20,9 @@ import kotlinx.coroutines.launch
 internal const val EMBEDDING_VIEW_ID = "nubrick-embedding-view"
 internal const val OVERLAY_VIEW_ID = "nubrick-overlay-view"
 internal const val EMBEDDING_PHASE_UPDATE_METHOD = "embedding-phase-update"
+// Sent once after connectEmbedding to provide the initial size so Flutter can reserve
+// space for the platform view before Compose mounts. Does not trigger the user's onSizeChange callback.
+internal const val EMBEDDING_INITIAL_SIZE_METHOD = "embedding-initial-size"
 internal const val EMBEDDING_SIZE_UPDATE_METHOD = "embedding-size-update"
 internal const val ON_EVENT_METHOD = "on-event"
 internal const val ON_DISPATCH_METHOD = "on-dispatch"

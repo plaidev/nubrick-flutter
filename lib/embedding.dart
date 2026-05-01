@@ -26,6 +26,66 @@ class Event {
 typedef EventHandler = void Function(Event event);
 typedef EmbeddingBuilder = Widget Function(
     BuildContext context, EmbeddingPhase phase, Widget child);
+typedef EmbeddingSizeHandler = void Function(
+    NubrickSize width, NubrickSize height);
+
+NubrickSize _nubrickSizeFromMessage(dynamic value) {
+  if (value == null) {
+    return const NubrickFillSize();
+  }
+  final map = Map<Object?, Object?>.from(value as Map);
+  switch (map['kind']) {
+    case 'fixed':
+      final fixedValue = map['value'];
+      if (fixedValue is num) {
+        return NubrickFixedSize(fixedValue.toDouble());
+      }
+      return const NubrickFillSize();
+    case 'fill':
+    default:
+      return const NubrickFillSize();
+  }
+}
+
+sealed class NubrickSize {
+  const NubrickSize();
+
+  double? get fixedValue => switch (this) {
+        NubrickFixedSize(:final value) => value,
+        NubrickFillSize() => null,
+      };
+
+  bool get isFill => this is NubrickFillSize;
+}
+
+final class NubrickFixedSize extends NubrickSize {
+  final double value;
+
+  const NubrickFixedSize(this.value);
+
+  @override
+  bool operator ==(Object other) =>
+      other is NubrickFixedSize && other.value == value;
+
+  @override
+  int get hashCode => value.hashCode;
+
+  @override
+  String toString() => 'NubrickSize.fixed($value)';
+}
+
+final class NubrickFillSize extends NubrickSize {
+  const NubrickFillSize();
+
+  @override
+  bool operator ==(Object other) => other is NubrickFillSize;
+
+  @override
+  int get hashCode => runtimeType.hashCode;
+
+  @override
+  String toString() => 'NubrickSize.fill';
+}
 
 /// A widget that embeds an experiment.
 ///
@@ -56,6 +116,7 @@ class NubrickEmbedding extends StatefulWidget {
   final double? height;
   final dynamic arguments;
   final EventHandler? onEvent;
+  final EmbeddingSizeHandler? onSizeChange;
   final EmbeddingBuilder? builder;
 
   // this is used from remoteconfig.embed
@@ -68,6 +129,7 @@ class NubrickEmbedding extends StatefulWidget {
     this.height,
     this.arguments,
     this.onEvent,
+    this.onSizeChange,
     this.variant,
     this.builder,
   });
@@ -129,13 +191,23 @@ class _EmbeddingState extends State<NubrickEmbedding> {
           };
         });
         return Future.value(true);
+      // embedding-initial-size: Android only — Flutter's AndroidView gives zero
+      // space to embedded Compose content, so no size-update would ever fire.
+      // This provides an initial size so Compose has space to render. Not needed
+      // on iOS. Does not trigger onSizeChange.
+      case 'embedding-initial-size':
       case 'embedding-size-update':
         if (!mounted) return Future.value(true);
         final args = Map<String, dynamic>.from(call.arguments);
+        final width = _nubrickSizeFromMessage(args["width"]);
+        final height = _nubrickSizeFromMessage(args["height"]);
         setState(() {
-          _embeddingWidth = args["width"]?.toDouble();
-          _embeddingHeight = args["height"]?.toDouble();
+          _embeddingWidth = width.fixedValue;
+          _embeddingHeight = height.fixedValue;
         });
+        if (call.method == 'embedding-size-update') {
+          widget.onSizeChange?.call(width, height);
+        }
         return Future.value(true);
       case 'on-event':
         if (widget.onEvent == null) return Future.value(false);

@@ -21,6 +21,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import app.nubrick.nubrick.NubrickEvent
+import app.nubrick.nubrick.NubrickSize
 import app.nubrick.nubrick.NubrickProvider
 import app.nubrick.nubrick.component.bridge.UIBlockActionBridge
 import app.nubrick.nubrick.remoteconfig.RemoteConfigVariant
@@ -32,6 +33,18 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 internal data class ConfigEntity(val variant: RemoteConfigVariant?, val experimentId: String?)
+
+private fun nubrickSizeToMessage(size: NubrickSize?): Map<String, Any?> {
+    return when (size) {
+        is NubrickSize.Fixed -> mapOf(
+            "kind" to "fixed",
+            "value" to size.value.toDouble(),
+        )
+        NubrickSize.Fill, null -> mapOf(
+            "kind" to "fill",
+        )
+    }
+}
 
 internal class NubrickFlutterManager(private val binaryMessenger: BinaryMessenger) {
     private var embeddingMap: MutableMap<String, Any?> = mutableMapOf()
@@ -61,9 +74,9 @@ internal class NubrickFlutterManager(private val binaryMessenger: BinaryMessenge
                 val size = FlutterBridge.computeInitialSize(it)
                 GlobalScope.launch(Dispatchers.Main) {
                     methodChannel.invokeMethod(EMBEDDING_PHASE_UPDATE_METHOD, "completed")
-                    methodChannel.invokeMethod(EMBEDDING_SIZE_UPDATE_METHOD, mapOf(
-                        "width" to size?.first,
-                        "height" to size?.second,
+                    methodChannel.invokeMethod(EMBEDDING_INITIAL_SIZE_METHOD, mapOf(
+                        "width" to nubrickSizeToMessage(size?.first),
+                        "height" to nubrickSizeToMessage(size?.second),
                     ))
                 }
             }.onFailure {
@@ -124,8 +137,8 @@ internal class NubrickFlutterManager(private val binaryMessenger: BinaryMessenge
             },
             onSizeChange = { width, height ->
                 methodChannel.invokeMethod(EMBEDDING_SIZE_UPDATE_METHOD, mapOf(
-                    "width" to width,
-                    "height" to height,
+                    "width" to nubrickSizeToMessage(width),
+                    "height" to nubrickSizeToMessage(height),
                 ))
             },
             eventBridge = eventBridge
