@@ -23,8 +23,23 @@ struct RemoteConfigEntity {
 // Flutter's StandardMessageCodec delivers arguments as [String: Any], but the iOS SDK expects
 // NubrickArguments ([String: any Sendable]). The cast is ok to do because all codec types
 // (String, NSNumber, FlutterStandardTypedData, NSArray, NSDictionary, NSNull) are Sendable.
+// Note: Sendable conformance is checked at compile time only, so `as! any Sendable` never fails at runtime.
 private func toNubrickArguments(_ args: [String: Any]?) -> NubrickArguments? {
     args?.mapValues { $0 as! any Sendable }
+}
+
+private func nubrickSizeToMessage(_ size: NubrickSize) -> [String: Any] {
+    switch size {
+    case .fixed(let value):
+        return [
+            "kind": "fixed",
+            "value": Double(value),
+        ]
+    case .fill:
+        return [
+            "kind": "fill",
+        ]
+    }
 }
 
 @MainActor
@@ -90,8 +105,8 @@ class NubrickFlutterManager {
             ])
         }, onSizeChange: { width, height in
             channel.invokeMethod(EMBEDDING_SIZE_UPDATE_METHOD, arguments: [
-                "width": width,
-                "height": height,
+                "width": nubrickSizeToMessage(width),
+                "height": nubrickSizeToMessage(height),
             ])
         }) { phase in
             switch phase {
