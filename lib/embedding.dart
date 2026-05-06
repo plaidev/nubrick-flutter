@@ -49,13 +49,6 @@ NubrickSize _nubrickSizeFromMessage(dynamic value) {
 
 sealed class NubrickSize {
   const NubrickSize();
-
-  double? get fixedValue => switch (this) {
-        NubrickFixedSize(:final value) => value,
-        NubrickFillSize() => null,
-      };
-
-  bool get isFill => this is NubrickFillSize;
 }
 
 final class NubrickFixedSize extends NubrickSize {
@@ -202,8 +195,8 @@ class _EmbeddingState extends State<NubrickEmbedding> {
         final width = _nubrickSizeFromMessage(args["width"]);
         final height = _nubrickSizeFromMessage(args["height"]);
         setState(() {
-          _embeddingWidth = width.fixedValue;
-          _embeddingHeight = height.fixedValue;
+          _embeddingWidth = width is NubrickFixedSize ? width.value : null;
+          _embeddingHeight = height is NubrickFixedSize ? height.value : null;
         });
         if (call.method == 'embedding-size-update') {
           widget.onSizeChange?.call(width, height);
