@@ -1,7 +1,10 @@
 import 'dart:math';
 
+const _chars =
+    'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+final _random = Random();
+
 String generateRandomString(int len) {
-  var r = Random();
-  return String.fromCharCodes(
-      List.generate(len, (index) => r.nextInt(33) + 89));
+  return List.generate(len, (_) => _chars[_random.nextInt(_chars.length)])
+      .join();
 }
