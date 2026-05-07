@@ -1,3 +1,7 @@
+## 0.18.0
+
+- Add optional `onSizeChange` callback to embedding
+
 ## 0.17.0
 
 - Update internal dependencies
