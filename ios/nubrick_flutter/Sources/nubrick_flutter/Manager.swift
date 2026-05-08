@@ -15,48 +15,25 @@ private func preferredWindow(_ connectedScenes: Set<UIScene>) -> UIWindow? {
     let preferredStates: [UIScene.ActivationState] = [.foregroundActive, .foregroundInactive]
 
     for state in preferredStates {
-        let windows = windowScenes
-            .filter { $0.activationState == state }
-            .flatMap(\.windows)
+        for windowScene in windowScenes where windowScene.activationState == state {
+            let windows = windowScene.windows
 
-        if let keyWindow = windows.first(where: { $0.isKeyWindow }) {
-            return keyWindow
-        }
-        if let visibleWindow = windows.first(where: { !$0.isHidden && $0.alpha > 0 }) {
-            return visibleWindow
-        }
-        if let firstWindow = windows.first {
-            return firstWindow
+            if let keyWindow = windows.first(where: { $0.isKeyWindow }) {
+                return keyWindow
+            }
+            if let visibleWindow = windows.first(where: { !$0.isHidden && $0.alpha > 0 }) {
+                return visibleWindow
+            }
+            if let firstWindow = windows.first {
+                return firstWindow
+            }
         }
     }
 
-    return windowScenes.flatMap(\.windows).first
-}
-
-private func topHostViewController(_ viewController: UIViewController?) -> UIViewController? {
-    var current = viewController
-
-    while let controller = current {
-        if let presented = controller.presentedViewController {
-            current = presented
-            continue
+    for windowScene in windowScenes {
+        if let firstWindow = windowScene.windows.first {
+            return firstWindow
         }
-        if let navigationController = controller as? UINavigationController,
-           let visible = navigationController.visibleViewController {
-            current = visible
-            continue
-        }
-        if let tabBarController = controller as? UITabBarController,
-           let selected = tabBarController.selectedViewController {
-            current = selected
-            continue
-        }
-        if let splitViewController = controller as? UISplitViewController,
-           let trailing = splitViewController.viewControllers.last {
-            current = trailing
-            continue
-        }
-        return controller
     }
 
     return nil
@@ -97,8 +74,8 @@ private func nubrickSizeToMessage(_ size: NubrickSize) -> [String: Any] {
 @MainActor
 class NubrickFlutterManager {
     private var initialized = false
-    private var embeddingMaps: [String:EmbeddingEntity]
-    private var configMaps: [String:RemoteConfigEntity]
+    private var embeddingMaps: [String: EmbeddingEntity]
+    private var configMaps: [String: RemoteConfigEntity]
 
     init() {
         self.embeddingMaps = [:]
@@ -121,7 +98,7 @@ class NubrickFlutterManager {
         if !self.initialized {
             self.initialized = true
             let selectedWindow = preferredWindow(UIApplication.shared.connectedScenes)
-            if let vc = topHostViewController(selectedWindow?.rootViewController) {
+            if let vc = selectedWindow?.rootViewController {
                 let overlay = NubrickSDK.overlayViewController()
                 vc.addChild(overlay)
                 vc.view.addSubview(overlay.view)
