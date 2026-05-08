@@ -10,6 +10,58 @@ import Flutter
 import UIKit
 @_spi(FlutterBridge) import Nubrick
 
+private func preferredWindow(_ connectedScenes: Set<UIScene>) -> UIWindow? {
+    let windowScenes = connectedScenes.compactMap { $0 as? UIWindowScene }
+    let preferredStates: [UIScene.ActivationState] = [.foregroundActive, .foregroundInactive]
+
+    for state in preferredStates {
+        let windows = windowScenes
+            .filter { $0.activationState == state }
+            .flatMap(\.windows)
+
+        if let keyWindow = windows.first(where: { $0.isKeyWindow }) {
+            return keyWindow
+        }
+        if let visibleWindow = windows.first(where: { !$0.isHidden && $0.alpha > 0 }) {
+            return visibleWindow
+        }
+        if let firstWindow = windows.first {
+            return firstWindow
+        }
+    }
+
+    return windowScenes.flatMap(\.windows).first
+}
+
+private func topHostViewController(_ viewController: UIViewController?) -> UIViewController? {
+    var current = viewController
+
+    while let controller = current {
+        if let presented = controller.presentedViewController {
+            current = presented
+            continue
+        }
+        if let navigationController = controller as? UINavigationController,
+           let visible = navigationController.visibleViewController {
+            current = visible
+            continue
+        }
+        if let tabBarController = controller as? UITabBarController,
+           let selected = tabBarController.selectedViewController {
+            current = selected
+            continue
+        }
+        if let splitViewController = controller as? UISplitViewController,
+           let trailing = splitViewController.viewControllers.last {
+            current = trailing
+            continue
+        }
+        return controller
+    }
+
+    return nil
+}
+
 struct EmbeddingEntity {
     let uiview: UIView
     let channel: FlutterMethodChannel
@@ -68,10 +120,19 @@ class NubrickFlutterManager {
 
         if !self.initialized {
             self.initialized = true
-            if let vc = UIApplication.shared.delegate?.window??.rootViewController {
+            let selectedWindow = preferredWindow(UIApplication.shared.connectedScenes)
+            if let vc = topHostViewController(selectedWindow?.rootViewController) {
                 let overlay = NubrickSDK.overlayViewController()
                 vc.addChild(overlay)
                 vc.view.addSubview(overlay.view)
+                overlay.view.translatesAutoresizingMaskIntoConstraints = false
+                NSLayoutConstraint.activate([
+                    overlay.view.topAnchor.constraint(equalTo: vc.view.topAnchor),
+                    overlay.view.bottomAnchor.constraint(equalTo: vc.view.bottomAnchor),
+                    overlay.view.leadingAnchor.constraint(equalTo: vc.view.leadingAnchor),
+                    overlay.view.trailingAnchor.constraint(equalTo: vc.view.trailingAnchor),
+                ])
+                overlay.didMove(toParent: vc)
             }
         }
     }
