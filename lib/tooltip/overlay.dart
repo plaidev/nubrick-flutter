@@ -43,6 +43,7 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
 
   schema.UIRootBlock? _rootBlock;
   final String _channelId = generateRandomString(16);
+  late final MethodChannel _channel;
   schema.UIPageBlock? _currentPage;
   // Incremented whenever a new tooltip flow starts (or current one is reset).
   // Async callbacks keep the id they started with and ignore stale work.
@@ -561,14 +562,14 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
   @override
   void initState() {
     super.initState();
-    final MethodChannel channel =
-        MethodChannel("Nubrick/Embedding/$_channelId");
-    channel.setMethodCallHandler(_handleMethod);
+    _channel = MethodChannel("Nubrick/Embedding/$_channelId");
+    _channel.setMethodCallHandler(_handleMethod);
     Nubrick.instance?.addOnTooltipListener(_onTooltip);
   }
 
   @override
   void dispose() {
+    _channel.setMethodCallHandler(null);
     Nubrick.instance?.removeOnTooltipListener(_onTooltip);
     if (_channelId.isNotEmpty) {
       NubrickFlutterPlatform.instance.disconnectTooltipEmbedding(_channelId);

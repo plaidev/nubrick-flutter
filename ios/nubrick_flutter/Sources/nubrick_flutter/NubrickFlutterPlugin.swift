@@ -141,6 +141,7 @@ public class NubrickFlutterPlugin: NSObject, FlutterPlugin {
             let channelId = args["channelId"] as! String
             let event = args["event"] as! String
             self.manager.callTooltipEmbeddingDispatch(channelId: channelId, event: event)
+            result("ok")
 
         case "disconnectTooltipEmbedding":
             let channelId = call.arguments as! String
