@@ -174,6 +174,7 @@ class NubrickFlutterPlugin: FlutterPlugin, MethodCallHandler {
             "disconnectTooltipEmbedding" -> {
                 val channelId = call.arguments as String
                 this.manager.disconnectTooltip(channelId)
+                result.success("ok")
             }
             "appendTooltipExperimentHistory" -> {
                 val experimentId = call.argument<String>("experimentId") as String
