@@ -5,7 +5,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:nubrick_flutter/channel/nubrick_flutter_platform_interface.dart';
 import 'package:nubrick_flutter/crash_report.dart';
-import 'package:nubrick_flutter/nubrick_flutter.dart';
+import 'package:nubrick_flutter/src/runtime.dart';
 import 'package:flutter/material.dart';
 import 'package:nubrick_flutter/utils/random.dart';
 import 'package:nubrick_flutter/utils/tooltip_position.dart';
@@ -564,13 +564,13 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
     super.initState();
     _channel = MethodChannel("Nubrick/Embedding/$_channelId");
     _channel.setMethodCallHandler(_handleMethod);
-    Nubrick.instance?.addOnTooltipListener(_onTooltip);
+    nubrickRuntime.addOnTooltipListener(_onTooltip);
   }
 
   @override
   void dispose() {
     _channel.setMethodCallHandler(null);
-    Nubrick.instance?.removeOnTooltipListener(_onTooltip);
+    nubrickRuntime.removeOnTooltipListener(_onTooltip);
     if (_channelId.isNotEmpty) {
       NubrickFlutterPlatform.instance.disconnectTooltipEmbedding(_channelId);
     }

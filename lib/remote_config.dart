@@ -1,4 +1,5 @@
 import 'package:nubrick_flutter/channel/nubrick_flutter_platform_interface.dart';
+import 'package:nubrick_flutter/src/runtime.dart';
 import 'package:nubrick_flutter/utils/random.dart';
 
 enum RemoteConfigPhase {
@@ -29,6 +30,7 @@ class NubrickRemoteConfig {
   NubrickRemoteConfig(this.id);
 
   Future<NubrickRemoteConfigVariant> fetch() async {
+    nubrickRuntime.ensureInitialized();
     var phase = await NubrickFlutterPlatform.instance
         .connectRemoteConfig(id, _channelId);
     return NubrickRemoteConfigVariant._(

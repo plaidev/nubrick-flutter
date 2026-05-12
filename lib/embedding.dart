@@ -2,28 +2,15 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:nubrick_flutter/event.dart';
 import 'package:nubrick_flutter/remote_config.dart';
+import 'package:nubrick_flutter/src/runtime.dart';
 import 'package:nubrick_flutter/utils/random.dart';
 import 'package:nubrick_flutter/utils/parse_event.dart';
 import './channel/nubrick_flutter_platform_interface.dart';
 
-enum EventPayloadType { integer, string, timestamp, unknown }
+export 'package:nubrick_flutter/event.dart';
 
-class EventPayload {
-  final String name;
-  final String value;
-  final EventPayloadType type;
-  EventPayload(this.name, this.value, this.type);
-}
-
-class Event {
-  final String? name;
-  final String? deepLink;
-  final List<EventPayload>? payload;
-  Event(this.name, this.deepLink, this.payload);
-}
-
-typedef EventHandler = void Function(Event event);
 typedef EmbeddingBuilder = Widget Function(
     BuildContext context, EmbeddingPhase phase, Widget child);
 typedef EmbeddingSizeHandler = void Function(
@@ -149,6 +136,7 @@ class _EmbeddingState extends State<NubrickEmbedding> {
   @override
   void initState() {
     super.initState();
+    nubrickRuntime.ensureInitialized();
     _embeddingChannel = MethodChannel("Nubrick/Embedding/$_channelId");
     _embeddingChannel.setMethodCallHandler(_handleMethod);
 

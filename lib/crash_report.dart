@@ -138,7 +138,7 @@ Future<void> recordError(
 ///
 /// If you need to disable crash reporting, use:
 /// ```dart
-/// Nubrick("PROJECT_ID", trackCrashes: false);
+/// Nubrick.initialize("PROJECT_ID", trackCrashes: false);
 /// ```
 @Deprecated(
   'Crash reporting is now automatic. '
