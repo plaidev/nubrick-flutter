@@ -1,13 +1,11 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
-import 'package:nubrick_flutter/crash_report.dart';
-import 'package:nubrick_flutter/embedding.dart';
-import 'package:nubrick_flutter/utils/parse_event.dart';
-import 'channel/nubrick_flutter_platform_interface.dart';
+import 'package:nubrick_flutter/event.dart';
+import 'package:nubrick_flutter/src/runtime.dart';
 
 // Export public APIs
 export 'package:nubrick_flutter/dispatcher.dart';
 export 'package:nubrick_flutter/embedding.dart';
+export 'package:nubrick_flutter/event.dart';
 export 'package:nubrick_flutter/provider.dart';
 export 'package:nubrick_flutter/remote_config.dart';
 export 'package:nubrick_flutter/user.dart';
@@ -26,107 +24,107 @@ export 'package:nubrick_flutter/anchor/anchor.dart';
 /// void main() {
 ///     WidgetsFlutterBinding.ensureInitialized();
 ///     // Initialize the bridge with the project ID
-///     Nubrick("PROJECT ID");
+///     Nubrick.initialize("PROJECT ID");
 ///     runApp(const YourApp());
 /// }
 /// ```
 class Nubrick {
-  static Nubrick? instance;
+  // Legacy object kept only so the deprecated instance-based API can keep
+  // returning a stable value while callers migrate to the static/runtime API.
+  // Remove this once the compatibility surface is dropped in a future release.
+  static final Nubrick _singleton = Nubrick._();
 
-  final String projectId;
-  final bool trackCrashes;
-  final List<EventHandler> _listeners = [];
-  final List<void Function(String)> _onDispatchListeners = [];
-  final List<void Function(String, String?)> _onTooltipListeners = [];
-  final MethodChannel _channel = const MethodChannel("nubrick_flutter");
+  Nubrick._();
 
-  Nubrick(this.projectId, {this.trackCrashes = true}) {
-    Nubrick.instance = this;
-    NubrickFlutterPlatform.instance.connectClient(projectId);
-    _channel.setMethodCallHandler(_handleMethod);
-
-    if (trackCrashes) {
-      // Chain existing error handlers
-      final previousFlutterErrorHandler = FlutterError.onError;
-      FlutterError.onError = (errorDetails) {
-        if (errorDetails.stack != null) {
-          recordError(
-            errorDetails.exception,
-            errorDetails.stack!,
-          );
-        }
-        // Call the previous handler if it exists
-        previousFlutterErrorHandler?.call(errorDetails);
-      };
-
-      final previousPlatformErrorHandler = PlatformDispatcher.instance.onError;
-      PlatformDispatcher.instance.onError = (error, stack) {
-        recordError(error, stack);
-        // Call the previous handler if it exists, otherwise return false to indicate the error was not handled
-        return previousPlatformErrorHandler?.call(error, stack) ?? false;
-      };
-    }
+  @Deprecated('Use Nubrick.initialize(projectId, trackCrashes: ...) instead.')
+  factory Nubrick(String projectId, {bool trackCrashes = true}) {
+    initialize(projectId, trackCrashes: trackCrashes);
+    return _singleton;
   }
 
-  addEventListener(EventHandler listener) {
-    _listeners.add(listener);
+  /// Initializes Nubrick once for the current process.
+  ///
+  /// Subsequent calls are ignored and a warning is logged.
+  /// The first initialization wins.
+  static void initialize(String projectId, {bool trackCrashes = true}) {
+    nubrickRuntime.initialize(projectId, trackCrashes: trackCrashes);
   }
 
-  removeEventListener(EventHandler listener) {
-    _listeners.remove(listener);
+  @Deprecated('Use the static Nubrick API directly instead of Nubrick.instance.')
+  static Nubrick? get instance =>
+      nubrickRuntime.isInitialized ? _singleton : null;
+
+  static String get projectId => nubrickRuntime.projectId;
+
+  static void addEventListener(EventHandler listener) {
+    nubrickRuntime.addEventListener(listener);
   }
 
-  void addOnDispatchListener(void Function(String) listener) {
-    _onDispatchListeners.add(listener);
+  static void removeEventListener(EventHandler listener) {
+    nubrickRuntime.removeEventListener(listener);
   }
 
-  void removeOnDispatchListener(void Function(String) listener) {
-    _onDispatchListeners.remove(listener);
+  static void addOnDispatchListener(void Function(String) listener) {
+    nubrickRuntime.addOnDispatchListener(listener);
   }
 
-  void addOnTooltipListener(void Function(String, String?) listener) {
-    _onTooltipListeners.add(listener);
+  static void removeOnDispatchListener(void Function(String) listener) {
+    nubrickRuntime.removeOnDispatchListener(listener);
   }
 
-  void removeOnTooltipListener(void Function(String, String?) listener) {
-    _onTooltipListeners.remove(listener);
+  static void addOnTooltipListener(void Function(String, String?) listener) {
+    nubrickRuntime.addOnTooltipListener(listener);
   }
 
-  Future<dynamic> _handleMethod(MethodCall call) async {
-    switch (call.method) {
-      case 'on-event':
-        final event = parseEvent(call.arguments);
-        for (var listener in List.of(_listeners)) {
-          listener(event);
-        }
-        return Future.value(true);
-      case 'on-dispatch':
-        final name = call.arguments["name"] as String?;
-        if (name != null) {
-          for (var listener in List.of(_onDispatchListeners)) {
-            listener(name);
-          }
-        }
-        return Future.value(true);
-      case 'on-tooltip':
-        String? data;
-        String? experimentId;
-        final args = call.arguments;
-        if (args is String) {
-          data = args;
-        } else if (args is Map) {
-          data = args["data"] as String?;
-          experimentId = args["experimentId"] as String?;
-        }
-        if (data != null) {
-          for (var listener in List.of(_onTooltipListeners)) {
-            listener(data, experimentId);
-          }
-        }
-        return Future.value(true);
-      default:
-        return Future.value(true);
-    }
+  static void removeOnTooltipListener(void Function(String, String?) listener) {
+    nubrickRuntime.removeOnTooltipListener(listener);
+  }
+
+  @visibleForTesting
+  static void resetForTest() {
+    nubrickRuntime.resetForTest();
   }
 }
 
+// Temporary compatibility layer for older `Nubrick.instance` call sites.
+// These forwards should be removed with the deprecated instance API.
+extension NubrickInstanceCompatibility on Nubrick {
+  @Deprecated('Use Nubrick.projectId instead.')
+  String get projectId => Nubrick.projectId;
+
+  @Deprecated(
+    'Use the trackCrashes argument passed to '
+    'Nubrick.initialize(projectId, trackCrashes: ...) instead.',
+  )
+  bool get trackCrashes => nubrickRuntime.trackCrashes;
+
+  @Deprecated('Use Nubrick.addEventListener(listener) instead.')
+  void addEventListener(EventHandler listener) {
+    Nubrick.addEventListener(listener);
+  }
+
+  @Deprecated('Use Nubrick.removeEventListener(listener) instead.')
+  void removeEventListener(EventHandler listener) {
+    Nubrick.removeEventListener(listener);
+  }
+
+  @Deprecated('Use Nubrick.addOnDispatchListener(listener) instead.')
+  void addOnDispatchListener(void Function(String) listener) {
+    Nubrick.addOnDispatchListener(listener);
+  }
+
+  @Deprecated('Use Nubrick.removeOnDispatchListener(listener) instead.')
+  void removeOnDispatchListener(void Function(String) listener) {
+    Nubrick.removeOnDispatchListener(listener);
+  }
+
+  @Deprecated('Use Nubrick.addOnTooltipListener(listener) instead.')
+  void addOnTooltipListener(void Function(String, String?) listener) {
+    Nubrick.addOnTooltipListener(listener);
+  }
+
+  @Deprecated('Use Nubrick.removeOnTooltipListener(listener) instead.')
+  void removeOnTooltipListener(void Function(String, String?) listener) {
+    Nubrick.removeOnTooltipListener(listener);
+  }
+}

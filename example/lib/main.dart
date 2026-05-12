@@ -3,9 +3,9 @@ import 'package:nubrick_flutter/nubrick_flutter.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  Nubrick("cgv3p3223akg00fod19g");
+  Nubrick.initialize("cgv3p3223akg00fod19g");
   // Global event listener
-  Nubrick.instance?.addEventListener((event) {
+  Nubrick.addEventListener((event) {
     print("Global Event: ${event.name}");
   });
   runApp(const MyApp());

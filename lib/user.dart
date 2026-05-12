@@ -1,4 +1,5 @@
 import 'package:nubrick_flutter/channel/nubrick_flutter_platform_interface.dart';
+import 'package:nubrick_flutter/src/runtime.dart';
 
 /// A class to handle NubrickUser.
 ///
@@ -35,6 +36,7 @@ class NubrickUser {
   /// Returns a [Future] that completes with the user ID as a [String],
   /// or `null` if no user ID is set.
   Future<String?> getId() async {
+    nubrickRuntime.ensureInitialized();
     return await NubrickFlutterPlatform.instance.getUserId();
   }
 
@@ -45,6 +47,7 @@ class NubrickUser {
   ///
   /// Returns a [Future] that completes when the properties have been set.
   Future<void> setProperties(Map<String, dynamic> properties) async {
+    nubrickRuntime.ensureInitialized();
     await NubrickFlutterPlatform.instance.setUserProperties(properties);
   }
 
@@ -54,6 +57,7 @@ class NubrickUser {
   /// where both keys and values are [String]s. Returns `null` if no
   /// properties are set or if the user is not identified.
   Future<Map<String, String>?> getProperties() async {
+    nubrickRuntime.ensureInitialized();
     return await NubrickFlutterPlatform.instance.getUserProperties();
   }
 }

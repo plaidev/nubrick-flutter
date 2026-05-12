@@ -1,4 +1,5 @@
 import 'package:nubrick_flutter/channel/nubrick_flutter_platform_interface.dart';
+import 'package:nubrick_flutter/src/runtime.dart';
 
 class NubrickEvent {
   final String name;
@@ -27,6 +28,7 @@ class NubrickDispatcher {
   factory NubrickDispatcher() => _instance;
 
   Future<void> dispatch(NubrickEvent event) {
+    nubrickRuntime.ensureInitialized();
     return NubrickFlutterPlatform.instance.dispatch(event.name);
   }
 }
