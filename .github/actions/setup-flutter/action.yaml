@@ -13,7 +13,7 @@ runs:
       id: flutter-action
       shell: bash
       env:
-        FLUTTER_VERSION: "3.32.8"
+        FLUTTER_VERSION: "3.41.9"
       run: |
         $GITHUB_ACTION_PATH/setup.sh -p -n "$FLUTTER_VERSION" stable
 
