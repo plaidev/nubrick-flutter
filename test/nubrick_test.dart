@@ -12,11 +12,16 @@ class _FakeNubrickFlutterPlatform extends NubrickFlutterPlatform
     with MockPlatformInterfaceMixin {
   int recordedCrashCount = 0;
   final List<String> connectedProjectIds = [];
+  String? connectClientResult = 'ok';
+  Object? connectClientError;
 
   @override
   Future<String?> connectClient(String projectId) async {
     connectedProjectIds.add(projectId);
-    return 'ok';
+    if (connectClientError != null) {
+      throw connectClientError!;
+    }
+    return connectClientResult;
   }
 
   @override
@@ -115,6 +120,51 @@ void main() {
       );
     });
 
+    test('ignores empty project id safely', () {
+      Nubrick.initialize('   ');
+
+      expect(nubrickRuntime.isInitialized, isFalse);
+      expect(fakePlatform.connectedProjectIds, isEmpty);
+      expect(
+        debugLogs,
+        contains(
+          'Nubrick.initialize(...) ignored because projectId is empty.',
+        ),
+      );
+    });
+
+    test('rolls back initialization when native setup rejects the project', () async {
+      fakePlatform.connectClientResult = 'no';
+
+      Nubrick.initialize('project-a');
+      await Future<void>.delayed(Duration.zero);
+
+      expect(nubrickRuntime.isInitialized, isFalse);
+      expect(() => Nubrick.projectId, throwsStateError);
+      expect(
+        debugLogs,
+        contains(
+          'Nubrick.initialize(...) failed during native setup. '
+          'connectClient returned "no". Initialization has been rolled back.',
+        ),
+      );
+    });
+
+    test('rolls back initialization when native setup throws', () async {
+      fakePlatform.connectClientError = Exception('native setup failed');
+
+      Nubrick.initialize('project-a');
+      await Future<void>.delayed(Duration.zero);
+
+      expect(nubrickRuntime.isInitialized, isFalse);
+      expect(() => Nubrick.projectId, throwsStateError);
+      expect(
+        debugLogs.single,
+        contains('Nubrick.initialize(...) failed during native setup.'),
+      );
+      expect(debugLogs.single, contains('native setup failed'));
+    });
+
     test('deprecated constructor initializes the singleton runtime', () {
       // ignore: deprecated_member_use_from_same_package
       final plugin = Nubrick('project-a');
@@ -169,6 +219,22 @@ void main() {
       expect(receivedEvent?.payload?[1].name, 'seats');
       expect(receivedEvent?.payload?[1].value, '3');
       expect(receivedEvent?.payload?[1].type, EventPayloadType.integer);
+    });
+
+    test('ignores malformed on-event payloads safely', () async {
+      Nubrick.initialize('project-a');
+
+      var listenerCalled = false;
+      Nubrick.addEventListener((_) {
+        listenerCalled = true;
+      });
+
+      await expectLater(
+        _sendMethodChannelCall('on-event', 'unexpected payload'),
+        completes,
+      );
+
+      expect(listenerCalled, isFalse);
     });
 
     test('routes on-dispatch from method channel to listeners', () async {

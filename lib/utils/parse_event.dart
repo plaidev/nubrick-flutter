@@ -13,14 +13,18 @@ EventPayloadType _parseEventPayloadType(dynamic type) {
   }
 }
 
-Event parseEvent(dynamic arguments) {
-  final map = arguments;
-  final name = map["name"] as String?;
-  final deepLink = map["deepLink"] as String?;
-  final rawPayload = map["payload"] as List<dynamic>? ?? [];
-  final payload = rawPayload
-      .map((e) => EventPayload(e["name"] as String? ?? "",
-          e["value"] as String? ?? "", _parseEventPayloadType(e["type"])))
-      .toList();
-  return Event(name, deepLink, payload);
+Event? parseEvent(dynamic arguments) {
+  try {
+    final map = arguments;
+    final name = map["name"] as String?;
+    final deepLink = map["deepLink"] as String?;
+    final rawPayload = map["payload"] as List<dynamic>? ?? [];
+    final payload = rawPayload
+        .map((e) => EventPayload(e["name"] as String? ?? "",
+            e["value"] as String? ?? "", _parseEventPayloadType(e["type"])))
+        .toList();
+    return Event(name, deepLink, payload);
+  } catch (_) {
+    return null;
+  }
 }
