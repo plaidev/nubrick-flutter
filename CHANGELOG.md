@@ -1,3 +1,8 @@
+## 0.19.0
+
+- Update example app to use SceneDelegate
+- Update API to remove use of Nubrick instance and make all public API static methods
+
 ## 0.18.0
 
 - Add optional `onSizeChange` callback to embedding
