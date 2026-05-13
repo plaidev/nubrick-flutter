@@ -82,7 +82,7 @@ class Nubrick {
 
   @visibleForTesting
   static void resetForTest() {
-    nubrickRuntime.resetForTest();
+    nubrickRuntime.reset();
   }
 }
 

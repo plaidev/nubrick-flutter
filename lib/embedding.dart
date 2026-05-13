@@ -192,7 +192,11 @@ class _EmbeddingState extends State<NubrickEmbedding> {
         return Future.value(true);
       case 'on-event':
         if (widget.onEvent == null) return Future.value(false);
-        widget.onEvent?.call(parseEvent(call.arguments));
+        final event = parseEvent(call.arguments);
+        if (event == null) {
+          return Future.value(true);
+        }
+        widget.onEvent?.call(event);
         return Future.value(true);
       default:
         return Future.value(false);

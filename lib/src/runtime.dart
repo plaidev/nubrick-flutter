@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:nubrick_flutter/channel/nubrick_flutter_platform_interface.dart';
@@ -45,6 +47,14 @@ class NubrickRuntime {
   }
 
   void initialize(String projectId, {required bool trackCrashes}) {
+    final normalizedProjectId = projectId.trim();
+    if (normalizedProjectId.isEmpty) {
+      debugPrint(
+        'Nubrick.initialize(...) ignored because projectId is empty.',
+      );
+      return;
+    }
+
     if (_isInitialized) {
       debugPrint(
         'Nubrick.initialize(...) called more than once. '
@@ -53,11 +63,11 @@ class NubrickRuntime {
       return;
     }
 
-    _projectId = projectId;
+    _projectId = normalizedProjectId;
     _isInitialized = true;
     _ensureMethodHandlerInstalled();
-    NubrickFlutterPlatform.instance.connectClient(projectId);
     _configureCrashTracking(trackCrashes);
+    unawaited(_connectClient(normalizedProjectId));
   }
 
   void _ensureMethodHandlerInstalled() {
@@ -66,6 +76,29 @@ class NubrickRuntime {
     }
     _channel.setMethodCallHandler(_handleMethod);
     _channelHandlerInstalled = true;
+  }
+
+  Future<void> _connectClient(String projectId) async {
+    try {
+      final result = await NubrickFlutterPlatform.instance.connectClient(
+        projectId,
+      );
+      if (result == null || result == 'ok') {
+        return;
+      }
+
+      reset();
+      debugPrint(
+        'Nubrick.initialize(...) failed during native setup. '
+        'connectClient returned "$result". Initialization has been rolled back.',
+      );
+    } catch (error) {
+      reset();
+      debugPrint(
+        'Nubrick.initialize(...) failed during native setup. '
+        'Initialization has been rolled back. Error: $error',
+      );
+    }
   }
 
   void _configureCrashTracking(bool enabled) {
@@ -123,6 +156,9 @@ class NubrickRuntime {
     switch (call.method) {
       case 'on-event':
         final event = parseEvent(call.arguments);
+        if (event == null) {
+          return Future.value(true);
+        }
         for (var listener in List.of(_listeners)) {
           listener(event);
         }
@@ -156,7 +192,11 @@ class NubrickRuntime {
     }
   }
 
-  void resetForTest() {
+  void reset() {
+    _projectId = null;
+    _isInitialized = false;
+    _trackCrashesEnabled = false;
+
     if (_crashHandlersInstalled) {
       FlutterError.onError = _previousFlutterErrorHandler;
       PlatformDispatcher.instance.onError = _previousPlatformErrorHandler;
@@ -164,13 +204,12 @@ class NubrickRuntime {
     _previousFlutterErrorHandler = null;
     _previousPlatformErrorHandler = null;
     _crashHandlersInstalled = false;
-    _trackCrashesEnabled = false;
-    _projectId = null;
-    _isInitialized = false;
+
     if (_channelHandlerInstalled) {
       _channel.setMethodCallHandler(null);
+      _channelHandlerInstalled = false;
     }
-    _channelHandlerInstalled = false;
+
     _listeners.clear();
     _onDispatchListeners.clear();
     _onTooltipListeners.clear();
