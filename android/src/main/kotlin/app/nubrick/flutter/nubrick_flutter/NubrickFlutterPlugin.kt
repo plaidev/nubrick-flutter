@@ -3,19 +3,20 @@
 package app.nubrick.flutter.nubrick_flutter
 
 import android.content.Context
-import app.nubrick.nubrick.Config
+import app.nubrick.nubrick.FlutterBridge
 import app.nubrick.nubrick.FlutterBridgeApi
-import app.nubrick.nubrick.NubrickSDK
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
-import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 internal const val EMBEDDING_VIEW_ID = "nubrick-embedding-view"
 internal const val OVERLAY_VIEW_ID = "nubrick-overlay-view"
@@ -31,6 +32,11 @@ internal const val ON_DISMISS_TOOLTIP_METHOD = "on-dismiss-tooltip"
 
 /** NubrickFlutterPlugin */
 class NubrickFlutterPlugin: FlutterPlugin, MethodCallHandler {
+    private companion object {
+        // Accessed only from the main thread (onAttachedToEngine / onDetachedFromEngine / onMethodCall).
+        private var activeCallbackOwner: NubrickFlutterPlugin? = null
+    }
+
     /// The MethodChannel that will the communication between Flutter and native Android
     ///
     /// This local reference serves to register the plugin with the Flutter Engine and unregister it
@@ -38,10 +44,12 @@ class NubrickFlutterPlugin: FlutterPlugin, MethodCallHandler {
     private lateinit var channel : MethodChannel
     private lateinit var context: Context
     private lateinit var manager: NubrickFlutterManager
+    private lateinit var sdkScope: CoroutineScope
 
     override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         val messenger = flutterPluginBinding.binaryMessenger
-        manager = NubrickFlutterManager(messenger)
+        sdkScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+        manager = NubrickFlutterManager(messenger, sdkScope)
         context = flutterPluginBinding.applicationContext
         channel = MethodChannel(messenger, "nubrick_flutter")
         channel.setMethodCallHandler(this)
@@ -56,7 +64,6 @@ class NubrickFlutterPlugin: FlutterPlugin, MethodCallHandler {
         )
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
     override fun onMethodCall(call: MethodCall, result: Result) {
         when (call.method) {
             "connectClient" -> {
@@ -65,41 +72,41 @@ class NubrickFlutterPlugin: FlutterPlugin, MethodCallHandler {
                     result.success("no")
                     return
                 }
-                NubrickSDK.initialize(
-                    context,
-                    Config(
-                        projectId,
-                        onEvent = { it ->
-                            GlobalScope.launch(Dispatchers.Main) {
-                                channel.invokeMethod(ON_EVENT_METHOD, mapOf(
-                                    "name" to it.name,
-                                    "deepLink" to it.deepLink,
-                                    "payload" to it.payload?.map { prop ->
-                                        mapOf(
-                                            "name" to prop.name,
-                                            "value" to prop.value,
-                                            "type" to prop.type,
-                                        )
-                                    }
-                                ))
-                            }
-                        },
-                        onDispatch = { it ->
-                            GlobalScope.launch(Dispatchers.Main) {
-                                channel.invokeMethod(ON_DISPATCH_METHOD, mapOf(
-                                    "name" to it.name
-                                ))
-                            }
+                activeCallbackOwner = this
+                manager.initialize(
+                    context = context,
+                    projectId = projectId,
+                    onEvent = { event ->
+                        sdkScope.launch {
+                            channel.invokeMethod(ON_EVENT_METHOD, mapOf(
+                                "name" to event.name,
+                                "deepLink" to event.deepLink,
+                                "payload" to event.payload?.map { prop ->
+                                    mapOf(
+                                        "name" to prop.name,
+                                        "value" to prop.value,
+                                        "type" to prop.type,
+                                    )
+                                }
+                            ))
                         }
-                    ),
+                    },
+                    onDispatch = { event ->
+                        sdkScope.launch {
+                            channel.invokeMethod(ON_DISPATCH_METHOD, mapOf(
+                                "name" to event.name
+                            ))
+                        }
+                    },
                     onTooltip = { data, experimentId ->
-                        GlobalScope.launch(Dispatchers.Main) {
+                        sdkScope.launch {
                             channel.invokeMethod("on-tooltip", mapOf(
                                 "data" to data,
                                 "experimentId" to experimentId,
                             ))
                         }
-                    })
+                    }
+                )
                 result.success("ok")
             }
             "getUserId" -> {
@@ -129,8 +136,11 @@ class NubrickFlutterPlugin: FlutterPlugin, MethodCallHandler {
             "connectRemoteConfig" -> {
                 val channelId = call.argument<String>("channelId") as String
                 val id = call.argument<String>("id") as String
-                GlobalScope.launch(Dispatchers.IO) {
-                    manager.connectRemoteConfig(channelId, id).onSuccess {
+                sdkScope.launch {
+                    val connectResult = withContext(Dispatchers.IO) {
+                        manager.connectRemoteConfig(channelId, id)
+                    }
+                    connectResult.onSuccess {
                         result.success(it)
                     }.onFailure {
                         result.success("failed")
@@ -166,8 +176,10 @@ class NubrickFlutterPlugin: FlutterPlugin, MethodCallHandler {
             "callTooltipEmbeddingDispatch" -> {
                 val channelId = call.argument<String>("channelId") as String
                 val event = call.argument<String>("event") as String
-                GlobalScope.launch(Dispatchers.IO) {
-                    manager.callTooltipEmbeddingDispatch(channelId, event)
+                sdkScope.launch {
+                    withContext(Dispatchers.IO) {
+                        manager.callTooltipEmbeddingDispatch(channelId, event)
+                    }
                     result.success("ok")
                 }
             }
@@ -219,6 +231,11 @@ class NubrickFlutterPlugin: FlutterPlugin, MethodCallHandler {
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         channel.setMethodCallHandler(null)
+        if (activeCallbackOwner === this) {
+            activeCallbackOwner = null
+            FlutterBridge.clearCallbacks()
+        }
+        sdkScope.cancel()
     }
 }
 
