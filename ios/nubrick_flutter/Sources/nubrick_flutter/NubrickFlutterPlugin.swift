@@ -12,20 +12,25 @@ let ON_DISMISS_TOOLTIP_METHOD = "on-dismiss-tooltip"
 
 @MainActor
 public class NubrickFlutterPlugin: NSObject, FlutterPlugin {
+    private static var activeCallbackOwner: NubrickFlutterPlugin?
+
     private let manager: NubrickFlutterManager
     private let messenger: FlutterBinaryMessenger
     private let channel: FlutterMethodChannel
-    init(messenger: FlutterBinaryMessenger, manager: NubrickFlutterManager, channel: FlutterMethodChannel) {
+
+    private init(messenger: FlutterBinaryMessenger, manager: NubrickFlutterManager, channel: FlutterMethodChannel) {
         self.messenger = messenger
         self.manager = manager
         self.channel = channel
         super.init()
     }
+
     public static func register(with registrar: FlutterPluginRegistrar) {
         let manager = NubrickFlutterManager()
         let messenger = registrar.messenger()
         let channel = FlutterMethodChannel(name: "nubrick_flutter", binaryMessenger: messenger)
         let instance = NubrickFlutterPlugin(messenger: messenger, manager: manager, channel: channel)
+        registrar.publish(instance)
         registrar.addMethodCallDelegate(instance, channel: channel)
         registrar.register(
             FLNativeViewFactory(messenger: messenger, manager: manager),
@@ -33,36 +38,50 @@ public class NubrickFlutterPlugin: NSObject, FlutterPlugin {
         )
     }
 
+    public func detachFromEngine(for registrar: FlutterPluginRegistrar) {
+        if Self.activeCallbackOwner === self {
+            Self.activeCallbackOwner = nil
+            NubrickBridge.clearCallbacks()
+        }
+    }
+
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         switch call.method {
         case "connectClient":
             let args = call.arguments as! [String:Any]
             let projectId = args["projectId"] as! String
+            Self.activeCallbackOwner = self
             self.manager.initialize(
                 projectId: projectId,
                 onEvent: { [weak self] event in
-                    self?.channel.invokeMethod(ON_EVENT_METHOD, arguments: [
-                        "name": event.name as Any?,
-                        "deepLink": event.deepLink as Any?,
-                        "payload": event.payload?.map({ prop in
-                            return [
-                                "name": prop.name,
-                                "value": prop.value,
-                                "type": prop.type
-                            ]
-                        }),
-                    ])
+                    Task { @MainActor in
+                        self?.channel.invokeMethod(ON_EVENT_METHOD, arguments: [
+                            "name": event.name as Any?,
+                            "deepLink": event.deepLink as Any?,
+                            "payload": event.payload?.map({ prop in
+                                return [
+                                    "name": prop.name,
+                                    "value": prop.value,
+                                    "type": prop.type
+                                ]
+                            }),
+                        ])
+                    }
                 },
                 onDispatch: { [weak self] event in
-                    self?.channel.invokeMethod(ON_DISPATCH_METHOD, arguments: [
-                        "name": event.name as Any?,
-                    ])
+                    Task { @MainActor in
+                        self?.channel.invokeMethod(ON_DISPATCH_METHOD, arguments: [
+                            "name": event.name as Any?,
+                        ])
+                    }
                 },
                 onTooltip: { [weak self] data, experimentId in
-                    self?.channel.invokeMethod("on-tooltip", arguments: [
-                        "data": data,
-                        "experimentId": experimentId,
-                    ])
+                    Task { @MainActor in
+                        self?.channel.invokeMethod("on-tooltip", arguments: [
+                            "data": data,
+                            "experimentId": experimentId,
+                        ])
+                    }
                 }
             )
             result("ok")

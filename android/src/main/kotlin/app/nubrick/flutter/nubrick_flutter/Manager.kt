@@ -3,6 +3,8 @@
 package app.nubrick.flutter.nubrick_flutter
 
 import android.content.Context
+import app.nubrick.nubrick.Config
+import app.nubrick.nubrick.Event
 import app.nubrick.nubrick.FlutterBridgeApi
 import app.nubrick.nubrick.FlutterBridge
 import app.nubrick.nubrick.NubrickSDK
@@ -27,29 +29,57 @@ import app.nubrick.nubrick.component.bridge.UIBlockActionBridge
 import app.nubrick.nubrick.remoteconfig.RemoteConfigVariant
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
-import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 internal data class ConfigEntity(val variant: RemoteConfigVariant?, val experimentId: String?)
 
-private fun nubrickSizeToMessage(size: NubrickSize?): Map<String, Any?> {
+private fun nubrickSizeToMessage(size: NubrickSize): Map<String, Any?> {
     return when (size) {
         is NubrickSize.Fixed -> mapOf(
             "kind" to "fixed",
             "value" to size.value.toDouble(),
         )
-        NubrickSize.Fill, null -> mapOf(
+        NubrickSize.Fill -> mapOf(
             "kind" to "fill",
         )
     }
 }
 
-internal class NubrickFlutterManager(private val binaryMessenger: BinaryMessenger) {
+internal class NubrickFlutterManager(
+    private val binaryMessenger: BinaryMessenger,
+    private val scope: CoroutineScope
+) {
     private var embeddingMap: MutableMap<String, Any?> = mutableMapOf()
     private var eventBridgeViewMap: MutableMap<String, UIBlockActionBridge> = mutableMapOf()
     private var configMap: MutableMap<String, ConfigEntity> = mutableMapOf()
+
+    fun initialize(
+        context: Context,
+        projectId: String,
+        onEvent: (event: Event) -> Unit,
+        onDispatch: (event: NubrickEvent) -> Unit,
+        onTooltip: (data: String, experimentId: String) -> Unit
+    ) {
+        // Callbacks are passed at init to avoid missing events fired during initialization.
+        NubrickSDK.initialize(
+            context,
+            Config(
+                projectId,
+                onEvent = onEvent,
+                onDispatch = onDispatch,
+            ),
+            onTooltip = onTooltip
+        )
+        // initialize is idempotent — on subsequent calls it's a no-op, so update callbacks separately.
+        FlutterBridge.updateCallbacks(
+            onEvent = onEvent,
+            onDispatch = onDispatch,
+            onTooltip = onTooltip
+        )
+    }
 
     fun getUserId(): String? {
         return NubrickSDK.getUserId()
@@ -64,32 +94,27 @@ internal class NubrickFlutterManager(private val binaryMessenger: BinaryMessenge
     }
 
     // embedding
-    @OptIn(DelicateCoroutinesApi::class)
     fun connectEmbedding(channelId: String, experimentId: String, componentId: String? = null) {
         val methodChannel = MethodChannel(this.binaryMessenger, "Nubrick/Embedding/$channelId")
-        GlobalScope.launch(Dispatchers.IO) {
-            val result = FlutterBridge.connectEmbedding(experimentId, componentId)
+        scope.launch {
+            val result = withContext(Dispatchers.IO) {
+                FlutterBridge.connectEmbedding(experimentId, componentId)
+            }
             result.onSuccess {
                 embeddingMap[channelId] = it
                 val size = FlutterBridge.computeInitialSize(it)
-                GlobalScope.launch(Dispatchers.Main) {
-                    methodChannel.invokeMethod(EMBEDDING_PHASE_UPDATE_METHOD, "completed")
-                    methodChannel.invokeMethod(EMBEDDING_INITIAL_SIZE_METHOD, mapOf(
-                        "width" to nubrickSizeToMessage(size?.first),
-                        "height" to nubrickSizeToMessage(size?.second),
-                    ))
-                }
+                methodChannel.invokeMethod(EMBEDDING_PHASE_UPDATE_METHOD, "completed")
+                methodChannel.invokeMethod(EMBEDDING_INITIAL_SIZE_METHOD, mapOf(
+                    "width" to nubrickSizeToMessage(size.first),
+                    "height" to nubrickSizeToMessage(size.second),
+                ))
             }.onFailure {
                 when (it) {
                     is NotFoundException -> {
-                        GlobalScope.launch(Dispatchers.Main) {
-                            methodChannel.invokeMethod(EMBEDDING_PHASE_UPDATE_METHOD, "not-found")
-                        }
+                        methodChannel.invokeMethod(EMBEDDING_PHASE_UPDATE_METHOD, "not-found")
                     }
                     else -> {
-                        GlobalScope.launch(Dispatchers.Main) {
-                            methodChannel.invokeMethod(EMBEDDING_PHASE_UPDATE_METHOD, "failed")
-                        }
+                        methodChannel.invokeMethod(EMBEDDING_PHASE_UPDATE_METHOD, "failed")
                     }
                 }
             }

@@ -88,8 +88,15 @@ class NubrickFlutterManager {
         onDispatch: ((_ event: NubrickEvent) -> Void)? = nil,
         onTooltip: ((_ data: String, _ experimentId: String) -> Void)? = nil
     ) {
+        // Callbacks are passed at init to avoid missing events fired during initialization.
         NubrickBridge.initialize(
             projectId: projectId,
+            onEvent: onEvent,
+            onDispatch: onDispatch,
+            onTooltip: onTooltip
+        )
+        // initialize is idempotent — on subsequent calls it's a no-op, so update callbacks separately.
+        NubrickBridge.updateCallbacks(
             onEvent: onEvent,
             onDispatch: onDispatch,
             onTooltip: onTooltip
