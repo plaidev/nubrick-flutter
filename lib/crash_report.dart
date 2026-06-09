@@ -100,17 +100,17 @@ List<_StackFrame> _parseStackTrace(StackTrace? stackTrace) {
   }
 
 /// Severity level for error reporting.
-enum ErrorSeverity { crash, warning }
+enum ErrorSeverity { error, warning }
 
 /// Records an error with stack trace at the specified severity level.
 ///
 /// - [error]: The error object to record
 /// - [stackTrace]: The stack trace associated with the error
-/// - [severity]: The severity level (defaults to [ErrorSeverity.crash])
+/// - [severity]: The severity level (defaults to [ErrorSeverity.error])
 Future<void> recordError(
   Object error,
   StackTrace stackTrace, {
-  ErrorSeverity severity = ErrorSeverity.crash,
+  ErrorSeverity severity = ErrorSeverity.error,
 }) async {
   try {
     final exceptionRecord = _ExceptionRecord(
@@ -121,6 +121,7 @@ Future<void> recordError(
 
     final Map<String, dynamic> errorData = {
       'exceptions': [exceptionRecord.toMap()],
+      'platform': 'flutter',
       'flutterSdkVersion': nubrickFlutterSdkVersion,
       'severity': severity.name,
     };
