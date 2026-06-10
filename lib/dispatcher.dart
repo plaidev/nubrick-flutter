@@ -27,8 +27,10 @@ class NubrickDispatcher {
   /// In most cases, you should use [NubrickDispatcher.instance] instead.
   factory NubrickDispatcher() => _instance;
 
-  Future<void> dispatch(NubrickEvent event) {
-    nubrickRuntime.ensureInitialized();
-    return NubrickFlutterPlatform.instance.dispatch(event.name);
+  Future<void> dispatch(NubrickEvent event) async {
+    if (!nubrickRuntime.isReady) {
+      await nubrickRuntime.ready;
+    }
+    await NubrickFlutterPlatform.instance.dispatch(event.name);
   }
 }

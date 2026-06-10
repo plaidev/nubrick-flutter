@@ -201,6 +201,12 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
     final transitionId = _nextTooltipTransitionId();
 
     try {
+      if (!nubrickRuntime.isReady) {
+        await nubrickRuntime.ready;
+      }
+      if (!mounted || flowId != _currentTooltipFlowId) {
+        return;
+      }
       await NubrickFlutterPlatform.instance.connectTooltipEmbedding(
           _channelId,
           schema.UIRootBlock(
@@ -535,8 +541,16 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
     _isFrameLoopActive = false;
     _consecutiveFullyOffscreenFrames = 0;
     _consecutiveUnresolvableDataFrames = 0;
-    NubrickFlutterPlatform.instance
-        .callTooltipEmbeddingDispatch(_channelId, onTrigger);
+    (() async {
+      if (!nubrickRuntime.isReady) {
+        await nubrickRuntime.ready;
+      }
+      await NubrickFlutterPlatform.instance
+          .callTooltipEmbeddingDispatch(_channelId, onTrigger);
+    })()
+        .catchError((e, stackTrace) {
+      recordError(e, stackTrace, severity: ErrorSeverity.warning);
+    });
   }
 
   Future<dynamic> _handleMethod(MethodCall call) async {

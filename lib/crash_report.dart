@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:nubrick_flutter/channel/nubrick_flutter_platform_interface.dart';
+import 'package:nubrick_flutter/src/runtime.dart';
 import 'package:nubrick_flutter/version.dart';
 import 'package:stack_trace/stack_trace.dart';
 
@@ -126,6 +127,9 @@ Future<void> recordError(
       'severity': severity.name,
     };
 
+    if (!nubrickRuntime.isReady) {
+      await nubrickRuntime.ready;
+    }
     await NubrickFlutterPlatform.instance.recordCrash(errorData);
   } catch (e) {
     // Silently handle any errors in the crash reporting itself
