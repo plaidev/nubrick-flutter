@@ -36,7 +36,9 @@ class NubrickUser {
   /// Returns a [Future] that completes with the user ID as a [String],
   /// or `null` if no user ID is set.
   Future<String?> getId() async {
-    nubrickRuntime.ensureInitialized();
+    if (!nubrickRuntime.isReady) {
+      await nubrickRuntime.ready;
+    }
     return await NubrickFlutterPlatform.instance.getUserId();
   }
 
@@ -47,7 +49,9 @@ class NubrickUser {
   ///
   /// Returns a [Future] that completes when the properties have been set.
   Future<void> setProperties(Map<String, dynamic> properties) async {
-    nubrickRuntime.ensureInitialized();
+    if (!nubrickRuntime.isReady) {
+      await nubrickRuntime.ready;
+    }
     await NubrickFlutterPlatform.instance.setUserProperties(properties);
   }
 
@@ -57,7 +61,9 @@ class NubrickUser {
   /// where both keys and values are [String]s. Returns `null` if no
   /// properties are set or if the user is not identified.
   Future<Map<String, String>?> getProperties() async {
-    nubrickRuntime.ensureInitialized();
+    if (!nubrickRuntime.isReady) {
+      await nubrickRuntime.ready;
+    }
     return await NubrickFlutterPlatform.instance.getUserProperties();
   }
 }

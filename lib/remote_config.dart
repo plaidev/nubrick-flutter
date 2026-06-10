@@ -30,7 +30,9 @@ class NubrickRemoteConfig {
   NubrickRemoteConfig(this.id);
 
   Future<NubrickRemoteConfigVariant> fetch() async {
-    nubrickRuntime.ensureInitialized();
+    if (!nubrickRuntime.isReady) {
+      await nubrickRuntime.ready;
+    }
     var phase = await NubrickFlutterPlatform.instance
         .connectRemoteConfig(id, _channelId);
     return NubrickRemoteConfigVariant._(
@@ -44,6 +46,9 @@ class NubrickRemoteConfigVariant {
   NubrickRemoteConfigVariant._(this.channelId, this.phase);
 
   Future<String?> get(String key) async {
+    if (!nubrickRuntime.isReady) {
+      await nubrickRuntime.ready;
+    }
     return await NubrickFlutterPlatform.instance
         .getRemoteConfigValue(channelId, key);
   }
@@ -64,6 +69,9 @@ class NubrickRemoteConfigVariant {
   }
 
   Future<void> dispose() async {
+    if (!nubrickRuntime.isReady) {
+      await nubrickRuntime.ready;
+    }
     await NubrickFlutterPlatform.instance.disconnectRemoteConfig(channelId);
   }
 }

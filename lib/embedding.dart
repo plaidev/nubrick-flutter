@@ -136,17 +136,36 @@ class _EmbeddingState extends State<NubrickEmbedding> {
   @override
   void initState() {
     super.initState();
-    nubrickRuntime.ensureInitialized();
     _embeddingChannel = MethodChannel("Nubrick/Embedding/$_channelId");
     _embeddingChannel.setMethodCallHandler(_handleMethod);
+    _connectEmbedding();
+  }
 
-    final variant = widget.variant;
-    if (variant != null) {
-      NubrickFlutterPlatform.instance.connectEmbeddingInRemoteConfigValue(
-          widget.id, variant.channelId, _channelId, widget.arguments);
-    } else {
-      NubrickFlutterPlatform.instance
-          .connectEmbedding(widget.id, _channelId, widget.arguments);
+  Future<void> _connectEmbedding() async {
+    try {
+      if (!nubrickRuntime.isReady) {
+        await nubrickRuntime.ready;
+      }
+      if (!mounted) {
+        return;
+      }
+
+      final variant = widget.variant;
+      if (variant != null) {
+        await NubrickFlutterPlatform.instance
+            .connectEmbeddingInRemoteConfigValue(
+                widget.id, variant.channelId, _channelId, widget.arguments);
+      } else {
+        await NubrickFlutterPlatform.instance
+            .connectEmbedding(widget.id, _channelId, widget.arguments);
+      }
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _phase = EmbeddingPhase.failed;
+      });
     }
   }
 

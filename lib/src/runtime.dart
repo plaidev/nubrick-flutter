@@ -10,14 +10,16 @@ import 'package:nubrick_flutter/utils/parse_event.dart';
 final nubrickRuntime = NubrickRuntime._internal();
 
 class NubrickRuntime {
+  static const Duration initializationTimeout = Duration(seconds: 10);
+
   FlutterExceptionHandler? _previousFlutterErrorHandler;
   bool Function(Object, StackTrace)? _previousPlatformErrorHandler;
   bool _crashHandlersInstalled = false;
   bool _trackCrashesEnabled = false;
 
   String? _projectId;
-  bool _isInitialized = false;
   bool _channelHandlerInstalled = false;
+  Completer<void>? _initializationCompleter;
   final List<EventHandler> _listeners = [];
   final List<void Function(String)> _onDispatchListeners = [];
   final List<void Function(String, String?)> _onTooltipListeners = [];
@@ -25,10 +27,22 @@ class NubrickRuntime {
 
   NubrickRuntime._internal();
 
-  bool get isInitialized => _isInitialized;
+  bool get isInitialized => _initializationCompleter != null;
 
-  void ensureInitialized() {
-    if (!_isInitialized) {
+  bool get isReady => _initializationCompleter?.isCompleted ?? false;
+
+  Future<void> get ready async {
+    final initializationCompleter = _initializationCompleter;
+    if (initializationCompleter == null) {
+      throw StateError(
+        'Nubrick must be initialized before use. '
+        'Call Nubrick.initialize("PROJECT_ID") first.',
+      );
+    }
+    if (!initializationCompleter.isCompleted) {
+      await initializationCompleter.future;
+    }
+    if (_initializationCompleter != initializationCompleter) {
       throw StateError(
         'Nubrick must be initialized before use. '
         'Call Nubrick.initialize("PROJECT_ID") first.',
@@ -37,12 +51,20 @@ class NubrickRuntime {
   }
 
   String get projectId {
-    ensureInitialized();
-    return _projectId!;
+    return _projectId ??
+        (throw StateError(
+          'Nubrick must be initialized before use. '
+          'Call Nubrick.initialize("PROJECT_ID") first.',
+        ));
   }
 
   bool get trackCrashes {
-    ensureInitialized();
+    if (!isInitialized) {
+      throw StateError(
+        'Nubrick must be initialized before use. '
+        'Call Nubrick.initialize("PROJECT_ID") first.',
+      );
+    }
     return _trackCrashesEnabled;
   }
 
@@ -55,7 +77,7 @@ class NubrickRuntime {
       return;
     }
 
-    if (_isInitialized) {
+    if (isInitialized) {
       debugPrint(
         'Nubrick.initialize(...) called more than once. '
         'Subsequent calls are ignored.',
@@ -64,10 +86,11 @@ class NubrickRuntime {
     }
 
     _projectId = normalizedProjectId;
-    _isInitialized = true;
+    final initializationCompleter = Completer<void>();
+    _initializationCompleter = initializationCompleter;
     _ensureMethodHandlerInstalled();
     _configureCrashTracking(trackCrashes);
-    unawaited(_connectClient(normalizedProjectId));
+    _connectClient(normalizedProjectId, initializationCompleter);
   }
 
   void _ensureMethodHandlerInstalled() {
@@ -78,12 +101,21 @@ class NubrickRuntime {
     _channelHandlerInstalled = true;
   }
 
-  Future<void> _connectClient(String projectId) async {
+  Future<void> _connectClient(
+    String projectId,
+    Completer<void> initializationCompleter,
+  ) async {
     try {
-      final result = await NubrickFlutterPlatform.instance.connectClient(
-        projectId,
-      );
+      final result = await NubrickFlutterPlatform.instance
+          .connectClient(
+            projectId,
+          )
+          .timeout(initializationTimeout);
+      if (initializationCompleter.isCompleted) {
+        return;
+      }
       if (result == null || result == 'ok') {
+        initializationCompleter.complete();
         return;
       }
 
@@ -93,11 +125,17 @@ class NubrickRuntime {
         'connectClient returned "$result". Initialization has been rolled back.',
       );
     } catch (error) {
-      reset();
+      if (!initializationCompleter.isCompleted) {
+        reset();
+      }
       debugPrint(
         'Nubrick.initialize(...) failed during native setup. '
         'Initialization has been rolled back. Error: $error',
       );
+    } finally {
+      if (!initializationCompleter.isCompleted) {
+        initializationCompleter.complete();
+      }
     }
   }
 
@@ -193,8 +231,13 @@ class NubrickRuntime {
   }
 
   void reset() {
+    final initializationCompleter = _initializationCompleter;
+    if (initializationCompleter != null &&
+        !initializationCompleter.isCompleted) {
+      initializationCompleter.complete();
+    }
     _projectId = null;
-    _isInitialized = false;
+    _initializationCompleter = null;
     _trackCrashesEnabled = false;
 
     if (_crashHandlersInstalled) {

@@ -12,16 +12,27 @@ class _FakeNubrickFlutterPlatform extends NubrickFlutterPlatform
     with MockPlatformInterfaceMixin {
   int recordedCrashCount = 0;
   final List<String> connectedProjectIds = [];
+  final List<String> dispatchedEvents = [];
   String? connectClientResult = 'ok';
   Object? connectClientError;
+  Completer<String?>? connectClientCompleter;
 
   @override
   Future<String?> connectClient(String projectId) async {
     connectedProjectIds.add(projectId);
+    if (connectClientCompleter != null) {
+      return connectClientCompleter!.future;
+    }
     if (connectClientError != null) {
       throw connectClientError!;
     }
     return connectClientResult;
+  }
+
+  @override
+  Future<String?> dispatch(String name) async {
+    dispatchedEvents.add(name);
+    return 'ok';
   }
 
   @override
@@ -133,6 +144,113 @@ void main() {
       );
     });
 
+    test('async platform calls fail immediately before initialization',
+        () async {
+      final dispatchFuture = NubrickDispatcher.instance.dispatch(
+        NubrickEvent('checkout_opened'),
+      );
+
+      await expectLater(dispatchFuture, throwsStateError);
+      expect(fakePlatform.connectedProjectIds, isEmpty);
+      expect(fakePlatform.dispatchedEvents, isEmpty);
+    });
+
+    test('async platform calls wait for native initialization readiness',
+        () async {
+      fakePlatform.connectClientCompleter = Completer<String?>();
+
+      Nubrick.initialize('project-a');
+      final dispatchFuture = NubrickDispatcher.instance.dispatch(
+        NubrickEvent('checkout_opened'),
+      );
+
+      await Future<void>.delayed(Duration.zero);
+
+      expect(fakePlatform.connectedProjectIds, ['project-a']);
+      expect(fakePlatform.dispatchedEvents, isEmpty);
+
+      fakePlatform.connectClientCompleter!.complete('ok');
+      await dispatchFuture;
+
+      expect(fakePlatform.dispatchedEvents, ['checkout_opened']);
+    });
+
+    test('ready platform calls do not wait for another async turn', () async {
+      Nubrick.initialize('project-a');
+      await Nubrick.ready;
+
+      final dispatchFuture = NubrickDispatcher.instance.dispatch(
+        NubrickEvent('checkout_opened'),
+      );
+
+      expect(fakePlatform.dispatchedEvents, ['checkout_opened']);
+      await dispatchFuture;
+    });
+
+    test('async platform calls fail if native initialization rolls back',
+        () async {
+      fakePlatform.connectClientCompleter = Completer<String?>();
+
+      Nubrick.initialize('project-a');
+      final dispatchFuture = NubrickDispatcher.instance.dispatch(
+        NubrickEvent('checkout_opened'),
+      );
+
+      await Future<void>.delayed(Duration.zero);
+      fakePlatform.connectClientCompleter!.complete('no');
+
+      await expectLater(dispatchFuture, throwsStateError);
+      expect(fakePlatform.dispatchedEvents, isEmpty);
+      expect(nubrickRuntime.isInitialized, isFalse);
+    });
+
+    testWidgets('async platform calls fail if native initialization times out',
+        (tester) async {
+      fakePlatform.connectClientCompleter = Completer<String?>();
+
+      Nubrick.initialize('project-a');
+      final dispatchFuture = NubrickDispatcher.instance.dispatch(
+        NubrickEvent('checkout_opened'),
+      );
+      final dispatchExpectation = expectLater(dispatchFuture, throwsStateError);
+
+      await tester.pump(NubrickRuntime.initializationTimeout);
+      await tester.pump();
+
+      await dispatchExpectation;
+      expect(fakePlatform.dispatchedEvents, isEmpty);
+      expect(nubrickRuntime.isInitialized, isFalse);
+      expect(debugLogs.single, contains('TimeoutException'));
+      debugPrint = originalDebugPrint;
+    });
+
+    test('stale native initialization completion does not reset newer runtime',
+        () async {
+      fakePlatform.connectClientCompleter = Completer<String?>();
+      final staleConnectClientCompleter = fakePlatform.connectClientCompleter!;
+
+      Nubrick.initialize('project-a');
+      await Future<void>.delayed(Duration.zero);
+
+      Nubrick.resetForTest();
+      fakePlatform.connectClientCompleter = Completer<String?>();
+      final currentConnectClientCompleter =
+          fakePlatform.connectClientCompleter!;
+
+      Nubrick.initialize('project-b');
+      await Future<void>.delayed(Duration.zero);
+
+      currentConnectClientCompleter.complete('ok');
+      await Nubrick.ready;
+
+      staleConnectClientCompleter.complete('ok');
+      await Future<void>.delayed(Duration.zero);
+
+      expect(fakePlatform.connectedProjectIds, ['project-a', 'project-b']);
+      expect(nubrickRuntime.isInitialized, isTrue);
+      expect(Nubrick.projectId, 'project-b');
+    });
+
     test('rolls back initialization when native setup rejects the project', () async {
       fakePlatform.connectClientResult = 'no';
 
@@ -187,9 +305,9 @@ void main() {
       expect(Nubrick.instance, isNull);
     });
 
-    test('ensureInitialized throws before initialize', () {
+    test('ready throws before initialize', () async {
       expect(nubrickRuntime.isInitialized, isFalse);
-      expect(nubrickRuntime.ensureInitialized, throwsStateError);
+      await expectLater(nubrickRuntime.ready, throwsStateError);
     });
 
     test('routes on-event from method channel to listeners', () async {

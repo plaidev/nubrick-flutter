@@ -56,6 +56,8 @@ class Nubrick {
 
   static String get projectId => nubrickRuntime.projectId;
 
+  static Future<void> get ready => nubrickRuntime.ready;
+
   static void addEventListener(EventHandler listener) {
     nubrickRuntime.addEventListener(listener);
   }
