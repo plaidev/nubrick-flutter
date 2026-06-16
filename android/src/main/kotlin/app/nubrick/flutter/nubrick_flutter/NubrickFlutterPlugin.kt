@@ -133,6 +133,13 @@ class NubrickFlutterPlugin: FlutterPlugin, MethodCallHandler {
                 this.manager.disconnectEmbedding(channelId)
                 result.success("ok")
             }
+            "updateEmbeddingArguments" -> {
+                val args = call.arguments as Map<*, *>
+                val channelId = args["channelId"] as String
+                val arguments = args["arguments"]
+                this.manager.updateEmbeddingArguments(channelId, arguments)
+                result.success("ok")
+            }
             "connectRemoteConfig" -> {
                 val channelId = call.argument<String>("channelId") as String
                 val id = call.argument<String>("id") as String

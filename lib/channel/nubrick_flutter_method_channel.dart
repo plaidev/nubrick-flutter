@@ -65,6 +65,19 @@ class MethodChannelNubrickFlutter extends NubrickFlutterPlatform {
   }
 
   @override
+  Future<String?> updateEmbeddingArguments(
+      String channelId, dynamic arguments) async {
+    final result = await methodChannel.invokeMethod<String>(
+      'updateEmbeddingArguments',
+      <String, dynamic>{
+        'channelId': channelId,
+        'arguments': arguments,
+      },
+    );
+    return result;
+  }
+
+  @override
   Future<RemoteConfigPhase?> connectRemoteConfig(
       String id, String channelId) async {
     final result = await methodChannel.invokeMethod<String>(

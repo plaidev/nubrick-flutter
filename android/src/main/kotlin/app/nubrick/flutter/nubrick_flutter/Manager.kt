@@ -19,6 +19,8 @@ import io.flutter.plugin.common.StandardMessageCodec
 import android.view.View
 import android.widget.LinearLayout
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
@@ -53,6 +55,7 @@ internal class NubrickFlutterManager(
     private val scope: CoroutineScope
 ) {
     private var embeddingMap: MutableMap<String, Any?> = mutableMapOf()
+    private var embeddingArgumentStateMap: MutableMap<String, MutableState<Any?>> = mutableMapOf()
     private var eventBridgeViewMap: MutableMap<String, UIBlockActionBridge> = mutableMapOf()
     private var configMap: MutableMap<String, ConfigEntity> = mutableMapOf()
 
@@ -123,6 +126,23 @@ internal class NubrickFlutterManager(
 
     fun disconnectEmbedding(channelId: String) {
         embeddingMap.remove(channelId)
+        embeddingArgumentStateMap.remove(channelId)
+    }
+
+    fun getEmbeddingArgumentState(channelId: String, initialArguments: Any?): MutableState<Any?> {
+        return embeddingArgumentStateMap.getOrPut(channelId) {
+            mutableStateOf(initialArguments)
+        }
+    }
+
+    fun updateEmbeddingArguments(channelId: String, arguments: Any?) {
+        if (channelId.isEmpty()) return
+        val state = embeddingArgumentStateMap[channelId]
+        if (state == null) {
+            embeddingArgumentStateMap[channelId] = mutableStateOf(arguments)
+        } else {
+            state.value = arguments
+        }
     }
 
     @Composable
@@ -237,6 +257,7 @@ internal class NubrickFlutterManager(
     fun disconnectTooltip(channelId: String) {
         if (channelId.isEmpty()) return
         embeddingMap.remove(channelId)
+        embeddingArgumentStateMap.remove(channelId)
         eventBridgeViewMap.remove(channelId)
     }
 
@@ -350,9 +371,10 @@ internal class NativeView(context: Context, channelId: String, arguments: Any?, 
 
     init {
         val param = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT)
+        val argumentState = manager.getEmbeddingArgumentState(channelId, arguments)
         view = ComposeView(context).apply {
             setContent {
-                manager.Render(channelId, arguments)
+                manager.Render(channelId, argumentState.value)
             }
             layoutParams = param
         }
