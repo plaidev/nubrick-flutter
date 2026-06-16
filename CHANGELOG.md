@@ -1,3 +1,7 @@
+## 0.19.1
+
+- Make UI components reactive to changes in parameters such as embedding arguments or user properties
+
 ## 0.19.0
 
 - Update example app to use SceneDelegate
