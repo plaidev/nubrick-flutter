@@ -50,6 +50,12 @@ abstract class NubrickFlutterPlatform extends PlatformInterface {
     throw UnimplementedError('disconnectEmbedding() has not been implemented.');
   }
 
+  Future<String?> updateEmbeddingArguments(
+      String channelId, dynamic arguments) {
+    throw UnimplementedError(
+        'updateEmbeddingArguments() has not been implemented.');
+  }
+
   Future<RemoteConfigPhase?> connectRemoteConfig(String id, String channelId) {
     throw UnimplementedError('connectRemoteConfig() has not been implemented.');
   }

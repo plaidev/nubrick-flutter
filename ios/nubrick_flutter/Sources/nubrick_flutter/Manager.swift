@@ -180,6 +180,16 @@ class NubrickFlutterManager {
         self.embeddingMaps[channelId] = nil
     }
 
+    func updateEmbeddingArguments(channelId: String, arguments: [String: Any]?) {
+        guard let entity = self.embeddingMaps[channelId] else {
+            return
+        }
+        guard let updatable = entity.uiview as? NubrickEmbeddingUpdatable else {
+            return
+        }
+        updatable.update(arguments: toNubrickArguments(arguments))
+    }
+
     func getEmbeddingEntity(channelId: String) -> EmbeddingEntity? {
         guard let entity = self.embeddingMaps[channelId] else {
             return nil
@@ -328,7 +338,9 @@ class NubrickFlutterManager {
         guard !experimentId.isEmpty else {
             return
         }
-        NubrickSDK.appendTooltipExperimentHistory(experimentId: experimentId)
+        Task { @MainActor in
+            await NubrickSDK.appendTooltipExperimentHistory(experimentId: experimentId)
+        }
     }
 
     // trigger

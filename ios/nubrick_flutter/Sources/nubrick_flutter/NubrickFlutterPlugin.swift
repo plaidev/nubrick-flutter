@@ -110,6 +110,12 @@ public class NubrickFlutterPlugin: NSObject, FlutterPlugin {
             let channelId = call.arguments as! String
             self.manager.disconnectEmbedding(channelId: channelId)
             result("ok")
+        case "updateEmbeddingArguments":
+            let args = call.arguments as! [String:Any]
+            let channelId = args["channelId"] as! String
+            let arguments = args["arguments"] as? [String: Any]
+            self.manager.updateEmbeddingArguments(channelId: channelId, arguments: arguments)
+            result("ok")
 
         // remote config
         case "connectRemoteConfig":

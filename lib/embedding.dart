@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +18,8 @@ typedef EmbeddingBuilder = Widget Function(
     BuildContext context, EmbeddingPhase phase, Widget child);
 typedef EmbeddingSizeHandler = void Function(
     NubrickSize width, NubrickSize height);
+
+const _argumentsEquality = DeepCollectionEquality();
 
 NubrickSize _nubrickSizeFromMessage(dynamic value) {
   if (value == null) {
@@ -141,6 +146,15 @@ class _EmbeddingState extends State<NubrickEmbedding> {
     _connectEmbedding();
   }
 
+  @override
+  void didUpdateWidget(covariant NubrickEmbedding oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!_argumentsEquality.equals(oldWidget.arguments, widget.arguments)) {
+      unawaited(NubrickFlutterPlatform.instance
+          .updateEmbeddingArguments(_channelId, widget.arguments));
+    }
+  }
+
   Future<void> _connectEmbedding() async {
     try {
       if (!nubrickRuntime.isReady) {
@@ -241,8 +255,8 @@ class _EmbeddingState extends State<NubrickEmbedding> {
       case EmbeddingPhase.notFound:
         return _renderWithBuilder(context, const SizedBox.shrink());
       case EmbeddingPhase.completed:
-        return _renderWithBuilder(context,
-            Center(child: _BridgeView(_channelId, widget.arguments)));
+        return _renderWithBuilder(
+            context, Center(child: _BridgeView(_channelId, widget.arguments)));
     }
   }
 
