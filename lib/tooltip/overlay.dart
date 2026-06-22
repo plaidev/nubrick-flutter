@@ -33,8 +33,7 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
   static const Duration _initialTooltipLookupDelay =
       Duration(milliseconds: 200);
   static const int _nextTooltipLookupRetries = 30;
-  static const Duration _nextTooltipLookupDelay =
-      Duration(milliseconds: 100);
+  static const Duration _nextTooltipLookupDelay = Duration(milliseconds: 100);
   // Anchor visibility heuristics used during next-tooltip lookup.
   static const double _minAnchorSize = 2.0;
   static const double _anchorVisibleInset = 16.0;
@@ -271,8 +270,16 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
       return null;
     }
 
-    final anchorPosition = box.localToGlobal(Offset.zero);
-    final anchorSize = box.size;
+    late final Offset anchorPosition;
+    late final Size anchorSize;
+    try {
+      anchorPosition = box.localToGlobal(Offset.zero);
+      anchorSize = box.size;
+    } on StateError {
+      return null;
+    } on FlutterError {
+      return null;
+    }
 
     final tooltipSize = page.data?.tooltipSize;
     if (tooltipSize == null) {
@@ -481,12 +488,7 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
       return;
     }
 
-    // try to update the tooltip position
-    try {
-      _updateTooltipPosition();
-    } catch (e, stackTrace) {
-      recordError(e, stackTrace, severity: ErrorSeverity.warning);
-    }
+    _updateTooltipPosition();
 
     if (_isFrameLoopActive && mounted) {
       WidgetsBinding.instance.addPostFrameCallback(_onFrame);
