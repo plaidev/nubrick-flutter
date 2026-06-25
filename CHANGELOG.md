@@ -1,3 +1,8 @@
+## 0.19.2
+
+- Add error reporting when embedding is missing size
+- Fix issue with embedding / tooltip display
+
 ## 0.19.1
 
 - Make UI components reactive to changes in parameters such as embedding arguments or user properties
