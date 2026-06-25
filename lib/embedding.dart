@@ -137,6 +137,8 @@ class _EmbeddingState extends State<NubrickEmbedding> {
   late final MethodChannel _embeddingChannel;
   double? _embeddingWidth;
   double? _embeddingHeight;
+  var _heightErrorReported = false;
+  var _widthErrorReported = false;
 
   @override
   void initState() {
@@ -238,10 +240,51 @@ class _EmbeddingState extends State<NubrickEmbedding> {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: widget.height ?? _embeddingHeight,
-      width: widget.width ?? _embeddingWidth,
-      child: _renderByPhase(context),
+    final isCompleted = _phase == EmbeddingPhase.completed;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        double? height = widget.height ?? _embeddingHeight;
+        double? width = widget.width ?? _embeddingWidth;
+        if (isCompleted && height == null && !constraints.hasBoundedHeight) {
+          height = 0.0;
+          if (!_heightErrorReported) {
+            _heightErrorReported = true;
+            final details = FlutterErrorDetails(
+              exception: StateError(
+                'NubrickEmbedding has no height. Fix this by either: '
+                '(1) passing height to the NubrickEmbedding widget, '
+                '(2) setting a fixed height in the editor for this component, or '
+                '(3) placing the embedding inside a height-bounded layout (e.g. Expanded, SizedBox).',
+              ),
+              library: 'nubrick_flutter',
+            );
+            FlutterError.reportError(details);
+            debugPrint('flutter: ${details.exceptionAsString()}');
+          }
+        }
+        if (isCompleted && width == null && !constraints.hasBoundedWidth) {
+          width = 0.0;
+          if (!_widthErrorReported) {
+            _widthErrorReported = true;
+            final details = FlutterErrorDetails(
+              exception: StateError(
+                'NubrickEmbedding has no width. Fix this by either: '
+                '(1) passing width to the NubrickEmbedding widget, '
+                '(2) setting a fixed width in the editor for this component, or '
+                '(3) placing the embedding inside a width-bounded layout (e.g. Expanded, SizedBox).',
+              ),
+              library: 'nubrick_flutter',
+            );
+            FlutterError.reportError(details);
+            debugPrint('flutter: ${details.exceptionAsString()}');
+          }
+        }
+        return SizedBox(
+          height: height,
+          width: width,
+          child: _renderByPhase(context),
+        );
+      },
     );
   }
 
