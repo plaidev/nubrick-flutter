@@ -328,7 +328,7 @@ class ApiHttpResponseAssertion {
 }
 
 class BoxShadow {
-  final Color? color;
+  final ColorValue? color;
   final int? offsetX;
   final int? offsetY;
   final int? radius;
@@ -349,7 +349,7 @@ class BoxShadow {
     }
 
     return BoxShadow(
-      color: Color.decode(json['color']),
+      color: ColorValue.decode(json['color']),
       offsetX: IntDecoder.decode(json['offsetX']),
       offsetY: IntDecoder.decode(json['offsetY']),
       radius: IntDecoder.decode(json['radius']),
@@ -383,9 +383,9 @@ enum BuiltinUserProperty {
   // ignore: constant_identifier_names
   lastBootTime,
   // ignore: constant_identifier_names
-  retentionPeriod,
-  // ignore: constant_identifier_names
   bootingTime,
+  // ignore: constant_identifier_names
+  retentionPeriod,
   // ignore: constant_identifier_names
   sdkVersion,
   // ignore: constant_identifier_names
@@ -440,10 +440,10 @@ extension BuiltinUserPropertyExtension on BuiltinUserProperty {
         return BuiltinUserProperty.firstBootTime;
       case 'lastBootTime':
         return BuiltinUserProperty.lastBootTime;
-      case 'retentionPeriod':
-        return BuiltinUserProperty.retentionPeriod;
       case 'bootingTime':
         return BuiltinUserProperty.bootingTime;
+      case 'retentionPeriod':
+        return BuiltinUserProperty.retentionPeriod;
       case 'sdkVersion':
         return BuiltinUserProperty.sdkVersion;
       case 'osVersion':
@@ -491,10 +491,10 @@ extension BuiltinUserPropertyExtension on BuiltinUserProperty {
         return 'firstBootTime';
       case BuiltinUserProperty.lastBootTime:
         return 'lastBootTime';
-      case BuiltinUserProperty.retentionPeriod:
-        return 'retentionPeriod';
       case BuiltinUserProperty.bootingTime:
         return 'bootingTime';
+      case BuiltinUserProperty.retentionPeriod:
+        return 'retentionPeriod';
       case BuiltinUserProperty.sdkVersion:
         return 'sdkVersion';
       case BuiltinUserProperty.osVersion:
@@ -610,6 +610,61 @@ class Color {
       'blue': blue,
       'alpha': alpha,
     };
+  }
+}
+
+abstract class ColorValue {
+  factory ColorValue.asColor(Color data) = ColorValueColor;
+  factory ColorValue.asLinearGradient(LinearGradient data) =
+      ColorValueLinearGradient;
+
+  static ColorValue? decode(dynamic json) {
+    if (json == null) {
+      return null;
+    }
+    if (json is! Map<String, dynamic>) {
+      return null;
+    }
+
+    final typename = json['__typename'];
+    if (typename == null || typename is! String) {
+      return null;
+    }
+
+    switch (typename) {
+      case 'Color':
+        final decoded = Color.decode(json);
+        return decoded != null ? ColorValue.asColor(decoded) : null;
+      case 'LinearGradient':
+        final decoded = LinearGradient.decode(json);
+        return decoded != null ? ColorValue.asLinearGradient(decoded) : null;
+      default:
+        return null;
+    }
+  }
+
+  Map<String, dynamic>? encode();
+}
+
+class ColorValueColor implements ColorValue {
+  final Color data;
+
+  ColorValueColor(this.data);
+
+  @override
+  Map<String, dynamic>? encode() {
+    return data.encode();
+  }
+}
+
+class ColorValueLinearGradient implements ColorValue {
+  final LinearGradient data;
+
+  ColorValueLinearGradient(this.data);
+
+  @override
+  Map<String, dynamic>? encode() {
+    return data.encode();
   }
 }
 
@@ -1153,8 +1208,8 @@ class FrameData {
   final int? borderBottomRightRadius;
   final int? borderBottomLeftRadius;
   final int? borderWidth;
-  final Color? borderColor;
-  final Color? background;
+  final ColorValue? borderColor;
+  final ColorValue? background;
   final String? backgroundSrc;
   final BoxShadow? shadow;
 
@@ -1199,8 +1254,8 @@ class FrameData {
           IntDecoder.decode(json['borderBottomRightRadius']),
       borderBottomLeftRadius: IntDecoder.decode(json['borderBottomLeftRadius']),
       borderWidth: IntDecoder.decode(json['borderWidth']),
-      borderColor: Color.decode(json['borderColor']),
-      background: Color.decode(json['background']),
+      borderColor: ColorValue.decode(json['borderColor']),
+      background: ColorValue.decode(json['background']),
       backgroundSrc: StringDecoder.decode(json['backgroundSrc']),
       shadow: BoxShadow.decode(json['shadow']),
     );
@@ -1284,6 +1339,38 @@ extension FrequencyUnitExtension on FrequencyUnit {
       case FrequencyUnit.UNKNOWN:
         return null;
     }
+  }
+}
+
+class GradientStop {
+  final Color? color;
+  final double? position;
+
+  GradientStop({
+    this.color,
+    this.position,
+  });
+
+  static GradientStop? decode(dynamic json) {
+    if (json == null) {
+      return null;
+    }
+    if (json is! Map<String, dynamic>) {
+      return null;
+    }
+
+    return GradientStop(
+      color: Color.decode(json['color']),
+      position: FloatDecoder.decode(json['position']),
+    );
+  }
+
+  Map<String, dynamic> encode() {
+    return {
+      '__typename': 'GradientStop',
+      'color': color?.encode(),
+      'position': position,
+    };
   }
 }
 
@@ -1379,6 +1466,55 @@ extension JustifyContentExtension on JustifyContent {
   }
 }
 
+class LinearGradient {
+  final double? red;
+  final double? green;
+  final double? blue;
+  final double? alpha;
+  final double? angle;
+  final List<GradientStop>? stops;
+
+  LinearGradient({
+    this.red,
+    this.green,
+    this.blue,
+    this.alpha,
+    this.angle,
+    this.stops,
+  });
+
+  static LinearGradient? decode(dynamic json) {
+    if (json == null) {
+      return null;
+    }
+    if (json is! Map<String, dynamic>) {
+      return null;
+    }
+
+    return LinearGradient(
+      red: FloatDecoder.decode(json['red']),
+      green: FloatDecoder.decode(json['green']),
+      blue: FloatDecoder.decode(json['blue']),
+      alpha: FloatDecoder.decode(json['alpha']),
+      angle: FloatDecoder.decode(json['angle']),
+      stops: ListDecoder.decode(
+          json['stops'], (element) => GradientStop.decode(element)),
+    );
+  }
+
+  Map<String, dynamic> encode() {
+    return {
+      '__typename': 'LinearGradient',
+      'red': red,
+      'green': green,
+      'blue': blue,
+      'alpha': alpha,
+      'angle': angle,
+      'stops': stops?.map((e) => e.encode()).toList(growable: false),
+    };
+  }
+}
+
 enum ModalPresentationStyle {
   // ignore: constant_identifier_names
   DEPENDS_ON_CONTEXT_OR_FULL_SCREEN,
@@ -1467,7 +1603,7 @@ extension ModalScreenSizeExtension on ModalScreenSize {
 
 class NavigationBackButton {
   final String? title;
-  final Color? color;
+  final ColorValue? color;
   final bool? visible;
 
   NavigationBackButton({
@@ -1486,7 +1622,7 @@ class NavigationBackButton {
 
     return NavigationBackButton(
       title: StringDecoder.decode(json['title']),
-      color: Color.decode(json['color']),
+      color: ColorValue.decode(json['color']),
       visible: BooleanDecoder.decode(json['visible']),
     );
   }
@@ -1924,6 +2060,7 @@ abstract class UIBlock {
       UIBlockUIMultiSelectInputBlock;
   factory UIBlock.asUISwitchInputBlock(UISwitchInputBlock data) =
       UIBlockUISwitchInputBlock;
+  factory UIBlock.asUIBlockButton(UIBlockButton data) = UIBlockUIBlockButton;
 
   static UIBlock? decode(dynamic json) {
     if (json == null) {
@@ -1974,6 +2111,9 @@ abstract class UIBlock {
       case 'UISwitchInputBlock':
         final decoded = UISwitchInputBlock.decode(json);
         return decoded != null ? UIBlock.asUISwitchInputBlock(decoded) : null;
+      case 'UIBlockButton':
+        final decoded = UIBlockButton.decode(json);
+        return decoded != null ? UIBlock.asUIBlockButton(decoded) : null;
       default:
         return null;
     }
@@ -2103,6 +2243,17 @@ class UIBlockUISwitchInputBlock implements UIBlock {
   }
 }
 
+class UIBlockUIBlockButton implements UIBlock {
+  final UIBlockButton data;
+
+  UIBlockUIBlockButton(this.data);
+
+  @override
+  Map<String, dynamic>? encode() {
+    return data.encode();
+  }
+}
+
 class UIBlockAction {
   final String? eventName;
   final String? name;
@@ -2158,6 +2309,78 @@ class UIBlockAction {
       'requiredFields': requiredFields?.map((e) => e).toList(growable: false),
       'httpRequest': httpRequest?.encode(),
       'httpResponseAssertion': httpResponseAssertion?.encode(),
+    };
+  }
+}
+
+class UIBlockButton {
+  final String? id;
+  final UIBlockButtonData? data;
+
+  UIBlockButton({
+    this.id,
+    this.data,
+  });
+
+  static UIBlockButton? decode(dynamic json) {
+    if (json == null) {
+      return null;
+    }
+    if (json is! Map<String, dynamic>) {
+      return null;
+    }
+
+    return UIBlockButton(
+      id: StringDecoder.decode(json['id']),
+      data: UIBlockButtonData.decode(json['data']),
+    );
+  }
+
+  Map<String, dynamic> encode() {
+    return {
+      '__typename': 'UIBlockButton',
+      'id': id,
+      'data': data?.encode(),
+    };
+  }
+}
+
+class UIBlockButtonData {
+  final UIBlock? child;
+  final FrameData? frame;
+  final UIBlockAction? onClick;
+  final bool? submitSurveyResponse;
+
+  UIBlockButtonData({
+    this.child,
+    this.frame,
+    this.onClick,
+    this.submitSurveyResponse,
+  });
+
+  static UIBlockButtonData? decode(dynamic json) {
+    if (json == null) {
+      return null;
+    }
+    if (json is! Map<String, dynamic>) {
+      return null;
+    }
+
+    return UIBlockButtonData(
+      child: UIBlock.decode(json['child']),
+      frame: FrameData.decode(json['frame']),
+      onClick: UIBlockAction.decode(json['onClick']),
+      submitSurveyResponse: BooleanDecoder.decode(json['submitSurveyResponse']),
+    );
+  }
+
+  Map<String, dynamic> encode() {
+    return {
+      '__typename': 'UIBlockButtonData',
+      'child': child?.encode(),
+      'frame': frame?.encode(),
+      'onClick': onClick?.encode(),
+      'submitSurveyResponse': submitSurveyResponse,
     };
   }
 }
@@ -2547,7 +2770,7 @@ class UIMultiSelectInputBlockData {
   final List<String>? value;
   final String? placeholder;
   final int? size;
-  final Color? color;
+  final ColorValue? color;
   final FontDesign? design;
   final FontWeight? weight;
   final TextAlign? textAlign;
@@ -2582,7 +2805,7 @@ class UIMultiSelectInputBlockData {
           json['value'], (element) => StringDecoder.decode(element)),
       placeholder: StringDecoder.decode(json['placeholder']),
       size: IntDecoder.decode(json['size']),
-      color: Color.decode(json['color']),
+      color: ColorValue.decode(json['color']),
       design: FontDesignExtension.decode(json['design']),
       weight: FontWeightExtension.decode(json['weight']),
       textAlign: TextAlignExtension.decode(json['textAlign']),
@@ -2879,7 +3102,7 @@ class UISelectInputBlockData {
   final String? value;
   final String? placeholder;
   final int? size;
-  final Color? color;
+  final ColorValue? color;
   final FontDesign? design;
   final FontWeight? weight;
   final TextAlign? textAlign;
@@ -2913,7 +3136,7 @@ class UISelectInputBlockData {
       value: StringDecoder.decode(json['value']),
       placeholder: StringDecoder.decode(json['placeholder']),
       size: IntDecoder.decode(json['size']),
-      color: Color.decode(json['color']),
+      color: ColorValue.decode(json['color']),
       design: FontDesignExtension.decode(json['design']),
       weight: FontWeightExtension.decode(json['weight']),
       textAlign: TextAlignExtension.decode(json['textAlign']),
@@ -3005,7 +3228,7 @@ class UISwitchInputBlock {
 class UISwitchInputBlockData {
   final String? key;
   final bool? value;
-  final Color? checkedColor;
+  final ColorValue? checkedColor;
 
   UISwitchInputBlockData({
     this.key,
@@ -3024,7 +3247,7 @@ class UISwitchInputBlockData {
     return UISwitchInputBlockData(
       key: StringDecoder.decode(json['key']),
       value: BooleanDecoder.decode(json['value']),
-      checkedColor: Color.decode(json['checkedColor']),
+      checkedColor: ColorValue.decode(json['checkedColor']),
     );
   }
 
@@ -3073,7 +3296,7 @@ class UITextBlock {
 class UITextBlockData {
   final String? value;
   final int? size;
-  final Color? color;
+  final ColorValue? color;
   final FontDesign? design;
   final FontWeight? weight;
   final int? maxLines;
@@ -3102,7 +3325,7 @@ class UITextBlockData {
     return UITextBlockData(
       value: StringDecoder.decode(json['value']),
       size: IntDecoder.decode(json['size']),
-      color: Color.decode(json['color']),
+      color: ColorValue.decode(json['color']),
       design: FontDesignExtension.decode(json['design']),
       weight: FontWeightExtension.decode(json['weight']),
       maxLines: IntDecoder.decode(json['maxLines']),
@@ -3168,7 +3391,7 @@ class UITextInputBlockData {
   final bool? secure;
   final bool? autocorrect;
   final int? size;
-  final Color? color;
+  final ColorValue? color;
   final FontDesign? design;
   final FontWeight? weight;
   final TextAlign? textAlign;
@@ -3210,7 +3433,7 @@ class UITextInputBlockData {
       secure: BooleanDecoder.decode(json['secure']),
       autocorrect: BooleanDecoder.decode(json['autocorrect']),
       size: IntDecoder.decode(json['size']),
-      color: Color.decode(json['color']),
+      color: ColorValue.decode(json['color']),
       design: FontDesignExtension.decode(json['design']),
       weight: FontWeightExtension.decode(json['weight']),
       textAlign: TextAlignExtension.decode(json['textAlign']),
