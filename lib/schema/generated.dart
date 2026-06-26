@@ -2060,7 +2060,6 @@ abstract class UIBlock {
       UIBlockUIMultiSelectInputBlock;
   factory UIBlock.asUISwitchInputBlock(UISwitchInputBlock data) =
       UIBlockUISwitchInputBlock;
-  factory UIBlock.asUIBlockButton(UIBlockButton data) = UIBlockUIBlockButton;
 
   static UIBlock? decode(dynamic json) {
     if (json == null) {
@@ -2111,9 +2110,6 @@ abstract class UIBlock {
       case 'UISwitchInputBlock':
         final decoded = UISwitchInputBlock.decode(json);
         return decoded != null ? UIBlock.asUISwitchInputBlock(decoded) : null;
-      case 'UIBlockButton':
-        final decoded = UIBlockButton.decode(json);
-        return decoded != null ? UIBlock.asUIBlockButton(decoded) : null;
       default:
         return null;
     }
@@ -2243,17 +2239,6 @@ class UIBlockUISwitchInputBlock implements UIBlock {
   }
 }
 
-class UIBlockUIBlockButton implements UIBlock {
-  final UIBlockButton data;
-
-  UIBlockUIBlockButton(this.data);
-
-  @override
-  Map<String, dynamic>? encode() {
-    return data.encode();
-  }
-}
-
 class UIBlockAction {
   final String? eventName;
   final String? name;
@@ -2309,78 +2294,6 @@ class UIBlockAction {
       'requiredFields': requiredFields?.map((e) => e).toList(growable: false),
       'httpRequest': httpRequest?.encode(),
       'httpResponseAssertion': httpResponseAssertion?.encode(),
-    };
-  }
-}
-
-class UIBlockButton {
-  final String? id;
-  final UIBlockButtonData? data;
-
-  UIBlockButton({
-    this.id,
-    this.data,
-  });
-
-  static UIBlockButton? decode(dynamic json) {
-    if (json == null) {
-      return null;
-    }
-    if (json is! Map<String, dynamic>) {
-      return null;
-    }
-
-    return UIBlockButton(
-      id: StringDecoder.decode(json['id']),
-      data: UIBlockButtonData.decode(json['data']),
-    );
-  }
-
-  Map<String, dynamic> encode() {
-    return {
-      '__typename': 'UIBlockButton',
-      'id': id,
-      'data': data?.encode(),
-    };
-  }
-}
-
-class UIBlockButtonData {
-  final UIBlock? child;
-  final FrameData? frame;
-  final UIBlockAction? onClick;
-  final bool? submitSurveyResponse;
-
-  UIBlockButtonData({
-    this.child,
-    this.frame,
-    this.onClick,
-    this.submitSurveyResponse,
-  });
-
-  static UIBlockButtonData? decode(dynamic json) {
-    if (json == null) {
-      return null;
-    }
-    if (json is! Map<String, dynamic>) {
-      return null;
-    }
-
-    return UIBlockButtonData(
-      child: UIBlock.decode(json['child']),
-      frame: FrameData.decode(json['frame']),
-      onClick: UIBlockAction.decode(json['onClick']),
-      submitSurveyResponse: BooleanDecoder.decode(json['submitSurveyResponse']),
-    );
-  }
-
-  Map<String, dynamic> encode() {
-    return {
-      '__typename': 'UIBlockButtonData',
-      'child': child?.encode(),
-      'frame': frame?.encode(),
-      'onClick': onClick?.encode(),
-      'submitSurveyResponse': submitSurveyResponse,
     };
   }
 }
