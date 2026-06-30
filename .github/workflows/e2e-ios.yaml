@@ -7,7 +7,7 @@ on:
 
 jobs:
   publish-flutter-ios-e2e-app:
-    runs-on: macos-15
+    runs-on: macos-26
     environment:
       name: Only Main
     steps:
@@ -16,7 +16,7 @@ jobs:
 
       - uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd # v1.6.0
         with:
-          xcode-version: '16.2'
+          xcode-version: 'latest'
 
       - name: Run Xcode first launch tasks
         run: xcodebuild -runFirstLaunch
