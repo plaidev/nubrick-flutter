@@ -1,3 +1,7 @@
+## 0.19.3
+
+- Fix issue on Android
+
 ## 0.19.2
 
 - Add error reporting when embedding is missing size
