@@ -86,7 +86,7 @@ class NubrickFlutterManager {
         projectId: String,
         onEvent: (@Sendable (_ event: ComponentEvent) -> Void)? = nil,
         onDispatch: ((_ event: NubrickEvent) -> Void)? = nil,
-        onTooltip: ((_ data: String, _ experimentId: String) -> Void)? = nil
+        onTooltip: ((_ data: String, _ experimentId: String, _ variantId: String?) -> Void)? = nil
     ) {
         // Callbacks are passed at init to avoid missing events fired during initialization.
         NubrickBridge.initialize(
@@ -284,10 +284,18 @@ class NubrickFlutterManager {
     }
 
     // tooltip
-    func connectTooltipEmbedding(channelId: String, rootBlock: String, messenger: FlutterBinaryMessenger) {
+    func connectTooltipEmbedding(
+        channelId: String,
+        experimentId: String,
+        variantId: String?,
+        rootBlock: String,
+        messenger: FlutterBinaryMessenger
+    ) {
         let channel = FlutterMethodChannel(name: "Nubrick/Embedding/\(channelId)", binaryMessenger: messenger)
         let accessor = NubrickBridge.renderUIView(
             json: rootBlock,
+            experimentId: experimentId,
+            variantId: variantId,
             onEvent: { event in
                 channel.invokeMethod(ON_EVENT_METHOD, arguments: [
                     "name": event.name as Any?,

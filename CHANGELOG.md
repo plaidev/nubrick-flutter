@@ -1,3 +1,7 @@
+## 0.20.0
+
+- Add survey response tracking support
+
 ## 0.19.3
 
 - Fix issue on Android

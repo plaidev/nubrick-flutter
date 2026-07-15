@@ -136,13 +136,15 @@ class MethodChannelNubrickFlutter extends NubrickFlutterPlatform {
   }
 
   @override
-  Future<String?> connectTooltipEmbedding(
-      String channelId, UIRootBlock rootBlock) async {
+  Future<String?> connectTooltipEmbedding(String channelId, String experimentId,
+      String? variantId, UIRootBlock rootBlock) async {
     var json = jsonEncode(rootBlock.encode());
     final result = await methodChannel.invokeMethod<String>(
       'connectTooltipEmbedding',
       <String, dynamic>{
         'channelId': channelId,
+        'experimentId': experimentId,
+        'variantId': variantId,
         'json': json,
       },
     );

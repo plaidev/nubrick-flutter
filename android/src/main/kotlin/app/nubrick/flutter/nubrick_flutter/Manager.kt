@@ -9,6 +9,7 @@ import app.nubrick.nubrick.FlutterBridgeApi
 import app.nubrick.nubrick.FlutterBridge
 import app.nubrick.nubrick.NubrickSDK
 import app.nubrick.nubrick.data.ExceptionRecord
+import app.nubrick.nubrick.data.ExperimentContent
 import app.nubrick.nubrick.data.NotFoundException
 import app.nubrick.nubrick.data.StackFrame
 import app.nubrick.nubrick.data.CrashSeverity
@@ -54,7 +55,7 @@ internal class NubrickFlutterManager(
     private val binaryMessenger: BinaryMessenger,
     private val scope: CoroutineScope
 ) {
-    private var embeddingMap: MutableMap<String, Any?> = mutableMapOf()
+    private var embeddingMap: MutableMap<String, ExperimentContent> = mutableMapOf()
     private var embeddingArgumentStateMap: MutableMap<String, MutableState<Any?>> = mutableMapOf()
     private var eventBridgeViewMap: MutableMap<String, UIBlockActionBridge> = mutableMapOf()
     private var configMap: MutableMap<String, ConfigEntity> = mutableMapOf()
@@ -64,7 +65,7 @@ internal class NubrickFlutterManager(
         projectId: String,
         onEvent: (event: Event) -> Unit,
         onDispatch: (event: NubrickEvent) -> Unit,
-        onTooltip: (data: String, experimentId: String) -> Unit
+        onTooltip: (data: String, experimentId: String, variantId: String?) -> Unit
     ) {
         // Callbacks are passed at init to avoid missing events fired during initialization.
         NubrickSDK.initialize(
@@ -97,11 +98,16 @@ internal class NubrickFlutterManager(
     }
 
     // embedding
-    fun connectEmbedding(channelId: String, experimentId: String, componentId: String? = null) {
+    fun connectEmbedding(
+        channelId: String,
+        experimentId: String,
+        componentId: String? = null,
+        variantId: String? = null,
+    ) {
         val methodChannel = MethodChannel(this.binaryMessenger, "Nubrick/Embedding/$channelId")
         scope.launch {
             val result = withContext(Dispatchers.IO) {
-                FlutterBridge.connectEmbedding(experimentId, componentId)
+                FlutterBridge.connectEmbedding(experimentId, componentId, variantId)
             }
             result.onSuccess {
                 embeddingMap[channelId] = it
@@ -153,7 +159,7 @@ internal class NubrickFlutterManager(
         val methodChannel = remember(channelId) {
             MethodChannel(this.binaryMessenger, "Nubrick/Embedding/$channelId")
         }
-        val data = this.embeddingMap[channelId]
+        val data = this.embeddingMap[channelId] ?: return
         val eventBridge = this.eventBridgeViewMap[channelId]
         FlutterBridge.render(
             modifier,
@@ -239,13 +245,29 @@ internal class NubrickFlutterManager(
         val variant = config.variant ?: return
         val componentId = variant.get(key) ?: return
         val experimentId = config.experimentId ?: return
-        this.connectEmbedding(embeddingChannelId, experimentId, componentId)
+        this.connectEmbedding(
+            channelId = embeddingChannelId,
+            experimentId = experimentId,
+            componentId = componentId,
+            variantId = variant.id,
+        )
     }
 
-    fun connectTooltipEmbedding(channelId: String, rootBlock: String) {
-        if (channelId.isEmpty()) return
-        embeddingMap[channelId] = rootBlock
+    fun connectTooltipEmbedding(
+        channelId: String,
+        experimentId: String,
+        variantId: String?,
+        rootJson: String,
+    ): Result<Unit> {
+        if (channelId.isEmpty() || experimentId.isEmpty()) {
+            return Result.failure(IllegalArgumentException("Missing tooltip channel or experiment ID"))
+        }
+        val content = FlutterBridge.buildExperimentContent(experimentId, variantId, rootJson).getOrElse {
+            return Result.failure(it)
+        }
+        embeddingMap[channelId] = content
         eventBridgeViewMap[channelId] = UIBlockActionBridge()
+        return Result.success(Unit)
     }
 
     suspend fun callTooltipEmbeddingDispatch(channelId: String, event: String) {

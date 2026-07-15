@@ -2248,6 +2248,7 @@ class UIBlockAction {
   final List<String>? requiredFields;
   final ApiHttpRequest? httpRequest;
   final ApiHttpResponseAssertion? httpResponseAssertion;
+  final bool? submitSurveyResponse;
 
   UIBlockAction({
     this.eventName,
@@ -2258,6 +2259,7 @@ class UIBlockAction {
     this.requiredFields,
     this.httpRequest,
     this.httpResponseAssertion,
+    this.submitSurveyResponse,
   });
 
   static UIBlockAction? decode(dynamic json) {
@@ -2280,6 +2282,7 @@ class UIBlockAction {
       httpRequest: ApiHttpRequest.decode(json['httpRequest']),
       httpResponseAssertion:
           ApiHttpResponseAssertion.decode(json['httpResponseAssertion']),
+      submitSurveyResponse: BooleanDecoder.decode(json['submitSurveyResponse']),
     );
   }
 
@@ -2294,6 +2297,7 @@ class UIBlockAction {
       'requiredFields': requiredFields?.map((e) => e).toList(growable: false),
       'httpRequest': httpRequest?.encode(),
       'httpResponseAssertion': httpResponseAssertion?.encode(),
+      'submitSurveyResponse': submitSurveyResponse,
     };
   }
 }
