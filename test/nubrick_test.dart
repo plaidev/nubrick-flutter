@@ -251,7 +251,8 @@ void main() {
       expect(Nubrick.projectId, 'project-b');
     });
 
-    test('rolls back initialization when native setup rejects the project', () async {
+    test('rolls back initialization when native setup rejects the project',
+        () async {
       fakePlatform.connectClientResult = 'no';
 
       Nubrick.initialize('project-a');
@@ -375,18 +376,25 @@ void main() {
 
       String? tooltipData;
       String? tooltipExperimentId;
+      String? tooltipVariantId;
       Nubrick.addOnTooltipListener((data, experimentId) {
         tooltipData = data;
         tooltipExperimentId = experimentId;
+      });
+      nubrickRuntime
+          .addInternalTooltipListener((data, experimentId, variantId) {
+        tooltipVariantId = variantId;
       });
 
       await _sendMethodChannelCall('on-tooltip', {
         'data': '{"step":1}',
         'experimentId': 'exp-123',
+        'variantId': 'var-456',
       });
 
       expect(tooltipData, '{"step":1}');
       expect(tooltipExperimentId, 'exp-123');
+      expect(tooltipVariantId, 'var-456');
     });
   });
 }

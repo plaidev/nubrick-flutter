@@ -98,11 +98,12 @@ class NubrickFlutterPlugin: FlutterPlugin, MethodCallHandler {
                             ))
                         }
                     },
-                    onTooltip = { data, experimentId ->
+                    onTooltip = { data, experimentId, variantId ->
                         sdkScope.launch {
                             channel.invokeMethod("on-tooltip", mapOf(
                                 "data" to data,
                                 "experimentId" to experimentId,
+                                "variantId" to variantId,
                             ))
                         }
                     }
@@ -176,8 +177,10 @@ class NubrickFlutterPlugin: FlutterPlugin, MethodCallHandler {
             // tooltip
             "connectTooltipEmbedding" -> {
                 val channelId = call.argument<String>("channelId") as String
-                val rootBlock = call.argument<String>("json") as String
-                this.manager.connectTooltipEmbedding(channelId, rootBlock)
+                val experimentId = call.argument<String>("experimentId") as String
+                val variantId = call.argument<String>("variantId")
+                val rootJson = call.argument<String>("json") as String
+                this.manager.connectTooltipEmbedding(channelId, experimentId, variantId, rootJson)
                 result.success("ok")
             }
             "callTooltipEmbeddingDispatch" -> {

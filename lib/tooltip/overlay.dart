@@ -155,11 +155,14 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
     return _currentTooltipTransitionId;
   }
 
-  void _onTooltip(String data, String? experimentId) async {
+  void _onTooltip(String data, String? experimentId, String? variantId) async {
     // Ignore re-entrant tooltip events during an active flow.
     // A new flow starts only after native sends dismiss/next and _hideTooltip
     // resets this flag.
     if (_isTooltipFlowActive) {
+      return;
+    }
+    if (experimentId == null || experimentId.isEmpty) {
       return;
     }
 
@@ -208,6 +211,8 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
       }
       await NubrickFlutterPlatform.instance.connectTooltipEmbedding(
           _channelId,
+          experimentId,
+          variantId,
           schema.UIRootBlock(
             id: generateRandomString(16),
             data: schema.UIRootBlockData(
@@ -580,13 +585,13 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
     super.initState();
     _channel = MethodChannel("Nubrick/Embedding/$_channelId");
     _channel.setMethodCallHandler(_handleMethod);
-    nubrickRuntime.addOnTooltipListener(_onTooltip);
+    nubrickRuntime.addInternalTooltipListener(_onTooltip);
   }
 
   @override
   void dispose() {
     _channel.setMethodCallHandler(null);
-    nubrickRuntime.removeOnTooltipListener(_onTooltip);
+    nubrickRuntime.removeInternalTooltipListener(_onTooltip);
     if (_channelId.isNotEmpty) {
       NubrickFlutterPlatform.instance.disconnectTooltipEmbedding(_channelId);
     }

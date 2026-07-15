@@ -75,11 +75,12 @@ public class NubrickFlutterPlugin: NSObject, FlutterPlugin {
                         ])
                     }
                 },
-                onTooltip: { [weak self] data, experimentId in
+                onTooltip: { [weak self] data, experimentId, variantId in
                     Task { @MainActor in
                         self?.channel.invokeMethod("on-tooltip", arguments: [
                             "data": data,
                             "experimentId": experimentId,
+                            "variantId": variantId,
                         ])
                     }
                 }
@@ -157,8 +158,16 @@ public class NubrickFlutterPlugin: NSObject, FlutterPlugin {
         case "connectTooltipEmbedding":
             let args = call.arguments as! [String:Any]
             let channelId = args["channelId"] as! String
+            let experimentId = args["experimentId"] as! String
+            let variantId = args["variantId"] as? String
             let rootBlock = args["json"] as! String
-            self.manager.connectTooltipEmbedding(channelId: channelId, rootBlock: rootBlock, messenger: self.messenger)
+            self.manager.connectTooltipEmbedding(
+                channelId: channelId,
+                experimentId: experimentId,
+                variantId: variantId,
+                rootBlock: rootBlock,
+                messenger: self.messenger
+            )
             result("ok")
 
         case "callTooltipEmbeddingDispatch":

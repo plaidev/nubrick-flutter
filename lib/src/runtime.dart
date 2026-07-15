@@ -22,7 +22,9 @@ class NubrickRuntime {
   Completer<void>? _initializationCompleter;
   final List<EventHandler> _listeners = [];
   final List<void Function(String)> _onDispatchListeners = [];
-  final List<void Function(String, String?)> _onTooltipListeners = [];
+  final List<void Function(String, String?)> _publicTooltipListeners = [];
+  final List<void Function(String, String?, String?)>
+      _internalTooltipListeners = [];
   final MethodChannel _channel = const MethodChannel("nubrick_flutter");
 
   NubrickRuntime._internal();
@@ -183,11 +185,21 @@ class NubrickRuntime {
   }
 
   void addOnTooltipListener(void Function(String, String?) listener) {
-    _onTooltipListeners.add(listener);
+    _publicTooltipListeners.add(listener);
   }
 
   void removeOnTooltipListener(void Function(String, String?) listener) {
-    _onTooltipListeners.remove(listener);
+    _publicTooltipListeners.remove(listener);
+  }
+
+  void addInternalTooltipListener(
+      void Function(String, String?, String?) listener) {
+    _internalTooltipListeners.add(listener);
+  }
+
+  void removeInternalTooltipListener(
+      void Function(String, String?, String?) listener) {
+    _internalTooltipListeners.remove(listener);
   }
 
   Future<dynamic> _handleMethod(MethodCall call) async {
@@ -212,16 +224,21 @@ class NubrickRuntime {
       case 'on-tooltip':
         String? data;
         String? experimentId;
+        String? variantId;
         final args = call.arguments;
         if (args is String) {
           data = args;
         } else if (args is Map) {
           data = args["data"] as String?;
           experimentId = args["experimentId"] as String?;
+          variantId = args["variantId"] as String?;
         }
         if (data != null) {
-          for (var listener in List.of(_onTooltipListeners)) {
+          for (var listener in List.of(_publicTooltipListeners)) {
             listener(data, experimentId);
+          }
+          for (var listener in List.of(_internalTooltipListeners)) {
+            listener(data, experimentId, variantId);
           }
         }
         return Future.value(true);
@@ -255,6 +272,7 @@ class NubrickRuntime {
 
     _listeners.clear();
     _onDispatchListeners.clear();
-    _onTooltipListeners.clear();
+    _publicTooltipListeners.clear();
+    _internalTooltipListeners.clear();
   }
 }
