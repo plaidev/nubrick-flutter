@@ -986,11 +986,13 @@ extension ExperimentKindExtension on ExperimentKind {
 
 class ExperimentVariant {
   final String? id;
+  final String? label;
   final List<VariantConfig>? configs;
   final int? weight;
 
   ExperimentVariant({
     this.id,
+    this.label,
     this.configs,
     this.weight,
   });
@@ -1005,6 +1007,7 @@ class ExperimentVariant {
 
     return ExperimentVariant(
       id: StringDecoder.decode(json['id']),
+      label: StringDecoder.decode(json['label']),
       configs: ListDecoder.decode(
           json['configs'], (element) => VariantConfig.decode(element)),
       weight: IntDecoder.decode(json['weight']),
@@ -1015,6 +1018,7 @@ class ExperimentVariant {
     return {
       '__typename': 'ExperimentVariant',
       'id': id,
+      'label': label,
       'configs': configs?.map((e) => e.encode()).toList(growable: false),
       'weight': weight,
     };
@@ -1939,6 +1943,8 @@ enum TriggerEventNameDefs {
   // ignore: constant_identifier_names
   N_ERROR_IN_SDK_RECORD,
   // ignore: constant_identifier_names
+  NUBRICK_SURVEY_RESPONSE_SENT,
+  // ignore: constant_identifier_names
   UNKNOWN,
 }
 
@@ -1974,6 +1980,8 @@ extension TriggerEventNameDefsExtension on TriggerEventNameDefs {
         return TriggerEventNameDefs.N_ERROR_RECORD;
       case 'N_ERROR_IN_SDK_RECORD':
         return TriggerEventNameDefs.N_ERROR_IN_SDK_RECORD;
+      case 'NUBRICK_SURVEY_RESPONSE_SENT':
+        return TriggerEventNameDefs.NUBRICK_SURVEY_RESPONSE_SENT;
       default:
         return TriggerEventNameDefs.UNKNOWN;
     }
@@ -2003,6 +2011,8 @@ extension TriggerEventNameDefsExtension on TriggerEventNameDefs {
         return 'N_ERROR_RECORD';
       case TriggerEventNameDefs.N_ERROR_IN_SDK_RECORD:
         return 'N_ERROR_IN_SDK_RECORD';
+      case TriggerEventNameDefs.NUBRICK_SURVEY_RESPONSE_SENT:
+        return 'NUBRICK_SURVEY_RESPONSE_SENT';
       case TriggerEventNameDefs.UNKNOWN:
         return null;
     }
