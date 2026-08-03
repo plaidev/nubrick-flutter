@@ -1,2 +1,2 @@
 /// The version of the Nubrick Flutter SDK.
-const String nubrickFlutterSdkVersion = '0.20.0';
+const String nubrickFlutterSdkVersion = '0.20.1';
