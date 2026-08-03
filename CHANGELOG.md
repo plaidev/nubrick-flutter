@@ -1,3 +1,7 @@
+## 0.20.1
+
+- Fix modal display issue
+
 ## 0.20.0
 
 - Add survey response tracking support

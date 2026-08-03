@@ -3,7 +3,7 @@ import 'package:nubrick_flutter/nubrick_flutter.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  Nubrick.initialize("cgv3p3223akg00fod19g");
+  Nubrick.initialize("p_d357ola9io6g00f6evag");
   // Global event listener
   Nubrick.addEventListener((event) {
     print("Global Event: ${event.name}");
