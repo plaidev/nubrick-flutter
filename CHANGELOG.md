@@ -1,3 +1,7 @@
+## 0.20.2
+
+- Fix modal display issue
+
 ## 0.20.1
 
 - Fix modal display issue
