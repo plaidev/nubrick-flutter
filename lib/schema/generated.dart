@@ -2428,6 +2428,7 @@ class UICollectionBlockData {
   final int? itemWidth;
   final int? itemHeight;
   final bool? fullItemWidth;
+  final bool? fullItemHeight;
   final bool? pageControl;
   final bool? autoScroll;
   final double? autoScrollInterval;
@@ -2444,6 +2445,7 @@ class UICollectionBlockData {
     this.itemWidth,
     this.itemHeight,
     this.fullItemWidth,
+    this.fullItemHeight,
     this.pageControl,
     this.autoScroll,
     this.autoScrollInterval,
@@ -2470,6 +2472,7 @@ class UICollectionBlockData {
       itemWidth: IntDecoder.decode(json['itemWidth']),
       itemHeight: IntDecoder.decode(json['itemHeight']),
       fullItemWidth: BooleanDecoder.decode(json['fullItemWidth']),
+      fullItemHeight: BooleanDecoder.decode(json['fullItemHeight']),
       pageControl: BooleanDecoder.decode(json['pageControl']),
       autoScroll: BooleanDecoder.decode(json['autoScroll']),
       autoScrollInterval: FloatDecoder.decode(json['autoScrollInterval']),
@@ -2490,6 +2493,7 @@ class UICollectionBlockData {
       'itemWidth': itemWidth,
       'itemHeight': itemHeight,
       'fullItemWidth': fullItemWidth,
+      'fullItemHeight': fullItemHeight,
       'pageControl': pageControl,
       'autoScroll': autoScroll,
       'autoScrollInterval': autoScrollInterval,
