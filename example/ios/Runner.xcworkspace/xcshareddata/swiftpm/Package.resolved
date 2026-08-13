@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/plaidev/nubrick-ios.git",
       "state" : {
-        "revision" : "f980e854bff81be7d6c079ea910b4484c13ad6d4",
-        "version" : "0.19.5"
+        "revision" : "791844d4d93900b80ff1edb35ed6cf4da9fbf1e2",
+        "version" : "0.19.9"
       }
     }
   ],

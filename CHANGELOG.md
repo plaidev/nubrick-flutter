@@ -1,3 +1,7 @@
+## 0.21.0
+
+- Update License and fix multiple issues
+
 ## 0.20.2
 
 - Fix modal display issue
