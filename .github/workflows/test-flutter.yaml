@@ -46,6 +46,14 @@ jobs:
 
           echo "Version consistency check passed"
 
+      - name: Check licensing files
+        run: |
+          test -f LICENSE
+          test -f NOTICE
+          grep -q 'Apache License' LICENSE
+          grep -q 'Version 2.0, January 2004' LICENSE
+          grep -q 'Copyright 2026 PLAID, Inc.' NOTICE
+
       - name: Run tests
         run: flutter test
 
