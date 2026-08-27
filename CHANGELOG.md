@@ -1,3 +1,7 @@
+## 0.21.1
+
+- Fix issue with trigger based experiments
+
 ## 0.21.0
 
 - Update License and fix multiple issues
