@@ -15,7 +15,7 @@ A new Flutter plugin project.
   s.source           = { :path => '.' }
   s.source_files = 'nubrick_flutter/Sources/nubrick_flutter/**/*.swift'
   s.dependency 'Flutter'
-  s.dependency 'Nubrick', '0.19.9'
+  s.dependency 'Nubrick', '0.19.11'
   s.ios.deployment_target = '15.0'
   s.platform = :ios, '15.0'
 

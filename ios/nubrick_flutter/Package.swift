@@ -12,7 +12,7 @@ let package = Package(
     dependencies: [
         .package(
             url: "https://github.com/plaidev/nubrick-ios.git",
-            exact: "0.19.9"
+            exact: "0.19.11"
         )
     ],
     targets: [
