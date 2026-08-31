@@ -1,3 +1,7 @@
+## 0.21.2
+
+- Fix issue on iOS
+
 ## 0.21.1
 
 - Fix issue with trigger based experiments
