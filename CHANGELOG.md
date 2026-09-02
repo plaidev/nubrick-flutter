@@ -1,3 +1,7 @@
+## 0.21.3
+
+- Improve experiment content caching
+
 ## 0.21.2
 
 - Fix issue on iOS
