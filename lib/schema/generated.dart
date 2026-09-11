@@ -3227,20 +3227,24 @@ class UITextBlock {
 class UITextBlockData {
   final String? value;
   final int? size;
+  final double? lineHeight;
   final ColorValue? color;
   final FontDesign? design;
   final FontWeight? weight;
   final int? maxLines;
+  final bool? scaleWithDeviceFontSize;
   final FrameData? frame;
   final UIBlockAction? onClick;
 
   UITextBlockData({
     this.value,
     this.size,
+    this.lineHeight,
     this.color,
     this.design,
     this.weight,
     this.maxLines,
+    this.scaleWithDeviceFontSize,
     this.frame,
     this.onClick,
   });
@@ -3256,10 +3260,13 @@ class UITextBlockData {
     return UITextBlockData(
       value: StringDecoder.decode(json['value']),
       size: IntDecoder.decode(json['size']),
+      lineHeight: FloatDecoder.decode(json['lineHeight']),
       color: ColorValue.decode(json['color']),
       design: FontDesignExtension.decode(json['design']),
       weight: FontWeightExtension.decode(json['weight']),
       maxLines: IntDecoder.decode(json['maxLines']),
+      scaleWithDeviceFontSize:
+          BooleanDecoder.decode(json['scaleWithDeviceFontSize']),
       frame: FrameData.decode(json['frame']),
       onClick: UIBlockAction.decode(json['onClick']),
     );
@@ -3270,10 +3277,12 @@ class UITextBlockData {
       '__typename': 'UITextBlockData',
       'value': value,
       'size': size,
+      'lineHeight': lineHeight,
       'color': color?.encode(),
       'design': design?.encode(),
       'weight': weight?.encode(),
       'maxLines': maxLines,
+      'scaleWithDeviceFontSize': scaleWithDeviceFontSize,
       'frame': frame?.encode(),
       'onClick': onClick?.encode(),
     };
