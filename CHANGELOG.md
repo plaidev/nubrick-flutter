@@ -1,3 +1,7 @@
+## 0.21.4
+
+- Update dependencies
+
 ## 0.21.3
 
 - Improve experiment content caching
