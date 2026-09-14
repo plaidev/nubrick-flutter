@@ -1,6 +1,6 @@
-## 0.21.4
+## 0.21.5
 
-- Update dependencies
+- Update dependencies and fix compile issue
 
 ## 0.21.3
 
