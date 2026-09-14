@@ -31,7 +31,7 @@ android {
         namespace 'app.nubrick.flutter.nubrick_flutter'
     }
 
-    compileSdk 34
+    compileSdk 36
 
     buildFeatures {
         compose true
