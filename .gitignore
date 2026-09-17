@@ -28,3 +28,12 @@ migrate_working_dir/
 **/doc/api/
 .dart_tool/
 build/
+
+# FVM Version Cache
+.fvm/
+
+# Kotlin Gradle Plugin cache
+.kotlin/
+
+# Local editor settings
+.vscode/

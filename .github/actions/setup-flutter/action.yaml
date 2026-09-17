@@ -5,6 +5,13 @@ name: Set up Flutter
 runs:
   using: composite
   steps:
+    - name: Read Flutter version from FVM config
+      id: fvm-config
+      shell: bash
+      run: |
+        version="$(jq -er '.flutter | select(type == "string" and length > 0)' "$GITHUB_WORKSPACE/.fvmrc")"
+        echo "version=$version" >> "$GITHUB_OUTPUT"
+
     - name: Make setup script executable
       run: chmod +x "$GITHUB_ACTION_PATH/setup.sh"
       shell: bash
@@ -13,7 +20,7 @@ runs:
       id: flutter-action
       shell: bash
       env:
-        FLUTTER_VERSION: "3.41.9"
+        FLUTTER_VERSION: ${{ steps.fvm-config.outputs.version }}
       run: |
         $GITHUB_ACTION_PATH/setup.sh -p -n "$FLUTTER_VERSION" stable
 

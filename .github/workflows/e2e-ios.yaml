@@ -34,9 +34,6 @@ jobs:
         working-directory: e2e
         run: |
           flutter clean
-          cd ios
-          rm -rf Pods .symlinks Podfile.lock
-          rm -rf ~/Library/Caches/CocoaPods
           rm -rf ~/Library/Developer/Xcode/DerivedData
 
       - name: Build iOS
