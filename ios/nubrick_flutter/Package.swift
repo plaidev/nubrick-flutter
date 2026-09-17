@@ -10,6 +10,7 @@ let package = Package(
         .library(name: "nubrick-flutter", targets: ["nubrick_flutter"])
     ],
     dependencies: [
+        .package(name: "FlutterFramework", path: "../FlutterFramework"),
         .package(
             url: "https://github.com/plaidev/nubrick-ios.git",
             exact: "0.19.15"
@@ -19,6 +20,7 @@ let package = Package(
         .target(
             name: "nubrick_flutter",
             dependencies: [
+                .product(name: "FlutterFramework", package: "FlutterFramework"),
                 .product(name: "Nubrick", package: "nubrick-ios")
             ]
         )
