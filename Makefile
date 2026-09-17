@@ -1,9 +1,10 @@
 VERSION := $(shell sed -n 's/^version: //p' pubspec.yaml)
+FLUTTER := fvm flutter
 
 .PHONY: install
 install:
-	cd example && flutter pub get
-	cd e2e && flutter pub get
+	cd example && $(FLUTTER) pub get
+	cd e2e && $(FLUTTER) pub get
 
 .PHONY: reinstall
 reinstall:
@@ -12,13 +13,13 @@ reinstall:
 
 .PHONY: reinstall-ios
 reinstall-ios:
-	cd example && flutter clean && flutter build ios --simulator
-	cd e2e && flutter clean && flutter build ios --simulator
+	cd example && $(FLUTTER) clean && $(FLUTTER) build ios --simulator
+	cd e2e && $(FLUTTER) clean && $(FLUTTER) build ios --simulator
 
 .PHONY: reinstall-android
 reinstall-android:
-	cd example && flutter clean && flutter build apk --debug
-	cd e2e && flutter clean && flutter build apk --debug
+	cd example && $(FLUTTER) clean && $(FLUTTER) build apk --debug
+	cd e2e && $(FLUTTER) clean && $(FLUTTER) build apk --debug
 
 define bump_version
 	@NEW_VERSION=$$(echo "$(VERSION)" | awk -F. '{print $(1)}') && \
