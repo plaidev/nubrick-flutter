@@ -1,6 +1,7 @@
 # This action is forked from subosito/flutter-action@v2.21.0
 
 name: Set up Flutter
+description: Install the Flutter version specified in .fvmrc (stable channel) and cache the SDK and pub dependencies.
 
 runs:
   using: composite
