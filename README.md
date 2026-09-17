@@ -8,6 +8,13 @@ documentations
 
 https://docs.nubrick.app
 
+## Android build requirements
+
+| Requirement | Value | Scope |
+| --- | --- | --- |
+| `compileSdk` | **36 or higher** | Build time — required to resolve Nubrick Android SDK and its transitive Compose dependencies |
+| `minSdk` | **26 or higher** | Runtime — minimum Android API level supported by Nubrick |
+
 ## Development
 
 This repository pins its Flutter SDK with [FVM](https://fvm.app/). From the repository root, run:
