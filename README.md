@@ -7,3 +7,21 @@
 documentations
 
 https://docs.nubrick.app
+
+## Development
+
+This repository pins its Flutter SDK with [FVM](https://fvm.app/). From the repository root, run:
+
+```sh
+fvm install
+fvm flutter pub get
+```
+
+Run the example app with:
+
+```sh
+cd example
+fvm flutter run
+```
+
+VS Code uses the pinned SDK automatically through the workspace settings. CI reads the same version from `.fvmrc`.
