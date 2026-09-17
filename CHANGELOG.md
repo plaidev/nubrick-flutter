@@ -1,3 +1,9 @@
+## 0.21.6
+
+- Update the development toolchain to Flutter 3.47
+- Update Android Gradle Plugin to 8.13.0
+- Update the Android Nubrick dependency to 0.16.9
+
 ## 0.21.5
 
 - Update dependencies and fix compile issue
