@@ -1,3 +1,7 @@
+## 0.21.7
+
+- Update dependencies
+
 ## 0.21.6
 
 - Update the development toolchain to Flutter 3.47

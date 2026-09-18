@@ -13,7 +13,7 @@ let package = Package(
         .package(name: "FlutterFramework", path: "../FlutterFramework"),
         .package(
             url: "https://github.com/plaidev/nubrick-ios.git",
-            exact: "0.19.15"
+            exact: "0.19.17"
         )
     ],
     targets: [
