@@ -3,16 +3,48 @@ name: "Publish Nubrick Flutter SDK"
 on:
   push:
     tags:
-      - "v[0-9]+.[0-9]+.[0-9]+*"
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+concurrency:
+  group: flutter-publish-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   publish:
     permissions:
       id-token: write
+      contents: write
     runs-on: ubuntu-latest
     steps:
       # Checkout repository
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Validate release tag and commit
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/release.py verify
+          git fetch --no-tags origin main:refs/remotes/origin/main
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main
+          echo "RELEASE_VERSION=${RELEASE_TAG#v}" >> "$GITHUB_ENV"
+
+      - name: Check pub.dev version
+        id: pub-version
+        shell: bash
+        run: |
+          set -euo pipefail
+          HTTP_CODE=$(curl --silent --show-error --location --retry 3 \
+            --output /tmp/nubrick-pub-version.json --write-out '%{http_code}' \
+            "https://pub.dev/api/packages/nubrick_flutter/versions/${RELEASE_VERSION}")
+          case "$HTTP_CODE" in
+            200) echo "published=true" >> "$GITHUB_OUTPUT" ;;
+            404) echo "published=false" >> "$GITHUB_OUTPUT" ;;
+            *) echo "pub.dev lookup failed with HTTP ${HTTP_CODE}" >&2; exit 1 ;;
+          esac
 
       # Set up the Dart SDK and provision the OIDC token used for publishing.
       # The `dart` command from this step will be shadowed by the one from the
@@ -25,9 +57,29 @@ jobs:
 
       # Minimal package setup and dry run checks.
       - name: Install dependencies
+        if: steps.pub-version.outputs.published == 'false'
         run: dart pub get
       - name: Publish - dry run
+        if: steps.pub-version.outputs.published == 'false'
         run: dart pub publish --dry-run
       # Publishing...
       - name: Publish to pub.dev
+        if: steps.pub-version.outputs.published == 'false'
         run: dart pub publish -f
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            IS_DRAFT=$(gh release view "$RELEASE_TAG" --json isDraft --jq '.isDraft')
+            if [[ "$IS_DRAFT" == "true" ]]; then
+              gh release edit "$RELEASE_TAG" --draft=false
+            fi
+          else
+            gh release create "$RELEASE_TAG" --verify-tag \
+              --title "$RELEASE_TAG" --target "$GITHUB_SHA" --generate-notes
+          fi
