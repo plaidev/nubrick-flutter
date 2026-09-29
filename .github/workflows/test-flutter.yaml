@@ -11,14 +11,10 @@ on:
       - README.md
   pull_request:
     branches: [ main ]
-    paths-ignore:
-      - .github/workflows/e2e.yaml
-      - .github/workflows/publish.yaml
-      - .gitignore
-      - README.md
 
 jobs:
   test:
+    if: "${{ github.event_name != 'pull_request' || !startsWith(github.head_ref, 'release/') }}"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
