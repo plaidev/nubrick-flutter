@@ -1,33 +1,195 @@
-name: "Publish Nubrick Flutter SDK"
+name: Release Nubrick Flutter SDK
 
 on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release tag (vX.Y.Z)"
+        required: true
+        type: string
+      release_notes:
+        description: "Required from main; separate release notes with |"
+        required: false
+        type: string
   push:
-    tags:
-      - "v[0-9]+.[0-9]+.[0-9]+*"
+    tags: ["v*"]
+
+concurrency:
+  group: flutter-release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  publish:
-    permissions:
-      id-token: write
+  release:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    environment: Only Main
+    permissions:
+      actions: write
+      contents: write
+      pull-requests: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: ${{ inputs.version }}
+      RELEASE_NOTES: ${{ inputs.release_notes }}
     steps:
-      # Checkout repository
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check release version
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || exit 1
+          [[ -n "${RELEASE_NOTES//[[:space:]]/}" ]] || {
+            echo "Release notes are required when starting from main" >&2
+            exit 1
+          }
+          BRANCH="release/${RELEASE_TAG#v}"
+          EXISTING_BRANCH=$(git ls-remote --heads origin "refs/heads/${BRANCH}")
+          if [[ -n "$EXISTING_BRANCH" ]]; then
+            echo "Release branch ${BRANCH} already exists" >&2
+            exit 1
+          fi
+          EXISTING_TAG=$(git ls-remote --tags --refs origin "refs/tags/${RELEASE_TAG}")
+          if [[ -n "$EXISTING_TAG" ]]; then
+            echo "Release tag ${RELEASE_TAG} already exists" >&2
+            exit 1
+          fi
+          HTTP_CODE=$(curl --silent --show-error --location --retry 3 \
+            --output /tmp/nubrick-pub-version.json --write-out '%{http_code}' \
+            "https://pub.dev/api/packages/nubrick_flutter/versions/${RELEASE_TAG#v}")
+          [[ "$HTTP_CODE" == "404" ]] || {
+            echo "pub.dev lookup returned HTTP ${HTTP_CODE}" >&2
+            exit 1
+          }
+          echo "RELEASE_BRANCH=$BRANCH" >> "$GITHUB_ENV"
+      - uses: ./.github/actions/setup-flutter
+      - name: Prepare release branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh auth setup-git
+          python3 .github/scripts/release.py prepare
+          (cd example && flutter pub get)
+          (cd e2e && flutter pub get)
+          git diff --check
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$RELEASE_BRANCH"
+          git add pubspec.yaml lib/version.dart CHANGELOG.md \
+            example/pubspec.lock e2e/pubspec.lock
+          git commit -m "Prepare ${RELEASE_TAG} release"
+      - name: Validate release branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/release.py verify
+          flutter test
+          dart pub publish --dry-run
+      - name: Push release branch
+        run: git push origin "$RELEASE_BRANCH"
+      - name: Create release PR
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > /tmp/release-pr-body.md <<EOF
+          ## Summary
+          - Prepare Flutter SDK ${RELEASE_TAG} for release.
+          - Keep the native SDK dependency versions pinned in main.
 
-      # Set up the Dart SDK and provision the OIDC token used for publishing.
-      # The `dart` command from this step will be shadowed by the one from the
-      # Flutter SDK below.
+          ## Validation
+          - Release metadata and example/E2E lockfile checks
+          - flutter test
+          - dart pub publish --dry-run
+          EOF
+          PR_URL=$(gh pr create --base main --head "$RELEASE_BRANCH" \
+            --title "Prepare ${RELEASE_TAG} release" --body-file /tmp/release-pr-body.md)
+          PR_NUMBER="${PR_URL##*/}"
+          [[ "$PR_NUMBER" =~ ^[0-9]+$ ]] || exit 1
+          echo "PR_NUMBER=$PR_NUMBER" >> "$GITHUB_ENV"
+      - name: Merge release PR
+        shell: bash
+        run: |
+          set -euo pipefail
+          RELEASE_SHA=$(git rev-parse HEAD)
+          gh pr merge "$PR_NUMBER" --squash --match-head-commit "$RELEASE_SHA"
+          MERGE_SHA=$(gh pr view "$PR_NUMBER" --json mergeCommit --jq '.mergeCommit.oid')
+          [[ "$MERGE_SHA" =~ ^[0-9a-f]{40}$ ]] || exit 1
+          echo "MERGE_SHA=$MERGE_SHA" >> "$GITHUB_ENV"
+      - name: Validate merged release
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git merge-base --is-ancestor "$MERGE_SHA" FETCH_HEAD
+          git checkout --detach "$MERGE_SHA"
+          flutter test
+          dart pub publish --dry-run
+      - name: Create release tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          git tag -a "$RELEASE_TAG" -m "Release $RELEASE_TAG" "$MERGE_SHA"
+          git push origin "refs/tags/${RELEASE_TAG}"
+      - name: Start publisher
+        run: |
+          gh workflow run publish.yaml --ref "$RELEASE_TAG" --field version="$RELEASE_TAG"
+
+  publish:
+    if: >-
+      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) ||
+      (github.event_name == 'workflow_dispatch' && github.ref_type == 'tag' && inputs.version == github.ref_name)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Validate release
+        shell: bash
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || exit 1
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            [[ "$INPUT_VERSION" == "$RELEASE_TAG" ]] || exit 1
+          fi
+          git fetch origin main
+          git merge-base --is-ancestor "$GITHUB_SHA" FETCH_HEAD
+          python3 .github/scripts/release.py verify
+          HTTP_CODE=$(curl --silent --show-error --location --retry 3 \
+            --output /tmp/nubrick-pub-version.json --write-out '%{http_code}' \
+            "https://pub.dev/api/packages/nubrick_flutter/versions/${RELEASE_TAG#v}")
+          case "$HTTP_CODE" in
+            200) echo "PUBLISHED=true" >> "$GITHUB_ENV" ;;
+            404) echo "PUBLISHED=false" >> "$GITHUB_ENV" ;;
+            *) echo "pub.dev lookup returned HTTP ${HTTP_CODE}" >&2; exit 1 ;;
+          esac
       - uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d # v1.8.1
-      # Download flutter SDK - needed for publishing Flutter packages. Can also
-      # publish pure Dart packages.
-      - name: Set up Flutter
-        uses: ./.github/actions/setup-flutter
-
-      # Minimal package setup and dry run checks.
-      - name: Install dependencies
-        run: dart pub get
-      - name: Publish - dry run
-        run: dart pub publish --dry-run
-      # Publishing...
+      - uses: ./.github/actions/setup-flutter
       - name: Publish to pub.dev
-        run: dart pub publish -f
+        if: env.PUBLISHED == 'false'
+        run: |
+          dart pub get
+          dart pub publish -f
+      - name: Create GitHub Release
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            IS_DRAFT=$(gh release view "$RELEASE_TAG" --json isDraft --jq '.isDraft')
+            if [[ "$IS_DRAFT" == "true" ]]; then
+              gh release edit "$RELEASE_TAG" --draft=false
+            fi
+          else
+            gh release create "$RELEASE_TAG" --verify-tag \
+              --title "$RELEASE_TAG" --target "$GITHUB_SHA" --generate-notes
+          fi
