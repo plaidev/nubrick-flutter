@@ -37,48 +37,15 @@ void main() {
     }
   });
 
-  test('compares version components numerically', () {
-    metadata.checkNextVersion();
-    for (final version in ['0.9.9', '0.9.8', '0.8.99']) {
-      expect(
-        () => ReleaseMetadata(version, directory: directory).checkNextVersion(),
-        throwsStateError,
-      );
-    }
-  });
-
-  test('prepares consistent versions and preserves changelog history', () {
-    final previous = file('CHANGELOG.md').readAsStringSync();
-    metadata.prepare(' - First note | * Second note\nThird note');
+  test('verification accepts consistent package metadata', () {
+    file('pubspec.yaml').writeAsStringSync('name: example\nversion: 0.10.0\n');
+    file('lib/version.dart').writeAsStringSync(
+        "const String nubrickFlutterSdkVersion = '0.10.0';\n");
+    file('CHANGELOG.md').writeAsStringSync('## 0.10.0\n\n- Valid notes\n');
     metadata.verify();
-    expect(file('CHANGELOG.md').readAsStringSync(),
-        '## 0.10.0\n\n- First note\n- Second note\n- Third note\n\n$previous');
-  });
-
-  test('rejects invalid notes before changing any files', () {
-    final original = file('pubspec.yaml').readAsStringSync();
-    for (final notes in ['', ' ', 'TODO', '- tBd', 'Valid|', 'Valid||Other']) {
-      expect(() => metadata.prepare(notes), throwsFormatException);
-      expect(file('pubspec.yaml').readAsStringSync(), original);
-    }
-  });
-
-  test('rejects malformed version declarations before changing files', () {
-    final original = file('pubspec.yaml').readAsStringSync();
-    file('lib/version.dart').writeAsStringSync('');
-    expect(() => metadata.prepare('Valid notes'), throwsStateError);
-    expect(file('pubspec.yaml').readAsStringSync(), original);
-    file('pubspec.yaml').writeAsStringSync('${original}version: 0.9.9\n');
-    expect(() => metadata.prepare('Valid notes'), throwsStateError);
-  });
-
-  test('rejects a mismatched changelog before preparing a release', () {
-    file('CHANGELOG.md').writeAsStringSync('## 0.9.8\n\n- Old notes\n');
-    expect(() => metadata.prepare('Valid notes'), throwsStateError);
   });
 
   test('verification rejects mismatched versions and missing notes', () {
-    metadata.prepare('Valid notes');
     file('pubspec.yaml').writeAsStringSync('version: 0.9.9\n');
     expect(metadata.verify, throwsStateError);
     file('pubspec.yaml').writeAsStringSync('version: 0.10.0\n');

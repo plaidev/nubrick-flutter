@@ -119,35 +119,6 @@ class ReleaseMetadata {
     return matches.single.group(1)!;
   }
 
-  List<String> parseNotes(String raw) {
-    final notes = raw.split(RegExp(r'\r?\n|\|')).map((note) {
-      return note.trim().replaceFirst(RegExp(r'^[-*]\s*'), '').trim();
-    }).toList();
-    if (notes.any((note) =>
-        note.isEmpty || ['TODO', 'TBD'].contains(note.toUpperCase()))) {
-      throw const FormatException(
-          'Release notes must contain nonempty items, without TODO or TBD');
-    }
-    return notes;
-  }
-
-  void checkNextVersion() {
-    final current = currentVersion;
-    if (!versionPattern.hasMatch(current)) {
-      throw FormatException('Invalid current package version: $current');
-    }
-    final previousParts = current.split('.').map(BigInt.parse).toList();
-    final nextParts = version.split('.').map(BigInt.parse).toList();
-    var comparison = 0;
-    for (var i = 0; i < 3 && comparison == 0; i++) {
-      comparison = nextParts[i].compareTo(previousParts[i]);
-    }
-    if (comparison <= 0) {
-      throw StateError('Release version $version must be newer than $current');
-    }
-    checkChangelog(current);
-  }
-
   void checkChangelog(String expected, {bool requireNotes = false}) {
     final lines = file('CHANGELOG.md').readAsLinesSync();
     if (lines.isEmpty || lines.first != '## $expected') {
@@ -169,36 +140,4 @@ class ReleaseMetadata {
     }
     checkChangelog(version, requireNotes: true);
   }
-
-  void prepare(String rawNotes) {
-    checkNextVersion();
-    final notes = parseNotes(rawNotes);
-    final pubspec =
-        replaceVersion('pubspec.yaml', r'^version: \S+$', 'version: $version');
-    final sdkVersion = replaceVersion(
-        'lib/version.dart',
-        r"^const String nubrickFlutterSdkVersion = '[^']+';$",
-        "const String nubrickFlutterSdkVersion = '$version';");
-    final changelog = file('CHANGELOG.md');
-    final updatedChangelog = '## $version\n\n'
-        '${notes.map((note) => '- $note').join('\n')}\n\n'
-        '${changelog.readAsStringSync()}';
-    file('pubspec.yaml').writeAsStringSync(pubspec);
-    file('lib/version.dart').writeAsStringSync(sdkVersion);
-    changelog.writeAsStringSync(updatedChangelog);
-  }
-
-  String replaceVersion(String path, String pattern, String replacement) {
-    final original = file(path).readAsStringSync();
-    final expression = RegExp(pattern, multiLine: true);
-    if (expression.allMatches(original).length != 1) {
-      throw StateError('Expected exactly one version field in $path');
-    }
-    return original.replaceFirst(expression, replacement);
-  }
-}
-
-Future<void> validatePackage() async {
-  await command('flutter', ['test']);
-  await command('dart', ['pub', 'publish', '--dry-run']);
 }
