@@ -187,24 +187,6 @@ Future<void> _withTooltipHarness(
 }
 
 void main() {
-  testWidgets('tooltip tolerates rounding at the fractional scroll end',
-      (tester) async {
-    await _withTooltipHarness(tester,
-        beforeAnchor: 1000.1,
-        afterAnchor: 0,
-        anchorHeight: 40.2,
-        viewportHeight: 100.1, check: (harness) async {
-      await harness.sendTooltip(tester);
-      await harness.finishLookup(tester);
-      final anchor = tester.getRect(find.byKey(harness.anchorKey));
-      final viewport = tester.getRect(find.byKey(harness.viewportKey));
-      expect(harness.controller.offset,
-          closeTo(harness.controller.position.maxScrollExtent, 0.01));
-      expect(anchor.bottom, closeTo(viewport.bottom, 1e-10));
-      harness.expectHighlightOnAnchor(tester);
-    });
-  });
-
   testWidgets('tooltip shows an oversized anchor already filling its viewport',
       (tester) async {
     await _withTooltipHarness(tester,

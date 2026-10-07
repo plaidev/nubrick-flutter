@@ -3,12 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nubrick_flutter/utils/tooltip_visibility.dart';
 
 void main() {
-  test('containment tolerates rounding but rejects actual clipping', () {
+  test('containment accepts exact edges but rejects clipping', () {
     const viewport = Rect.fromLTWH(0, 0, 100, 100);
-    expect(
-        containsTooltipAnchor(viewport,
-            const Rect.fromLTRB(-1e-13, -1e-13, 100 + 1e-13, 100 + 1e-13)),
-        isTrue);
+    expect(containsTooltipAnchor(viewport, viewport), isTrue);
     for (final anchor in [
       const Rect.fromLTRB(-0.01, 0, 100, 100),
       const Rect.fromLTRB(0, -0.01, 100, 100),

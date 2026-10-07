@@ -1,14 +1,13 @@
 import 'dart:math' as math;
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 bool containsTooltipAnchor(Rect viewport, Rect anchor) =>
     !viewport.isEmpty &&
-    anchor.left >= viewport.left - precisionErrorTolerance &&
-    anchor.top >= viewport.top - precisionErrorTolerance &&
-    anchor.right <= viewport.right + precisionErrorTolerance &&
-    anchor.bottom <= viewport.bottom + precisionErrorTolerance;
+    anchor.left >= viewport.left &&
+    anchor.top >= viewport.top &&
+    anchor.right <= viewport.right &&
+    anchor.bottom <= viewport.bottom;
 
 /// Geometry is measured in global logical pixels.
 class TooltipAnchorVisibility {
@@ -47,10 +46,9 @@ class TooltipAnchorVisibility {
     if (viewportBounds.isEmpty || bounds.isEmpty) return false;
     final visibleBounds = viewportBounds.intersect(bounds);
     // Smaller anchors must fit; oversized anchors must fill the viewport on
-    // each oversized axis. Allow only floating-point rounding at the edges.
-    return visibleBounds.width + precisionErrorTolerance >=
+    // each oversized axis.
+    return visibleBounds.width >=
             math.min(bounds.width, viewportBounds.width) &&
-        visibleBounds.height + precisionErrorTolerance >=
-            math.min(bounds.height, viewportBounds.height);
+        visibleBounds.height >= math.min(bounds.height, viewportBounds.height);
   }
 }
