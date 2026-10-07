@@ -54,9 +54,6 @@ ProcessResult captureCommand(String executable, List<String> arguments,
   return result;
 }
 
-String output(String executable, List<String> arguments) =>
-    (captureCommand(executable, arguments).stdout as String).trim();
-
 Future<void> runStep(List<String> arguments,
     Map<String, FutureOr<void> Function()> steps) async {
   try {
