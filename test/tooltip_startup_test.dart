@@ -120,7 +120,8 @@ Future<void> _withTooltipHarness(
   required double afterAnchor,
   double anchorHeight = 40,
   double? viewportHeight,
-  bool pageALayout = false,
+  bool showAppBar = false,
+  bool showBottomNavigationBar = false,
   required Future<void> Function(_TooltipHarness) check,
 }) async {
   final original = NubrickFlutterPlatform.instance;
@@ -139,7 +140,7 @@ Future<void> _withTooltipHarness(
       // The provider's overlay covers the whole route, including its chrome.
       home: Stack(children: [
         Scaffold(
-          appBar: pageALayout ? AppBar(title: const Text('Page A')) : null,
+          appBar: showAppBar ? AppBar(title: const Text('Page A')) : null,
           body: Align(
             alignment: Alignment.topCenter,
             child: SizedBox(
@@ -157,7 +158,7 @@ Future<void> _withTooltipHarness(
               ),
             ),
           ),
-          bottomNavigationBar: pageALayout
+          bottomNavigationBar: showBottomNavigationBar
               ? BottomNavigationBar(
                   key: harness.navigationKey,
                   items: const [
@@ -167,7 +168,7 @@ Future<void> _withTooltipHarness(
                         icon: Icon(Icons.business), label: 'Page B'),
                   ],
                 )
-              : const SizedBox(height: 80),
+              : null,
         ),
         NubrickTooltipOverlay(keysReference: {'target': harness.anchorKey}),
       ]),
@@ -224,12 +225,13 @@ void main() {
     });
   });
 
-  testWidgets('Page A scrolls an on-screen anchor clear of the bottom bar',
+  testWidgets('tooltip scrolls an on-screen anchor clear of the bottom bar',
       (tester) async {
     await _withTooltipHarness(tester,
         beforeAnchor: 1000,
         afterAnchor: 400,
-        pageALayout: true, check: (harness) async {
+        showAppBar: true,
+        showBottomNavigationBar: true, check: (harness) async {
       final navigation = tester.getRect(find.byKey(harness.navigationKey));
       final initialAnchor = tester.getRect(find.byKey(harness.anchorKey));
       // Place the anchor inside screen bounds, but below the body viewport.
