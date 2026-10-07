@@ -12,6 +12,28 @@ void main() {
 
   File file(String path) => File('${directory.path}/$path');
 
+  Future<ProcessResult> dispatchPublisher(Map<String, dynamic> response) async {
+    Directory('${directory.path}/bin').createSync();
+    final gh = file('bin/gh')..writeAsStringSync(r'''#!/bin/sh
+printf '%s\n' "$@" > "$GH_ARGUMENTS_FILE"
+printf '%s\n' "$GH_DISPATCH_RESPONSE"
+''');
+    final chmod = Process.runSync('chmod', ['+x', gh.path]);
+    expect(chmod.exitCode, 0);
+    return Process.run('dart', [
+      '.github/scripts/release.dart',
+      'start-publisher'
+    ], environment: {
+      'PATH': '${directory.path}/bin:${Platform.environment['PATH']}',
+      'GH_ARGUMENTS_FILE': file('gh-arguments').path,
+      'GH_DISPATCH_RESPONSE': jsonEncode(response),
+      'GITHUB_REPOSITORY': 'example/sdk',
+      'GITHUB_OUTPUT': file('outputs').path,
+      'GITHUB_STEP_SUMMARY': file('summary').path,
+      'RELEASE_TAG': 'v0.10.0',
+    });
+  }
+
   setUp(() {
     directory = Directory.systemTemp.createTempSync('release-script-test-');
     Directory('${directory.path}/lib').createSync();
@@ -137,5 +159,43 @@ Future<void> main() async {
       await stdoutSubscription.cancel();
       await stderrSubscription.cancel();
     }
+  });
+
+  test('publisher dispatch exports its exact run ID and summary link',
+      () async {
+    const url = 'https://github.com/example/sdk/actions/runs/12345';
+    final result = await dispatchPublisher({
+      'workflow_run_id': 12345,
+      'html_url': url,
+    });
+    expect(result.exitCode, 0, reason: '${result.stderr}');
+    expect(file('outputs').readAsStringSync(), 'run_id=12345\n');
+    expect(file('summary').readAsStringSync(), 'Publisher: [v0.10.0]($url)\n');
+    expect(file('gh-arguments').readAsLinesSync(), [
+      'api',
+      '--method',
+      'POST',
+      'repos/example/sdk/actions/workflows/publish.yaml/dispatches',
+      '--header',
+      'X-GitHub-Api-Version: 2022-11-28',
+      '--field',
+      'return_run_details=true',
+      '--raw-field',
+      'ref=v0.10.0',
+      '--raw-field',
+      'inputs[version]=v0.10.0',
+    ]);
+  });
+
+  test('publisher dispatch fails with a stack trace if its run ID is missing',
+      () async {
+    final result = await dispatchPublisher({
+      'html_url': 'https://github.com/example/sdk/actions/runs/12345',
+    });
+    expect(result.exitCode, 1);
+    expect(result.stderr, contains('no valid run ID or URL'));
+    expect(result.stderr, contains('startPublisher'));
+    expect(file('outputs').existsSync(), isFalse);
+    expect(file('summary').existsSync(), isFalse);
   });
 }
