@@ -12,7 +12,7 @@ on:
         type: string
 
 concurrency:
-  group: flutter-publish-${{ github.ref }}
+  group: flutter-publish
   cancel-in-progress: false
 
 jobs:
