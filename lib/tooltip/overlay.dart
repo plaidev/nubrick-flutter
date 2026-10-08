@@ -333,9 +333,9 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
     if (!_isAnchorOnCurrentRoute(data.context)) {
       return false;
     }
-    final visibility = TooltipAnchorVisibility.measure(data.context);
-    if (visibility == null) return false;
-    if (!visibility.isVisible) {
+    final isVisible = isTooltipAnchorVisible(data.context);
+    if (isVisible == null) return false;
+    if (!isVisible) {
       await Scrollable.ensureVisible(
         data.context,
         // Center the anchor in its scroll viewport to leave space around the
@@ -438,8 +438,7 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
       _stopTooltipFlow();
       return;
     }
-    final visibility = TooltipAnchorVisibility.measure(data.context);
-    if (visibility == null || !visibility.isVisible) {
+    if (isTooltipAnchorVisible(data.context) != true) {
       _consecutiveFullyOffscreenFrames += 1;
       if (_consecutiveFullyOffscreenFrames >=
           _hideAfterConsecutiveFailureFrames) {

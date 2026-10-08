@@ -14,11 +14,12 @@ class _ThrowingClip extends SingleChildRenderObjectWidget {
 }
 
 class _ThrowingClipRenderBox extends RenderProxyBox {
-  bool failMeasurement = false;
+  Object? measurementError;
 
   @override
   Rect? describeApproximatePaintClip(RenderObject child) {
-    if (failMeasurement) throw StateError('Clip measurement failed');
+    final error = measurementError;
+    if (error != null) throw error;
     return super.describeApproximatePaintClip(child);
   }
 }
@@ -33,7 +34,7 @@ void main() {
     await tester.pumpWidget(const SizedBox());
 
     expect(context.mounted, isFalse);
-    expect(TooltipAnchorVisibility.measure(context), isNull);
+    expect(isTooltipAnchorVisible(context), isNull);
   });
 
   testWidgets('returns null when an ancestor clip measurement throws',
@@ -46,14 +47,61 @@ void main() {
         child: SizedBox(key: anchorKey, width: 40, height: 40),
       ),
     ));
-    expect(TooltipAnchorVisibility.measure(anchorKey.currentContext!),
-        isNotNull);
+    expect(isTooltipAnchorVisible(anchorKey.currentContext!), isTrue);
     final clip =
         clipKey.currentContext!.findRenderObject()! as _ThrowingClipRenderBox;
-    clip.failMeasurement = true;
+    try {
+      for (final error in [
+        FlutterError('Clip measurement failed'),
+        StateError('Clip measurement failed'),
+      ]) {
+        clip.measurementError = error;
+        expect(isTooltipAnchorVisible(anchorKey.currentContext!), isNull);
+      }
+    } finally {
+      clip.measurementError = null;
+    }
+  });
 
-    expect(TooltipAnchorVisibility.measure(anchorKey.currentContext!), isNull);
-    clip.failMeasurement = false;
+  testWidgets('returns null when there is no MediaQuery', (tester) async {
+    final key = GlobalKey();
+    await tester.pumpWidget(
+      RawView(
+        view: tester.view,
+        child: SizedBox(key: key, width: 40, height: 40),
+      ),
+      wrapWithView: false,
+    );
+
+    final context = key.currentContext!;
+    final box = context.findRenderObject()! as RenderBox;
+    expect(box.attached, isTrue);
+    expect(box.hasSize, isTrue);
+    expect(MediaQuery.maybeSizeOf(context), isNull);
+    expect(isTooltipAnchorVisible(context), isNull);
+  });
+
+  testWidgets('propagates unexpected errors during clip measurement',
+      (tester) async {
+    final anchorKey = GlobalKey();
+    final clipKey = GlobalKey();
+    await tester.pumpWidget(MaterialApp(
+      home: _ThrowingClip(
+        key: clipKey,
+        child: SizedBox(key: anchorKey, width: 40, height: 40),
+      ),
+    ));
+    final clip =
+        clipKey.currentContext!.findRenderObject()! as _ThrowingClipRenderBox;
+    try {
+      for (final error in [TypeError(), AssertionError('Clip implementation')]) {
+        clip.measurementError = error;
+        expect(() => isTooltipAnchorVisible(anchorKey.currentContext!),
+            throwsA(same(error)));
+      }
+    } finally {
+      clip.measurementError = null;
+    }
   });
 
   test('containment accepts exact edges but rejects clipping', () {
@@ -98,8 +146,7 @@ void main() {
           ),
         ),
       ));
-      expect(TooltipAnchorVisibility.measure(key.currentContext!)!.isVisible,
-          expected,
+      expect(isTooltipAnchorVisible(key.currentContext!), expected,
           reason: 'Anchor bounds: $bounds');
     }
   });
@@ -131,8 +178,7 @@ void main() {
       ),
     ));
     // Visibility currently checks ancestor clipping, not sibling occlusion.
-    expect(TooltipAnchorVisibility.measure(key.currentContext!)!.isVisible,
-        isTrue);
+    expect(isTooltipAnchorVisible(key.currentContext!), isTrue);
   });
 
   testWidgets('rejects an anchor clipped by its scroll viewport',
@@ -152,7 +198,6 @@ void main() {
         ),
       ),
     ));
-    expect(TooltipAnchorVisibility.measure(key.currentContext!)!.isVisible,
-        isFalse);
+    expect(isTooltipAnchorVisible(key.currentContext!), isFalse);
   });
 }

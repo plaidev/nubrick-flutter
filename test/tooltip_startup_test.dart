@@ -244,10 +244,7 @@ void main() {
           Offset.zero & MediaQuery.sizeOf(harness.anchorKey.currentContext!);
       expect(containsTooltipAnchor(screen, coveredAnchor), isTrue);
       expect(navigation.overlaps(coveredAnchor), isTrue);
-      expect(
-          TooltipAnchorVisibility.measure(harness.anchorKey.currentContext!)!
-              .isVisible,
-          isFalse);
+      expect(isTooltipAnchorVisible(harness.anchorKey.currentContext!), isFalse);
       final beforeOffset = harness.controller.offset;
 
       await harness.sendTooltip(tester);
