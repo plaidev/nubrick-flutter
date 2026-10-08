@@ -11,28 +11,33 @@ class TooltipAnchorVisibility {
   TooltipAnchorVisibility._(this.anchor, this.bounds, this.viewportBounds);
 
   static TooltipAnchorVisibility? measure(BuildContext context) {
-    final object = context.findRenderObject();
-    if (object is! RenderBox || !object.attached || !object.hasSize) {
+    try {
+      final object = context.findRenderObject();
+      if (object is! RenderBox || !object.attached || !object.hasSize) {
+        return null;
+      }
+      Rect viewport = Offset.zero & MediaQuery.sizeOf(context);
+      RenderObject child = object;
+      while (child.parent != null) {
+        final parent = child.parent!;
+        final clip = parent.describeApproximatePaintClip(child);
+        if (clip != null) {
+          viewport = viewport.intersect(
+            MatrixUtils.transformRect(parent.getTransformTo(null), clip),
+          );
+        }
+        child = parent;
+      }
+      return TooltipAnchorVisibility._(
+        object,
+        MatrixUtils.transformRect(
+            object.getTransformTo(null), Offset.zero & object.size),
+        viewport,
+      );
+    } catch (_) {
+      // Treat failed geometry measurements as an unresolved anchor.
       return null;
     }
-    Rect viewport = Offset.zero & MediaQuery.sizeOf(context);
-    RenderObject child = object;
-    while (child.parent != null) {
-      final parent = child.parent!;
-      final clip = parent.describeApproximatePaintClip(child);
-      if (clip != null) {
-        viewport = viewport.intersect(
-          MatrixUtils.transformRect(parent.getTransformTo(null), clip),
-        );
-      }
-      child = parent;
-    }
-    return TooltipAnchorVisibility._(
-      object,
-      MatrixUtils.transformRect(
-          object.getTransformTo(null), Offset.zero & object.size),
-      viewport,
-    );
   }
 
   bool get isVisible {

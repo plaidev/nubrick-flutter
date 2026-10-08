@@ -1,10 +1,61 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nubrick_flutter/utils/tooltip_visibility.dart';
 
 import 'helpers/tooltip_visibility.dart';
 
+class _ThrowingClip extends SingleChildRenderObjectWidget {
+  const _ThrowingClip({super.key, required super.child});
+
+  @override
+  _ThrowingClipRenderBox createRenderObject(BuildContext context) =>
+      _ThrowingClipRenderBox();
+}
+
+class _ThrowingClipRenderBox extends RenderProxyBox {
+  bool failMeasurement = false;
+
+  @override
+  Rect? describeApproximatePaintClip(RenderObject child) {
+    if (failMeasurement) throw StateError('Clip measurement failed');
+    return super.describeApproximatePaintClip(child);
+  }
+}
+
 void main() {
+  testWidgets('returns null for a disposed context', (tester) async {
+    final key = GlobalKey();
+    await tester.pumpWidget(MaterialApp(
+      home: SizedBox(key: key, width: 40, height: 40),
+    ));
+    final context = key.currentContext!;
+    await tester.pumpWidget(const SizedBox());
+
+    expect(context.mounted, isFalse);
+    expect(TooltipAnchorVisibility.measure(context), isNull);
+  });
+
+  testWidgets('returns null when an ancestor clip measurement throws',
+      (tester) async {
+    final anchorKey = GlobalKey();
+    final clipKey = GlobalKey();
+    await tester.pumpWidget(MaterialApp(
+      home: _ThrowingClip(
+        key: clipKey,
+        child: SizedBox(key: anchorKey, width: 40, height: 40),
+      ),
+    ));
+    expect(TooltipAnchorVisibility.measure(anchorKey.currentContext!),
+        isNotNull);
+    final clip =
+        clipKey.currentContext!.findRenderObject()! as _ThrowingClipRenderBox;
+    clip.failMeasurement = true;
+
+    expect(TooltipAnchorVisibility.measure(anchorKey.currentContext!), isNull);
+    clip.failMeasurement = false;
+  });
+
   test('containment accepts exact edges but rejects clipping', () {
     const viewport = Rect.fromLTWH(0, 0, 100, 100);
     expect(containsTooltipAnchor(viewport, viewport), isTrue);
