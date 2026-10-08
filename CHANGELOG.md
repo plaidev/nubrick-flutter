@@ -1,3 +1,7 @@
+## 0.21.8
+
+- Only one trigger-based experiment (modal or tooltip) can now be active at a time, preventing overlapping experiments.
+
 ## 0.21.7
 
 - Update dependencies
