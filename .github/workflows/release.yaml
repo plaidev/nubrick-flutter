@@ -8,7 +8,7 @@ on:
         required: true
         type: string
       release_notes:
-        description: "Separate release notes with |"
+        description: "Separate release note items with | (e.g. Fix Android crash | Update iOS SDK)"
         required: true
         type: string
 concurrency:
