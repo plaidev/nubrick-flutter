@@ -23,7 +23,7 @@ class NubrickRuntime {
   final List<EventHandler> _listeners = [];
   final List<void Function(String)> _onDispatchListeners = [];
   final List<void Function(String, String?)> _publicTooltipListeners = [];
-  final List<void Function(String, String?, String?)>
+  final List<void Function(String, String?, String?, String)>
       _internalTooltipListeners = [];
   final MethodChannel _channel = const MethodChannel("nubrick_flutter");
 
@@ -193,12 +193,12 @@ class NubrickRuntime {
   }
 
   void addInternalTooltipListener(
-      void Function(String, String?, String?) listener) {
+      void Function(String, String?, String?, String) listener) {
     _internalTooltipListeners.add(listener);
   }
 
   void removeInternalTooltipListener(
-      void Function(String, String?, String?) listener) {
+      void Function(String, String?, String?, String) listener) {
     _internalTooltipListeners.remove(listener);
   }
 
@@ -225,6 +225,7 @@ class NubrickRuntime {
         String? data;
         String? experimentId;
         String? variantId;
+        String? sessionId;
         final args = call.arguments;
         if (args is String) {
           data = args;
@@ -232,16 +233,21 @@ class NubrickRuntime {
           data = args["data"] as String?;
           experimentId = args["experimentId"] as String?;
           variantId = args["variantId"] as String?;
+          sessionId = args["sessionId"] as String?;
         }
         if (data != null) {
           for (var listener in List.of(_publicTooltipListeners)) {
             listener(data, experimentId);
           }
-          for (var listener in List.of(_internalTooltipListeners)) {
-            listener(data, experimentId, variantId);
+          if (sessionId != null) {
+            for (var listener in List.of(_internalTooltipListeners)) {
+              listener(data, experimentId, variantId, sessionId);
+            }
           }
         }
-        return Future.value(true);
+        return Future.value(data != null &&
+            sessionId != null &&
+            _internalTooltipListeners.isNotEmpty);
       default:
         return Future.value(true);
     }

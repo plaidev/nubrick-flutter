@@ -164,20 +164,25 @@ class MethodChannelNubrickFlutter extends NubrickFlutterPlatform {
   }
 
   @override
-  Future<String?> disconnectTooltipEmbedding(String channelId) async {
+  Future<String?> disconnectTooltipEmbedding(String channelId,
+      {required bool stoppedByFlutter}) async {
     final result = await methodChannel.invokeMethod<String>(
       'disconnectTooltipEmbedding',
-      channelId,
+      {'channelId': channelId, 'stoppedByFlutter': stoppedByFlutter},
     );
     return result;
   }
 
   @override
-  Future<void> appendTooltipExperimentHistory(String experimentId) async {
+  Future<void> appendTooltipExperimentHistory(
+      String experimentId, String variantId,
+      {required String channelId}) async {
     await methodChannel.invokeMethod<void>(
       'appendTooltipExperimentHistory',
       <String, dynamic>{
+        'channelId': channelId,
         'experimentId': experimentId,
+        'variantId': variantId,
       },
     );
   }

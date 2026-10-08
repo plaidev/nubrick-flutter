@@ -7,7 +7,6 @@ import 'package:nubrick_flutter/channel/nubrick_flutter_platform_interface.dart'
 import 'package:nubrick_flutter/crash_report.dart';
 import 'package:nubrick_flutter/src/runtime.dart';
 import 'package:flutter/material.dart';
-import 'package:nubrick_flutter/utils/random.dart';
 import 'package:nubrick_flutter/utils/tooltip_position.dart';
 import 'package:nubrick_flutter/schema/generated.dart' as schema;
 import 'package:nubrick_flutter/utils/tooltip_animation.dart';
@@ -41,8 +40,8 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
   static const int _hideAfterConsecutiveFailureFrames = 3;
 
   schema.UIRootBlock? _rootBlock;
-  final String _channelId = generateRandomString(16);
-  late final MethodChannel _channel;
+  String _channelId = '';
+  MethodChannel? _channel;
   schema.UIPageBlock? _currentPage;
   // Incremented whenever a new tooltip flow starts (or current one is reset).
   // Async callbacks keep the id they started with and ignore stale work.
@@ -60,13 +59,12 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
   bool _isFrameLoopActive = false;
   // True while showing the temporary dim barrier between tooltip steps.
   bool _isTransitioningToNextTooltip = false;
-  // True from accepted onTooltip until tooltip flow is hidden/dismissed.
-  // While true, incoming onTooltip payloads are intentionally ignored to avoid
-  // overlapping tooltip embeddings and stale async callbacks racing each other.
-  bool _isTooltipFlowActive = false;
+  // Local rendering state. Native decides whether an experiment may start.
+  bool get _isTooltipFlowActive => _channelId.isNotEmpty;
   // Tracks current in-flight next-tooltip target to dedupe duplicate requests.
   String? _pendingNextTooltipPageId;
   String? _currentTooltipExperimentId;
+  String? _currentTooltipVariantId;
   bool _didAppendCurrentTooltipHistory = false;
 
   bool _isAnchorOnCurrentRoute(BuildContext context) {
@@ -155,52 +153,62 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
     return _currentTooltipTransitionId;
   }
 
-  void _onTooltip(String data, String? experimentId, String? variantId) async {
-    // Ignore re-entrant tooltip events during an active flow.
-    // A new flow starts only after native sends dismiss/next and _hideTooltip
-    // resets this flag.
-    if (_isTooltipFlowActive) {
-      return;
-    }
-    if (experimentId == null || experimentId.isEmpty) {
-      return;
-    }
+  void _onTooltip(String data, String? experimentId, String? variantId,
+      String sessionId) async {
+    // Native has already reserved this session.
+    if (_isTooltipFlowActive) _stopTooltipFlow(stoppedByFlutter: false);
 
     final decodedData = jsonDecode(data);
+    _channelId = sessionId;
+    if (experimentId == null || experimentId.isEmpty) {
+      _stopTooltipFlow();
+      return;
+    }
     var uiroot = schema.UIRootBlock.decode(decodedData);
     if (uiroot == null) {
+      _stopTooltipFlow();
       return;
     }
     _rootBlock = uiroot;
     var currentPageId = uiroot.data?.currentPageId;
     if (currentPageId == null) {
+      _stopTooltipFlow();
       return;
     }
     final pages = uiroot.data?.pages;
     if (pages == null) {
+      _stopTooltipFlow();
       return;
     }
     final page = _findPageInListById(pages, currentPageId);
     if (page == null) {
+      _stopTooltipFlow();
       return;
     }
     var destinationId = page.data?.triggerSetting?.onTrigger?.destinationPageId;
     if (destinationId == null) {
+      _stopTooltipFlow();
       return;
     }
     final destinationPage = _findPageInListById(pages, destinationId);
     if (destinationPage == null) {
+      _stopTooltipFlow();
       return;
     }
 
-    _isTooltipFlowActive = true;
     _consecutiveFullyOffscreenFrames = 0;
     _consecutiveUnresolvableDataFrames = 0;
     _currentTooltipExperimentId = experimentId;
+    _currentTooltipVariantId = variantId;
     _didAppendCurrentTooltipHistory = false;
     _currentTooltipFlowId += 1;
     final flowId = _currentTooltipFlowId;
     final transitionId = _nextTooltipTransitionId();
+    _channel = MethodChannel("Nubrick/Embedding/$sessionId");
+    _channel!.setMethodCallHandler((call) async {
+      if (!mounted || flowId != _currentTooltipFlowId) return false;
+      return _handleMethod(call);
+    });
 
     try {
       if (!nubrickRuntime.isReady) {
@@ -209,24 +217,30 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
       if (!mounted || flowId != _currentTooltipFlowId) {
         return;
       }
-      await NubrickFlutterPlatform.instance.connectTooltipEmbedding(
-          _channelId,
+      final result = await NubrickFlutterPlatform.instance.connectTooltipEmbedding(
+          sessionId,
           experimentId,
           variantId,
           schema.UIRootBlock(
-            id: generateRandomString(16),
+            id: uiroot.id,
             data: schema.UIRootBlockData(
               currentPageId: destinationId,
               pages: uiroot.data?.pages,
             ),
           ));
+      if (result != 'ok') {
+        if (mounted && flowId == _currentTooltipFlowId) _stopTooltipFlow();
+        return;
+      }
     } catch (e, stackTrace) {
-      _isTooltipFlowActive = false;
+      if (mounted && flowId == _currentTooltipFlowId) _stopTooltipFlow();
       recordError(e, stackTrace, severity: ErrorSeverity.warning);
       return;
     }
 
     if (!mounted || flowId != _currentTooltipFlowId) {
+      await NubrickFlutterPlatform.instance.disconnectTooltipEmbedding(
+          sessionId, stoppedByFlutter: false);
       return;
     }
 
@@ -244,10 +258,11 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
             mounted &&
             flowId == _currentTooltipFlowId &&
             transitionId == _currentTooltipTransitionId) {
-          _hideTooltip();
+          _stopTooltipFlow();
         }
       });
     });
+    WidgetsBinding.instance.scheduleFrame();
   }
 
   /// calculate the anchor position, size, tooltip position, size
@@ -381,10 +396,12 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
     _pendingNextTooltipPageId = null;
     if (!_didAppendCurrentTooltipHistory) {
       final experimentId = _currentTooltipExperimentId;
-      if (experimentId != null && experimentId.isNotEmpty) {
+      final variantId = _currentTooltipVariantId;
+      if (experimentId != null && variantId != null && variantId.isNotEmpty) {
         _didAppendCurrentTooltipHistory = true;
         NubrickFlutterPlatform.instance
-            .appendTooltipExperimentHistory(experimentId)
+            .appendTooltipExperimentHistory(experimentId, variantId,
+                channelId: _channelId)
             .catchError((e, stackTrace) {
           recordError(e, stackTrace, severity: ErrorSeverity.warning);
         });
@@ -421,7 +438,7 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
           mounted &&
           flowId == _currentTooltipFlowId &&
           transitionId == _currentTooltipTransitionId) {
-        _hideTooltip();
+        _stopTooltipFlow();
       }
     });
   }
@@ -436,13 +453,13 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
       _consecutiveUnresolvableDataFrames += 1;
       if (_consecutiveUnresolvableDataFrames >=
           _hideAfterConsecutiveFailureFrames) {
-        _hideTooltip();
+        _stopTooltipFlow();
       }
       return;
     }
     _consecutiveUnresolvableDataFrames = 0;
     if (!_isAnchorOnCurrentRoute(data.context)) {
-      _hideTooltip();
+      _stopTooltipFlow();
       return;
     }
     if (!_isAnchorInViewport(
@@ -450,7 +467,7 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
       _consecutiveFullyOffscreenFrames += 1;
       if (_consecutiveFullyOffscreenFrames >=
           _hideAfterConsecutiveFailureFrames) {
-        _hideTooltip();
+        _stopTooltipFlow();
       }
       return;
     }
@@ -500,20 +517,32 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
     }
   }
 
-  void _hideTooltip() {
+  void _disconnectTooltip({required bool stoppedByFlutter}) {
+    _channel?.setMethodCallHandler(null);
+    _channel = null;
+    final channelId = _channelId;
+    _channelId = '';
+    if (channelId.isEmpty) return;
+    NubrickFlutterPlatform.instance
+        .disconnectTooltipEmbedding(channelId,
+            stoppedByFlutter: stoppedByFlutter)
+        .catchError((e, stackTrace) {
+      recordError(e, stackTrace, severity: ErrorSeverity.warning);
+      return null;
+    });
+  }
+
+  void _stopTooltipFlow({bool stoppedByFlutter = true}) {
     _currentTooltipFlowId += 1;
     _currentTooltipTransitionId += 1;
     _consecutiveFullyOffscreenFrames = 0;
     _consecutiveUnresolvableDataFrames = 0;
     _isFrameLoopActive = false;
     _isTransitioningToNextTooltip = false;
-    _isTooltipFlowActive = false;
     _pendingNextTooltipPageId = null;
     _currentTooltipExperimentId = null;
+    _currentTooltipVariantId = null;
     _didAppendCurrentTooltipHistory = false;
-    if (_channelId.isNotEmpty) {
-      NubrickFlutterPlatform.instance.disconnectTooltipEmbedding(_channelId);
-    }
     setState(() {
       _anchorPosition = null;
       _anchorSize = null;
@@ -522,6 +551,7 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
       _rootBlock = null;
       _currentPage = null;
     });
+    _disconnectTooltip(stoppedByFlutter: stoppedByFlutter);
   }
 
   void _onTransitionTargetTap(bool isInAnchor) {
@@ -548,14 +578,22 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
     _isFrameLoopActive = false;
     _consecutiveFullyOffscreenFrames = 0;
     _consecutiveUnresolvableDataFrames = 0;
+    final flowId = _currentTooltipFlowId;
+    final transitionId = _currentTooltipTransitionId;
+    final channelId = _channelId;
     (() async {
       if (!nubrickRuntime.isReady) {
         await nubrickRuntime.ready;
       }
       await NubrickFlutterPlatform.instance
-          .callTooltipEmbeddingDispatch(_channelId, onTrigger);
+          .callTooltipEmbeddingDispatch(channelId, onTrigger);
     })()
         .catchError((e, stackTrace) {
+      if (mounted &&
+          flowId == _currentTooltipFlowId &&
+          transitionId == _currentTooltipTransitionId) {
+        _stopTooltipFlow();
+      }
       recordError(e, stackTrace, severity: ErrorSeverity.warning);
     });
   }
@@ -573,7 +611,7 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
         if (!_isTooltipFlowActive) {
           return Future.value(true);
         }
-        _hideTooltip();
+        _stopTooltipFlow(stoppedByFlutter: false);
         return Future.value(true);
       default:
         return Future.value(false);
@@ -583,18 +621,14 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
   @override
   void initState() {
     super.initState();
-    _channel = MethodChannel("Nubrick/Embedding/$_channelId");
-    _channel.setMethodCallHandler(_handleMethod);
     nubrickRuntime.addInternalTooltipListener(_onTooltip);
   }
 
   @override
   void dispose() {
-    _channel.setMethodCallHandler(null);
+    _currentTooltipFlowId += 1;
     nubrickRuntime.removeInternalTooltipListener(_onTooltip);
-    if (_channelId.isNotEmpty) {
-      NubrickFlutterPlatform.instance.disconnectTooltipEmbedding(_channelId);
-    }
+    _disconnectTooltip(stoppedByFlutter: true);
     super.dispose();
   }
 
@@ -730,6 +764,7 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
     switch (defaultTargetPlatform) {
       case TargetPlatform.iOS:
         return UiKitView(
+          key: ValueKey(_channelId),
           viewType: viewType,
           layoutDirection: TextDirection.ltr,
           creationParams: creationParams,
@@ -743,6 +778,7 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
         );
       case TargetPlatform.android:
         return AndroidView(
+          key: ValueKey(_channelId),
           viewType: viewType,
           layoutDirection: TextDirection.ltr,
           creationParams: creationParams,

@@ -41,18 +41,21 @@ class _FakeNubrickFlutterPlatform extends NubrickFlutterPlatform
   }
 }
 
-Future<void> _sendMethodChannelCall(String method, [dynamic arguments]) async {
-  final completer = Completer<void>();
+Future<dynamic> _sendMethodChannelCall(String method,
+    [dynamic arguments]) async {
+  final completer = Completer<dynamic>();
   final message = const StandardMethodCodec().encodeMethodCall(
     MethodCall(method, arguments),
   );
 
   await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-      .handlePlatformMessage('nubrick_flutter', message, (_) {
-    completer.complete();
+      .handlePlatformMessage('nubrick_flutter', message, (reply) {
+    completer.complete(reply == null
+        ? null
+        : const StandardMethodCodec().decodeEnvelope(reply));
   });
 
-  await completer.future;
+  return completer.future;
 }
 
 void main() {
@@ -371,6 +374,18 @@ void main() {
       expect(dispatchedName, 'checkout_opened');
     });
 
+    test('rejects native tooltip delivery when no overlay is listening',
+        () async {
+      Nubrick.initialize('project-a');
+      Nubrick.addOnTooltipListener((data, experimentId) {});
+      final accepted = await _sendMethodChannelCall('on-tooltip', {
+        'data': '{"id":"native-session"}',
+        'experimentId': 'exp',
+        'variantId': 'variant',
+      });
+      expect(accepted, false);
+    });
+
     test('routes on-tooltip from method channel to listeners', () async {
       Nubrick.initialize('project-a');
 
@@ -382,14 +397,16 @@ void main() {
         tooltipExperimentId = experimentId;
       });
       nubrickRuntime
-          .addInternalTooltipListener((data, experimentId, variantId) {
+          .addInternalTooltipListener((data, experimentId, variantId, sessionId) {
         tooltipVariantId = variantId;
+        expect(sessionId, 'session-789');
       });
 
       await _sendMethodChannelCall('on-tooltip', {
         'data': '{"step":1}',
         'experimentId': 'exp-123',
         'variantId': 'var-456',
+        'sessionId': 'session-789',
       });
 
       expect(tooltipData, '{"step":1}');

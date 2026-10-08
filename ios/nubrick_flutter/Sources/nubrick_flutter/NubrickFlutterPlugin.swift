@@ -39,6 +39,9 @@ public class NubrickFlutterPlugin: NSObject, FlutterPlugin {
     }
 
     public func detachFromEngine(for registrar: FlutterPluginRegistrar) {
+        if let channelId = self.manager.tooltipChannelId {
+            self.manager.disconnectTooltipEmbedding(channelId: channelId, stoppedByFlutter: true)
+        }
         if Self.activeCallbackOwner === self {
             Self.activeCallbackOwner = nil
             NubrickBridge.clearCallbacks()
@@ -75,13 +78,23 @@ public class NubrickFlutterPlugin: NSObject, FlutterPlugin {
                         ])
                     }
                 },
-                onTooltip: { [weak self] data, experimentId, variantId in
+                onTooltip: { [weak self] data, experimentId, variantId, sessionId in
                     Task { @MainActor in
-                        self?.channel.invokeMethod("on-tooltip", arguments: [
+                        guard let self, Self.activeCallbackOwner === self else {
+                            NubrickSDK.stopTooltipExperiment(sessionId: sessionId)
+                            return
+                        }
+                        self.manager.trackTooltip(sessionId: sessionId)
+                        self.channel.invokeMethod("on-tooltip", arguments: [
                             "data": data,
                             "experimentId": experimentId,
                             "variantId": variantId,
-                        ])
+                            "sessionId": sessionId,
+                        ]) { reply in
+                            if reply as? Bool != true {
+                                self.manager.disconnectTooltipEmbedding(channelId: sessionId, stoppedByFlutter: true)
+                            }
+                        }
                     }
                 }
             )
@@ -161,30 +174,39 @@ public class NubrickFlutterPlugin: NSObject, FlutterPlugin {
             let experimentId = args["experimentId"] as! String
             let variantId = args["variantId"] as? String
             let rootBlock = args["json"] as! String
-            self.manager.connectTooltipEmbedding(
+            let connected = self.manager.connectTooltipEmbedding(
                 channelId: channelId,
                 experimentId: experimentId,
                 variantId: variantId,
                 rootBlock: rootBlock,
                 messenger: self.messenger
             )
-            result("ok")
+            result(connected ? "ok" : "unavailable")
 
         case "callTooltipEmbeddingDispatch":
             let args = call.arguments as! [String:Any]
             let channelId = args["channelId"] as! String
             let event = args["event"] as! String
-            self.manager.callTooltipEmbeddingDispatch(channelId: channelId, event: event)
-            result("ok")
+            do {
+                try self.manager.callTooltipEmbeddingDispatch(channelId: channelId, event: event)
+                result("ok")
+            } catch {
+                result(FlutterError(code: "tooltip-dispatch-failed", message: error.localizedDescription, details: nil))
+            }
 
         case "disconnectTooltipEmbedding":
-            let channelId = call.arguments as! String
-            self.manager.disconnectTooltipEmbedding(channelId: channelId)
+            let args = call.arguments as! [String: Any]
+            let channelId = args["channelId"] as! String
+            self.manager.disconnectTooltipEmbedding(channelId: channelId, stoppedByFlutter: args["stoppedByFlutter"] as? Bool == true)
             result("ok")
         case "appendTooltipExperimentHistory":
             let args = call.arguments as! [String: Any]
             let experimentId = args["experimentId"] as! String
-            self.manager.appendTooltipExperimentHistory(experimentId: experimentId)
+            let variantId = args["variantId"] as! String
+            let channelId = args["channelId"] as! String
+            self.manager.appendTooltipExperimentHistory(
+                experimentId: experimentId, variantId: variantId, channelId: channelId
+            )
             result("ok")
 
         // trigger
