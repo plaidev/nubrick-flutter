@@ -1,9 +1,3 @@
-## Unreleased
-
-- Update native dependencies to iOS 0.19.20 and Android 0.16.13.
-- Include the variant ID when recording tooltip display events and experiment history.
-- Let native SDKs manage one shared session for tooltips and trigger experiments. Flutter reports display recording and stops caused by its UI.
-
 ## 0.21.7
 
 - Update dependencies
