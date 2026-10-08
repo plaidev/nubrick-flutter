@@ -1,33 +1,43 @@
-name: "Publish Nubrick Flutter SDK"
+name: Publish Nubrick Flutter SDK
 
 on:
   push:
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release tag (vX.Y.Z)"
+        required: true
+        type: string
+
+concurrency:
+  group: flutter-publish
+  cancel-in-progress: false
 
 jobs:
   publish:
-    permissions:
-      id-token: write
+    if: github.ref_type == 'tag' && (github.event_name == 'push' || inputs.version == github.ref_name)
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: ${{ github.ref_name }}
     steps:
-      # Checkout repository
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      # Set up the Dart SDK and provision the OIDC token used for publishing.
-      # The `dart` command from this step will be shadowed by the one from the
-      # Flutter SDK below.
+        with:
+          fetch-depth: 0
       - uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d # v1.8.1
-      # Download flutter SDK - needed for publishing Flutter packages. Can also
-      # publish pure Dart packages.
-      - name: Set up Flutter
-        uses: ./.github/actions/setup-flutter
-
-      # Minimal package setup and dry run checks.
-      - name: Install dependencies
-        run: dart pub get
-      - name: Publish - dry run
-        run: dart pub publish --dry-run
-      # Publishing...
+      - uses: ./.github/actions/setup-flutter
+      - name: Validate release
+        id: validate
+        env:
+          INPUT_VERSION: ${{ inputs.version || github.ref_name }}
+        run: dart .github/scripts/publish.dart validate
       - name: Publish to pub.dev
-        run: dart pub publish -f
+        if: steps.validate.outputs.published == 'false'
+        run: dart .github/scripts/publish.dart publish
+      - name: Create GitHub Release
+        run: dart .github/scripts/publish.dart create-release
