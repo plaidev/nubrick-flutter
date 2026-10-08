@@ -41,7 +41,6 @@ Future<void> checkRelease() async {
 }
 
 Future<void> prepareBranch() async {
-  await command('gh', ['auth', 'setup-git']);
   metadata.prepare(environment('RELEASE_NOTES'));
   for (final project in ['example', 'e2e']) {
     await command('flutter', ['pub', 'get'], workingDirectory: project);

@@ -33,7 +33,6 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-          persist-credentials: false
       - uses: ./.github/actions/setup-flutter
       - name: Check release version
         run: dart .github/scripts/release.dart check
