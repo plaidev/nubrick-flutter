@@ -61,7 +61,7 @@ Future<void> prepareBranch() async {
     'example/pubspec.lock',
     'e2e/pubspec.lock',
   ]);
-  await command('git', ['commit', '-m', 'Prepare $tag release']);
+  await command('git', ['commit', '-m', 'Prepare $tag release [skip ci]']);
 }
 
 void createPullRequest() {
@@ -107,6 +107,8 @@ Future<void> mergePullRequest() async {
     'merge',
     number,
     '--squash',
+    '--subject',
+    'Prepare $tag release',
     '--match-head-commit',
     releaseSha,
   ]);
