@@ -98,13 +98,25 @@ class NubrickFlutterPlugin: FlutterPlugin, MethodCallHandler {
                             ))
                         }
                     },
-                    onTooltip = { data, experimentId, variantId ->
+                    onTooltip = { data, experimentId, variantId, sessionId ->
+                        manager.trackTooltip(sessionId)
                         sdkScope.launch {
                             channel.invokeMethod("on-tooltip", mapOf(
                                 "data" to data,
                                 "experimentId" to experimentId,
                                 "variantId" to variantId,
-                            ))
+                                "sessionId" to sessionId,
+                            ), object : Result {
+                                override fun success(result: Any?) {
+                                    if (result != true) manager.disconnectTooltip(sessionId, stoppedByFlutter = true)
+                                }
+                                override fun error(code: String, message: String?, details: Any?) {
+                                    manager.disconnectTooltip(sessionId, stoppedByFlutter = true)
+                                }
+                                override fun notImplemented() {
+                                    manager.disconnectTooltip(sessionId, stoppedByFlutter = true)
+                                }
+                            })
                         }
                     }
                 )
@@ -180,8 +192,8 @@ class NubrickFlutterPlugin: FlutterPlugin, MethodCallHandler {
                 val experimentId = call.argument<String>("experimentId") as String
                 val variantId = call.argument<String>("variantId")
                 val rootJson = call.argument<String>("json") as String
-                this.manager.connectTooltipEmbedding(channelId, experimentId, variantId, rootJson)
-                result.success("ok")
+                val connected = this.manager.connectTooltipEmbedding(channelId, experimentId, variantId, rootJson)
+                result.success(if (connected.isSuccess) "ok" else "unavailable")
             }
             "callTooltipEmbeddingDispatch" -> {
                 val channelId = call.argument<String>("channelId") as String
@@ -194,13 +206,15 @@ class NubrickFlutterPlugin: FlutterPlugin, MethodCallHandler {
                 }
             }
             "disconnectTooltipEmbedding" -> {
-                val channelId = call.arguments as String
-                this.manager.disconnectTooltip(channelId)
+                val channelId = call.argument<String>("channelId") as String
+                this.manager.disconnectTooltip(channelId, call.argument<Boolean>("stoppedByFlutter") == true)
                 result.success("ok")
             }
             "appendTooltipExperimentHistory" -> {
                 val experimentId = call.argument<String>("experimentId") as String
-                this.manager.appendTooltipExperimentHistory(experimentId)
+                val variantId = call.argument<String>("variantId") as String
+                val channelId = call.argument<String>("channelId") as String
+                this.manager.appendTooltipExperimentHistory(experimentId, variantId, channelId)
                 result.success("ok")
             }
 
@@ -240,6 +254,10 @@ class NubrickFlutterPlugin: FlutterPlugin, MethodCallHandler {
     }
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
+        val channelId = manager.tooltipChannelId
+        if (channelId != null) {
+            manager.disconnectTooltip(channelId, stoppedByFlutter = true)
+        }
         channel.setMethodCallHandler(null)
         if (activeCallbackOwner === this) {
             activeCallbackOwner = null

@@ -74,6 +74,7 @@ private func nubrickSizeToMessage(_ size: NubrickSize) -> [String: Any] {
 @MainActor
 class NubrickFlutterManager {
     private var initialized = false
+    private(set) var tooltipChannelId: String?
     private var embeddingMaps: [String: EmbeddingEntity]
     private var configMaps: [String: RemoteConfigEntity]
 
@@ -86,7 +87,7 @@ class NubrickFlutterManager {
         projectId: String,
         onEvent: (@Sendable (_ event: ComponentEvent) -> Void)? = nil,
         onDispatch: ((_ event: NubrickEvent) -> Void)? = nil,
-        onTooltip: ((_ data: String, _ experimentId: String, _ variantId: String?) -> Void)? = nil
+        onTooltip: ((_ data: String, _ experimentId: String, _ variantId: String?, _ sessionId: String) -> Void)? = nil
     ) {
         // Callbacks are passed at init to avoid missing events fired during initialization.
         NubrickBridge.initialize(
@@ -290,12 +291,14 @@ class NubrickFlutterManager {
         variantId: String?,
         rootBlock: String,
         messenger: FlutterBinaryMessenger
-    ) {
+    ) -> Bool {
+        guard tooltipChannelId == channelId else { return false }
         let channel = FlutterMethodChannel(name: "Nubrick/Embedding/\(channelId)", binaryMessenger: messenger)
         let accessor = NubrickBridge.renderUIView(
             json: rootBlock,
             experimentId: experimentId,
             variantId: variantId,
+            sessionId: channelId,
             onEvent: { event in
                 channel.invokeMethod(ON_EVENT_METHOD, arguments: [
                     "name": event.name as Any?,
@@ -324,30 +327,39 @@ class NubrickFlutterManager {
             accessor: accessor
         )
         self.embeddingMaps[channelId] = embeedingEntity
+        return true
     }
 
-    func callTooltipEmbeddingDispatch(channelId: String, event: String) {
+    func callTooltipEmbeddingDispatch(channelId: String, event: String) throws {
         guard let entity = self.embeddingMaps[channelId] else {
             return
         }
         guard let accessor = entity.accessor else {
             return
         }
-        do {
-            try accessor.dispatchAction(event)
-        } catch {}
+        try accessor.dispatchAction(event)
     }
 
-    func disconnectTooltipEmbedding(channelId: String) {
+    func trackTooltip(sessionId: String) {
+        tooltipChannelId = sessionId
+    }
+
+    func disconnectTooltipEmbedding(channelId: String, stoppedByFlutter: Bool) {
         self.embeddingMaps[channelId] = nil
+        if tooltipChannelId == channelId {
+            tooltipChannelId = nil
+        }
+        if stoppedByFlutter { NubrickSDK.stopTooltipExperiment(sessionId: channelId) }
     }
 
-    func appendTooltipExperimentHistory(experimentId: String) {
-        guard !experimentId.isEmpty else {
+    func appendTooltipExperimentHistory(experimentId: String, variantId: String, channelId: String) {
+        guard !experimentId.isEmpty, !variantId.isEmpty else {
             return
         }
         Task { @MainActor in
-            await NubrickSDK.appendTooltipExperimentHistory(experimentId: experimentId)
+            await NubrickSDK.appendTooltipExperimentHistory(
+                experimentId: experimentId, variantId: variantId, sessionId: channelId
+            )
         }
     }
 

@@ -55,6 +55,8 @@ internal class NubrickFlutterManager(
     private val binaryMessenger: BinaryMessenger,
     private val scope: CoroutineScope
 ) {
+    var tooltipChannelId: String? = null
+        private set
     private var embeddingMap: MutableMap<String, ExperimentContent> = mutableMapOf()
     private var embeddingArgumentStateMap: MutableMap<String, MutableState<Any?>> = mutableMapOf()
     private var eventBridgeViewMap: MutableMap<String, UIBlockActionBridge> = mutableMapOf()
@@ -65,7 +67,7 @@ internal class NubrickFlutterManager(
         projectId: String,
         onEvent: (event: Event) -> Unit,
         onDispatch: (event: NubrickEvent) -> Unit,
-        onTooltip: (data: String, experimentId: String, variantId: String?) -> Unit
+        onTooltip: (data: String, experimentId: String, variantId: String?, sessionId: String) -> Unit
     ) {
         // Callbacks are passed at init to avoid missing events fired during initialization.
         NubrickSDK.initialize(
@@ -262,8 +264,11 @@ internal class NubrickFlutterManager(
         if (channelId.isEmpty() || experimentId.isEmpty()) {
             return Result.failure(IllegalArgumentException("Missing tooltip channel or experiment ID"))
         }
-        val content = FlutterBridge.buildExperimentContent(experimentId, variantId, rootJson).getOrElse {
+        val content = FlutterBridge.buildExperimentContent(experimentId, variantId, rootJson, sessionId = channelId).getOrElse {
             return Result.failure(it)
+        }
+        if (tooltipChannelId != channelId) {
+            return Result.failure(IllegalStateException("Tooltip session has ended"))
         }
         embeddingMap[channelId] = content
         eventBridgeViewMap[channelId] = UIBlockActionBridge()
@@ -276,16 +281,24 @@ internal class NubrickFlutterManager(
         eventBridge.dispatch(event)
     }
 
-    fun disconnectTooltip(channelId: String) {
+    fun trackTooltip(sessionId: String) {
+        tooltipChannelId = sessionId
+    }
+
+    fun disconnectTooltip(channelId: String, stoppedByFlutter: Boolean) {
         if (channelId.isEmpty()) return
         embeddingMap.remove(channelId)
         embeddingArgumentStateMap.remove(channelId)
         eventBridgeViewMap.remove(channelId)
+        if (tooltipChannelId == channelId) {
+            tooltipChannelId = null
+        }
+        if (stoppedByFlutter) NubrickSDK.stopTooltipExperiment(channelId)
     }
 
-    fun appendTooltipExperimentHistory(experimentId: String) {
-        if (experimentId.isEmpty()) return
-        NubrickSDK.appendTooltipExperimentHistory(experimentId)
+    fun appendTooltipExperimentHistory(experimentId: String, variantId: String, channelId: String) {
+        if (experimentId.isEmpty() || variantId.isEmpty()) return
+        NubrickSDK.appendTooltipExperimentHistory(experimentId, variantId, channelId)
     }
 
     fun dispatch(name: String) {
