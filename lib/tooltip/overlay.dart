@@ -338,6 +338,8 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
     if (!visibility.isVisible) {
       await Scrollable.ensureVisible(
         data.context,
+        // Center the anchor in its scroll viewport to leave space around the
+        // highlight when scroll limits allow.
         alignment: 0.5,
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
