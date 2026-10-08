@@ -13,6 +13,8 @@ import 'package:nubrick_flutter/utils/tooltip_visibility.dart';
 import 'package:nubrick_flutter/utils/transparent_pointer.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
+import 'helpers/tooltip_visibility.dart';
+
 class _TooltipPlatform extends NubrickFlutterPlatform
     with MockPlatformInterfaceMixin {
   int connections = 0;

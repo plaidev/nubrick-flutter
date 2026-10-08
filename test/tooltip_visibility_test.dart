@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nubrick_flutter/utils/tooltip_visibility.dart';
 
+import 'helpers/tooltip_visibility.dart';
+
 void main() {
   test('containment accepts exact edges but rejects clipping', () {
     const viewport = Rect.fromLTWH(0, 0, 100, 100);
