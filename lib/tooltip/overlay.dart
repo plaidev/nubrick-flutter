@@ -2,15 +2,16 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:nubrick_flutter/channel/nubrick_flutter_platform_interface.dart';
 import 'package:nubrick_flutter/crash_report.dart';
-import 'package:nubrick_flutter/src/runtime.dart';
-import 'package:flutter/material.dart';
-import 'package:nubrick_flutter/utils/tooltip_position.dart';
 import 'package:nubrick_flutter/schema/generated.dart' as schema;
-import 'package:nubrick_flutter/utils/tooltip_animation.dart';
+import 'package:nubrick_flutter/src/runtime.dart';
 import 'package:nubrick_flutter/utils/retry.dart';
+import 'package:nubrick_flutter/utils/tooltip_animation.dart';
+import 'package:nubrick_flutter/utils/tooltip_position.dart';
+import 'package:nubrick_flutter/utils/tooltip_visibility.dart';
 import 'package:nubrick_flutter/utils/transparent_pointer.dart';
 
 /// @warning This is the internal overlay view for the tooltip.
@@ -35,7 +36,6 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
   static const Duration _nextTooltipLookupDelay = Duration(milliseconds: 100);
   // Anchor visibility heuristics used during next-tooltip lookup.
   static const double _minAnchorSize = 2.0;
-  static const double _anchorVisibleInset = 16.0;
   // Hide displayed tooltip only after transient failures persist for N frames.
   static const int _hideAfterConsecutiveFailureFrames = 3;
 
@@ -91,38 +91,6 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
   bool _isAnchorTooSmall(Size anchorSize) {
     return anchorSize.width < _minAnchorSize ||
         anchorSize.height < _minAnchorSize;
-  }
-
-  bool _doesAnchorOverlapViewport(
-    BuildContext context,
-    Offset anchorPosition,
-    Size anchorSize, {
-    double inset = 0.0,
-  }) {
-    final Size screenSize = MediaQuery.of(context).size;
-    final Rect screenRect = (Offset.zero & screenSize).deflate(inset);
-    final Rect anchorRect = Rect.fromLTWH(
-      anchorPosition.dx,
-      anchorPosition.dy,
-      anchorSize.width,
-      anchorSize.height,
-    );
-    return anchorRect.overlaps(screenRect);
-  }
-
-  bool _isAnchorWithinSafeViewport(
-      BuildContext context, Offset anchorPosition, Size anchorSize) {
-    return _doesAnchorOverlapViewport(
-      context,
-      anchorPosition,
-      anchorSize,
-      inset: _anchorVisibleInset,
-    );
-  }
-
-  bool _isAnchorInViewport(
-      BuildContext context, Offset anchorPosition, Size anchorSize) {
-    return _doesAnchorOverlapViewport(context, anchorPosition, anchorSize);
   }
 
   void _startNextTooltipTransition() {
@@ -262,7 +230,8 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
         }
       });
     });
-    WidgetsBinding.instance.scheduleFrame();
+    // Post-frame callbacks alone do not request a frame on an idle screen.
+    WidgetsBinding.instance.ensureVisualUpdate();
   }
 
   /// calculate the anchor position, size, tooltip position, size
@@ -361,14 +330,21 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
       return false;
     }
 
-    if (!_isAnchorWithinSafeViewport(
-        data.context, data.anchorPosition, data.anchorSize)) {
-      // try to scroll to the anchor if possible
+    if (!_isAnchorOnCurrentRoute(data.context)) {
+      return false;
+    }
+    final isVisible = isTooltipAnchorVisible(data.context);
+    if (isVisible == null) return false;
+    if (!isVisible) {
       await Scrollable.ensureVisible(
         data.context,
+        // Center the anchor in its scroll viewport to leave space around the
+        // highlight when scroll limits allow.
+        alignment: 0.5,
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
+      // Remeasure after scrolling before displaying the highlight.
       return false;
     }
 
@@ -462,8 +438,7 @@ class NubrickTooltipOverlayState extends State<NubrickTooltipOverlay> {
       _stopTooltipFlow();
       return;
     }
-    if (!_isAnchorInViewport(
-        data.context, data.anchorPosition, data.anchorSize)) {
+    if (isTooltipAnchorVisible(data.context) != true) {
       _consecutiveFullyOffscreenFrames += 1;
       if (_consecutiveFullyOffscreenFrames >=
           _hideAfterConsecutiveFailureFrames) {
