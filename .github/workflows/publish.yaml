@@ -1,9 +1,6 @@
 name: Publish Nubrick Flutter SDK
 
 on:
-  push:
-    tags:
-      - "v[0-9]+.[0-9]+.[0-9]+*"
   workflow_dispatch:
     inputs:
       version:
@@ -17,7 +14,7 @@ concurrency:
 
 jobs:
   publish:
-    if: github.ref_type == 'tag' && (github.event_name == 'push' || inputs.version == github.ref_name)
+    if: github.ref_type == 'tag' && inputs.version == github.ref_name
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -34,7 +31,7 @@ jobs:
       - name: Validate release
         id: validate
         env:
-          INPUT_VERSION: ${{ inputs.version || github.ref_name }}
+          INPUT_VERSION: ${{ inputs.version }}
         run: dart .github/scripts/publish.dart validate
       - name: Publish to pub.dev
         if: steps.validate.outputs.published == 'false'

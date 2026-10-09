@@ -1,0 +1,68 @@
+name: Release Nubrick Flutter SDK
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release tag (vX.Y.Z)"
+        required: true
+        type: string
+      release_notes:
+        description: "Separate release note items with | (e.g. Fix Android crash | Update iOS SDK)"
+        required: true
+        type: string
+concurrency:
+  group: flutter-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: Only Main
+    permissions:
+      actions: write
+      contents: write
+      pull-requests: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: ${{ inputs.version }}
+      RELEASE_NOTES: ${{ inputs.release_notes }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: ./.github/actions/setup-flutter
+      - name: Check release version
+        run: dart .github/scripts/release.dart check
+      - name: Prepare release branch
+        run: dart .github/scripts/release.dart prepare
+      - name: Validate release branch
+        run: dart .github/scripts/release.dart validate
+      - name: Push release branch
+        run: dart .github/scripts/release.dart push
+      - name: Create release PR
+        id: create_pr
+        run: dart .github/scripts/release.dart create-pr
+      - name: Merge release PR
+        id: merge_pr
+        env:
+          PR_NUMBER: ${{ steps.create_pr.outputs.pr_number }}
+        run: dart .github/scripts/release.dart merge-pr
+      - name: Validate merged release
+        env:
+          MERGE_SHA: ${{ steps.merge_pr.outputs.merge_sha }}
+        run: dart .github/scripts/release.dart validate-merged
+      - name: Create release tag
+        env:
+          MERGE_SHA: ${{ steps.merge_pr.outputs.merge_sha }}
+        run: dart .github/scripts/release.dart tag
+      - name: Start publisher
+        id: start_publisher
+        run: dart .github/scripts/release.dart start-publisher
+      - name: Wait for publisher
+        timeout-minutes: 20
+        env:
+          PUBLISH_RUN_ID: ${{ steps.start_publisher.outputs.run_id }}
+        run: gh run watch "$PUBLISH_RUN_ID" --exit-status --interval 10
