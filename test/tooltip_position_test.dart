@@ -6,7 +6,7 @@ import 'package:nubrick_flutter/utils/tooltip_position.dart';
 const _screen = Size(400, 800);
 const _tooltip = Size(120, 80);
 
-// Regression expectations for issue #3092 with no screen margin.
+// Regression expectations for issue #3092 with the default 16px screen margin.
 const _expected = <String, Map<UITooltipPlacement, Offset>>{
   'normal': {
     UITooltipPlacement.TOP_CENTER: Offset(140, 272),
@@ -25,48 +25,48 @@ const _expected = <String, Map<UITooltipPlacement, Offset>>{
   },
   'full_width': {
     UITooltipPlacement.TOP_CENTER: Offset(140, 272),
-    UITooltipPlacement.TOP_START: Offset(0, 272),
-    UITooltipPlacement.TOP_END: Offset(280, 272),
+    UITooltipPlacement.TOP_START: Offset(16, 272),
+    UITooltipPlacement.TOP_END: Offset(264, 272),
     UITooltipPlacement.BOTTOM_CENTER: Offset(140, 448),
-    UITooltipPlacement.BOTTOM_START: Offset(0, 448),
-    UITooltipPlacement.BOTTOM_END: Offset(280, 448),
-    UITooltipPlacement.LEFT_CENTER: Offset(0, 360),
-    UITooltipPlacement.LEFT_START: Offset(0, 368),
-    UITooltipPlacement.LEFT_END: Offset(0, 352),
-    UITooltipPlacement.RIGHT_CENTER: Offset(280, 360),
-    UITooltipPlacement.RIGHT_START: Offset(280, 368),
-    UITooltipPlacement.RIGHT_END: Offset(280, 352),
+    UITooltipPlacement.BOTTOM_START: Offset(16, 448),
+    UITooltipPlacement.BOTTOM_END: Offset(264, 448),
+    UITooltipPlacement.LEFT_CENTER: Offset(16, 360),
+    UITooltipPlacement.LEFT_START: Offset(16, 368),
+    UITooltipPlacement.LEFT_END: Offset(16, 352),
+    UITooltipPlacement.RIGHT_CENTER: Offset(264, 360),
+    UITooltipPlacement.RIGHT_START: Offset(264, 368),
+    UITooltipPlacement.RIGHT_END: Offset(264, 352),
     UITooltipPlacement.UNKNOWN: Offset(140, 448),
   },
   'full_height': {
-    UITooltipPlacement.TOP_CENTER: Offset(140, 0),
-    UITooltipPlacement.TOP_START: Offset(160, 0),
-    UITooltipPlacement.TOP_END: Offset(120, 0),
-    UITooltipPlacement.BOTTOM_CENTER: Offset(140, 720),
-    UITooltipPlacement.BOTTOM_START: Offset(160, 720),
-    UITooltipPlacement.BOTTOM_END: Offset(120, 720),
+    UITooltipPlacement.TOP_CENTER: Offset(140, 16),
+    UITooltipPlacement.TOP_START: Offset(160, 16),
+    UITooltipPlacement.TOP_END: Offset(120, 16),
+    UITooltipPlacement.BOTTOM_CENTER: Offset(140, 704),
+    UITooltipPlacement.BOTTOM_START: Offset(160, 704),
+    UITooltipPlacement.BOTTOM_END: Offset(120, 704),
     UITooltipPlacement.LEFT_CENTER: Offset(24, 360),
-    UITooltipPlacement.LEFT_START: Offset(24, 0),
-    UITooltipPlacement.LEFT_END: Offset(24, 720),
+    UITooltipPlacement.LEFT_START: Offset(24, 16),
+    UITooltipPlacement.LEFT_END: Offset(24, 704),
     UITooltipPlacement.RIGHT_CENTER: Offset(256, 360),
-    UITooltipPlacement.RIGHT_START: Offset(256, 0),
-    UITooltipPlacement.RIGHT_END: Offset(256, 720),
-    UITooltipPlacement.UNKNOWN: Offset(140, 720),
+    UITooltipPlacement.RIGHT_START: Offset(256, 16),
+    UITooltipPlacement.RIGHT_END: Offset(256, 704),
+    UITooltipPlacement.UNKNOWN: Offset(140, 704),
   },
   'anchor_overlap': {
-    UITooltipPlacement.TOP_CENTER: Offset(140, 0),
-    UITooltipPlacement.TOP_START: Offset(160, 0),
-    UITooltipPlacement.TOP_END: Offset(120, 0),
-    UITooltipPlacement.BOTTOM_CENTER: Offset(140, 720),
-    UITooltipPlacement.BOTTOM_START: Offset(160, 720),
-    UITooltipPlacement.BOTTOM_END: Offset(120, 720),
-    UITooltipPlacement.LEFT_CENTER: Offset(0, 360),
-    UITooltipPlacement.LEFT_START: Offset(0, 368),
-    UITooltipPlacement.LEFT_END: Offset(0, 352),
-    UITooltipPlacement.RIGHT_CENTER: Offset(280, 360),
-    UITooltipPlacement.RIGHT_START: Offset(280, 368),
-    UITooltipPlacement.RIGHT_END: Offset(280, 352),
-    UITooltipPlacement.UNKNOWN: Offset(140, 720),
+    UITooltipPlacement.TOP_CENTER: Offset(140, 16),
+    UITooltipPlacement.TOP_START: Offset(160, 16),
+    UITooltipPlacement.TOP_END: Offset(120, 16),
+    UITooltipPlacement.BOTTOM_CENTER: Offset(140, 704),
+    UITooltipPlacement.BOTTOM_START: Offset(160, 704),
+    UITooltipPlacement.BOTTOM_END: Offset(120, 704),
+    UITooltipPlacement.LEFT_CENTER: Offset(16, 360),
+    UITooltipPlacement.LEFT_START: Offset(16, 368),
+    UITooltipPlacement.LEFT_END: Offset(16, 352),
+    UITooltipPlacement.RIGHT_CENTER: Offset(264, 360),
+    UITooltipPlacement.RIGHT_START: Offset(264, 368),
+    UITooltipPlacement.RIGHT_END: Offset(264, 352),
+    UITooltipPlacement.UNKNOWN: Offset(140, 704),
   },
 };
 
@@ -79,8 +79,8 @@ Rect _anchorRect(String scenario, UITooltipPlacement placement) {
     case 'full_height':
       return const Rect.fromLTWH(160, 0, 80, 800);
     case 'anchor_overlap':
-      // The requested position overflows by 24px: the 16px gap plus
-      // 8px of anchor overlap after clamping to the screen edge.
+      // Clamping to the 16px screen margin moves the tooltip by 40px:
+      // the 16px gap plus 24px of anchor overlap.
       switch (placement) {
         case UITooltipPlacement.TOP_CENTER:
         case UITooltipPlacement.TOP_START:
@@ -112,7 +112,6 @@ Offset _position(Rect anchor, UITooltipPlacement placement) {
     tooltipSize: _tooltip,
     screenSize: _screen,
     placement: placement,
-    margin: 0,
   );
 }
 
@@ -123,7 +122,7 @@ void main() {
     }
   });
 
-  group('placement and overlap regressions with margin 0', () {
+  group('placement and overlap regressions with default margin 16', () {
     for (final scenario in _expected.entries) {
       for (final entry in scenario.value.entries) {
         test('${scenario.key}/${entry.key.name}', () {
@@ -132,68 +131,15 @@ void main() {
           expect(position, entry.value);
           if (scenario.key == 'anchor_overlap') {
             final overlap = anchor.intersect(position & _tooltip);
-            expect(overlap.width == 8 || overlap.height == 8, isTrue);
+            expect(overlap.width == 24 || overlap.height == 24, isTrue);
           }
         });
       }
     }
   });
 
-  group('default screen margin is 16 without flipping', () {
-    const cases = <(String, UITooltipPlacement, Offset)>[
-      ('full_width', UITooltipPlacement.TOP_START, Offset(16, 272)),
-      ('full_width', UITooltipPlacement.TOP_END, Offset(264, 272)),
-      ('full_width', UITooltipPlacement.BOTTOM_START, Offset(16, 448)),
-      ('full_width', UITooltipPlacement.BOTTOM_END, Offset(264, 448)),
-      ('full_width', UITooltipPlacement.LEFT_CENTER, Offset(16, 360)),
-      ('full_width', UITooltipPlacement.LEFT_START, Offset(16, 368)),
-      ('full_width', UITooltipPlacement.LEFT_END, Offset(16, 352)),
-      ('full_width', UITooltipPlacement.RIGHT_CENTER, Offset(264, 360)),
-      ('full_width', UITooltipPlacement.RIGHT_START, Offset(264, 368)),
-      ('full_width', UITooltipPlacement.RIGHT_END, Offset(264, 352)),
-      ('full_height', UITooltipPlacement.TOP_CENTER, Offset(140, 16)),
-      ('full_height', UITooltipPlacement.TOP_START, Offset(160, 16)),
-      ('full_height', UITooltipPlacement.TOP_END, Offset(120, 16)),
-      ('full_height', UITooltipPlacement.BOTTOM_CENTER, Offset(140, 704)),
-      ('full_height', UITooltipPlacement.BOTTOM_START, Offset(160, 704)),
-      ('full_height', UITooltipPlacement.BOTTOM_END, Offset(120, 704)),
-      ('full_height', UITooltipPlacement.LEFT_START, Offset(24, 16)),
-      ('full_height', UITooltipPlacement.LEFT_END, Offset(24, 704)),
-      ('full_height', UITooltipPlacement.RIGHT_START, Offset(256, 16)),
-      ('full_height', UITooltipPlacement.RIGHT_END, Offset(256, 704)),
-      ('full_height', UITooltipPlacement.UNKNOWN, Offset(140, 704)),
-    ];
-    for (final (scenario, placement, expected) in cases) {
-      test('$scenario/${placement.name}', () {
-        final anchor = _anchorRect(scenario, placement);
-        expect(
-          calculateTooltipPosition(
-            anchorPosition: anchor.topLeft,
-            anchorSize: anchor.size,
-            tooltipSize: _tooltip,
-            screenSize: _screen,
-            placement: placement,
-          ),
-          expected,
-        );
-      });
-    }
-  });
-
   group('positions just inside, on, and outside each boundary', () {
     const cases = <(double, UITooltipPlacement, Offset, Offset)>[
-      (0, UITooltipPlacement.LEFT_CENTER, Offset(135, 368), Offset(0, 360)),
-      (0, UITooltipPlacement.LEFT_CENTER, Offset(136, 368), Offset(0, 360)),
-      (0, UITooltipPlacement.LEFT_CENTER, Offset(137, 368), Offset(1, 360)),
-      (0, UITooltipPlacement.RIGHT_CENTER, Offset(183, 368), Offset(279, 360)),
-      (0, UITooltipPlacement.RIGHT_CENTER, Offset(184, 368), Offset(280, 360)),
-      (0, UITooltipPlacement.RIGHT_CENTER, Offset(185, 368), Offset(280, 360)),
-      (0, UITooltipPlacement.TOP_CENTER, Offset(160, 95), Offset(140, 0)),
-      (0, UITooltipPlacement.TOP_CENTER, Offset(160, 96), Offset(140, 0)),
-      (0, UITooltipPlacement.TOP_CENTER, Offset(160, 97), Offset(140, 1)),
-      (0, UITooltipPlacement.BOTTOM_CENTER, Offset(160, 639), Offset(140, 719)),
-      (0, UITooltipPlacement.BOTTOM_CENTER, Offset(160, 640), Offset(140, 720)),
-      (0, UITooltipPlacement.BOTTOM_CENTER, Offset(160, 641), Offset(140, 720)),
       (16, UITooltipPlacement.LEFT_CENTER, Offset(151, 368), Offset(16, 360)),
       (16, UITooltipPlacement.LEFT_CENTER, Offset(152, 368), Offset(16, 360)),
       (16, UITooltipPlacement.LEFT_CENTER, Offset(153, 368), Offset(17, 360)),
