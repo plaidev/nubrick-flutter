@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/widgets.dart';
 import 'package:nubrick_flutter/schema/generated.dart';
 
@@ -79,59 +81,12 @@ Offset calculateTooltipPosition({
       break;
   }
 
-  // Check if tooltip would be offscreen and adjust accordingly
-
-  // Off left edge
-  if (left < margin) {
-    // If we're using LEFT placement, switch to RIGHT
-    if (placement == UITooltipPlacement.LEFT_CENTER ||
-        placement == UITooltipPlacement.LEFT_START ||
-        placement == UITooltipPlacement.LEFT_END) {
-      // Recalculate using RIGHT placement
-      left = anchorPosition.dx + anchorSize.width + offset;
-    } else {
-      left = margin;
-    }
-  }
-
-  // Off right edge
-  if (left + tooltipSize.width > screenSize.width - margin) {
-    // If we're using RIGHT placement, switch to LEFT
-    if (placement == UITooltipPlacement.RIGHT_CENTER ||
-        placement == UITooltipPlacement.RIGHT_START ||
-        placement == UITooltipPlacement.RIGHT_END) {
-      // Recalculate using LEFT placement
-      left = anchorPosition.dx - tooltipSize.width - offset;
-    } else {
-      left = screenSize.width - tooltipSize.width - margin;
-    }
-  }
-
-  // Off top edge
-  if (top < margin) {
-    // If we're using TOP placement, switch to BOTTOM
-    if (placement == UITooltipPlacement.TOP_CENTER ||
-        placement == UITooltipPlacement.TOP_START ||
-        placement == UITooltipPlacement.TOP_END) {
-      // Recalculate using BOTTOM placement
-      top = anchorPosition.dy + anchorSize.height + offset;
-    } else {
-      top = margin;
-    }
-  }
-
-  // Off bottom edge
-  if (top + tooltipSize.height > screenSize.height - margin) {
-    // If we're using BOTTOM placement, switch to TOP
-    if (placement == UITooltipPlacement.BOTTOM_CENTER ||
-        placement == UITooltipPlacement.BOTTOM_START ||
-        placement == UITooltipPlacement.BOTTOM_END) {
-      // Recalculate using TOP placement
-      top = anchorPosition.dy - tooltipSize.height - offset;
-    } else {
-      top = screenSize.height - tooltipSize.height - margin;
-    }
-  }
-
-  return Offset(left, top);
+  // Keep the requested side instead of flipping around the anchor.
+  // Oversized tooltips stay at the leading margin without an invalid range.
+  return Offset(
+    left.clamp(margin,
+        math.max(margin, screenSize.width - tooltipSize.width - margin)),
+    top.clamp(margin,
+        math.max(margin, screenSize.height - tooltipSize.height - margin)),
+  );
 }
