@@ -1,3 +1,9 @@
+## 0.21.9
+
+- Fix tooltip startup and anchor visibility
+- Fix tooltip positioning near screen edges without flipping direction
+- Update Android SDK to 0.16.14 and iOS SDK to 0.19.21
+
 ## 0.21.8
 
 - Only one trigger-based experiment (modal or tooltip) can now be active at a time, preventing overlapping experiments.
