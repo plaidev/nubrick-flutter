@@ -8,7 +8,7 @@
 import Foundation
 import Flutter
 import UIKit
-@_spi(FlutterBridge) import Nubrick
+@_spi(FlutterBridge) @_spi(ExperimentalEventProperties) import Nubrick
 
 private func preferredWindow(_ connectedScenes: Set<UIScene>) -> UIWindow? {
     let windowScenes = connectedScenes.compactMap { $0 as? UIWindowScene }
@@ -364,8 +364,9 @@ class NubrickFlutterManager {
     }
 
     // trigger
-    func dispatch(name: String) {
-        NubrickSDK.dispatch(NubrickEvent(name))
+    func dispatch(name: String, properties: [String: Any] = [:]) {
+        let event = properties.isEmpty ? NubrickEvent(name) : NubrickEvent(name, properties: properties)
+        NubrickSDK.dispatch(event)
     }
 
     /**

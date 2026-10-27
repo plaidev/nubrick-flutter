@@ -1,10 +1,12 @@
-@file:OptIn(FlutterBridgeApi::class)
+@file:OptIn(FlutterBridgeApi::class, ExperimentalEventPropertiesApi::class)
 
 package app.nubrick.flutter.nubrick_flutter
 
 import android.content.Context
 import app.nubrick.nubrick.FlutterBridge
 import app.nubrick.nubrick.FlutterBridgeApi
+import app.nubrick.nubrick.ExperimentalEventPropertiesApi
+import app.nubrick.nubrick.EventPropertyValue
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodCall
@@ -17,6 +19,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.Instant
 
 internal const val EMBEDDING_VIEW_ID = "nubrick-embedding-view"
 internal const val OVERLAY_VIEW_ID = "nubrick-overlay-view"
@@ -29,6 +32,33 @@ internal const val ON_EVENT_METHOD = "on-event"
 internal const val ON_DISPATCH_METHOD = "on-dispatch"
 internal const val ON_NEXT_TOOLTIP_METHOD = "on-next-tooltip"
 internal const val ON_DISMISS_TOOLTIP_METHOD = "on-dismiss-tooltip"
+
+private fun encodeDispatchProperty(value: EventPropertyValue): Map<String, Any> = when (value) {
+    is EventPropertyValue.Integer -> mapOf("type" to "integer", "value" to value.value)
+    is EventPropertyValue.Float -> mapOf("type" to "float", "value" to value.value)
+    is EventPropertyValue.String -> mapOf("type" to "string", "value" to value.value)
+    is EventPropertyValue.Boolean -> mapOf("type" to "boolean", "value" to value.value)
+    is EventPropertyValue.Timestamp -> mapOf("type" to "timestamp", "value" to value.value.toString())
+}
+
+private fun decodeDispatchProperties(raw: Any?): Map<String, Any> {
+    val source = raw as? Map<*, *> ?: return emptyMap()
+    val properties = mutableMapOf<String, Any>()
+    for ((key, encoded) in source) {
+        if (key !is String || encoded !is Map<*, *>) continue
+        val value = encoded["value"]
+        val decoded: Any? = when (encoded["type"]) {
+            "integer" -> value as? Int ?: value as? Long
+            "float" -> (value as? Number)?.toDouble()
+            "string" -> value as? String
+            "boolean" -> value as? Boolean
+            "timestamp" -> (value as? String)?.let { runCatching { Instant.parse(it) }.getOrNull() }
+            else -> null
+        }
+        if (decoded != null) properties[key] = decoded
+    }
+    return properties
+}
 
 /** NubrickFlutterPlugin */
 class NubrickFlutterPlugin: FlutterPlugin, MethodCallHandler {
@@ -94,7 +124,8 @@ class NubrickFlutterPlugin: FlutterPlugin, MethodCallHandler {
                     onDispatch = { event ->
                         sdkScope.launch {
                             channel.invokeMethod(ON_DISPATCH_METHOD, mapOf(
-                                "name" to event.name
+                                "name" to event.name,
+                                "properties" to event.properties.mapValues { (_, value) -> encodeDispatchProperty(value) }
                             ))
                         }
                     },
@@ -219,8 +250,14 @@ class NubrickFlutterPlugin: FlutterPlugin, MethodCallHandler {
             }
 
             "dispatch" -> {
-                val event = call.arguments as String
-                this.manager.dispatch(event)
+                val arguments = call.arguments
+                val name = if (arguments is String) arguments else (arguments as? Map<*, *>)?.get("name") as? String
+                if (name == null) {
+                    result.error("INVALID_EVENT", "Expected an event name", null)
+                    return
+                }
+                val properties = if (arguments is Map<*, *>) decodeDispatchProperties(arguments["properties"]) else emptyMap()
+                this.manager.dispatch(name, properties)
                 result.success("ok")
             }
             "recordCrash" -> {

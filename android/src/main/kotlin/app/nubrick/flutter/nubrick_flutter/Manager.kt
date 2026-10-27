@@ -1,4 +1,4 @@
-@file:OptIn(FlutterBridgeApi::class)
+@file:OptIn(FlutterBridgeApi::class, ExperimentalEventPropertiesApi::class)
 
 package app.nubrick.flutter.nubrick_flutter
 
@@ -6,6 +6,7 @@ import android.content.Context
 import app.nubrick.nubrick.Config
 import app.nubrick.nubrick.Event
 import app.nubrick.nubrick.FlutterBridgeApi
+import app.nubrick.nubrick.ExperimentalEventPropertiesApi
 import app.nubrick.nubrick.FlutterBridge
 import app.nubrick.nubrick.NubrickSDK
 import app.nubrick.nubrick.data.ExceptionRecord
@@ -301,8 +302,10 @@ internal class NubrickFlutterManager(
         NubrickSDK.appendTooltipExperimentHistory(experimentId, variantId, channelId)
     }
 
-    fun dispatch(name: String) {
-        NubrickSDK.dispatch(NubrickEvent(name))
+    fun dispatch(name: String, properties: Map<String, Any> = emptyMap()) {
+        NubrickSDK.dispatch(
+            if (properties.isEmpty()) NubrickEvent(name) else NubrickEvent(name, properties)
+        )
     }
 
     /**

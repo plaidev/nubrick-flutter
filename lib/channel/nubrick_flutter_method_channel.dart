@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:nubrick_flutter/nubrick_flutter.dart';
 import 'package:nubrick_flutter/schema/generated.dart';
+import 'package:nubrick_flutter/src/event_property_codec.dart';
 
 import './nubrick_flutter_platform_interface.dart';
 
@@ -189,9 +190,18 @@ class MethodChannelNubrickFlutter extends NubrickFlutterPlatform {
 
   @override
   Future<String?> dispatch(String name) async {
+    return methodChannel.invokeMethod<String>('dispatch', name);
+  }
+
+  @override
+  Future<String?> dispatchWithProperties(
+      String name, Map<String, Object> properties) async {
     final result = await methodChannel.invokeMethod<String>(
       'dispatch',
-      name,
+      {
+        'name': name,
+        'properties': encodeEventProperties(properties),
+      },
     );
     return result;
   }

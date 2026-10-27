@@ -1,3 +1,4 @@
+import 'package:meta/meta.dart';
 import 'package:nubrick_flutter/schema/generated.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 import 'package:nubrick_flutter/nubrick_flutter.dart';
@@ -103,6 +104,13 @@ abstract class NubrickFlutterPlatform extends PlatformInterface {
 
   Future<String?> dispatch(String name) {
     throw UnimplementedError('dispatch() has not been implemented.');
+  }
+
+  @experimental
+  Future<String?> dispatchWithProperties(
+      String name, Map<String, Object> properties) {
+    throw UnimplementedError(
+        'dispatchWithProperties() has not been implemented.');
   }
 
   /// Records a crash with the given error data.

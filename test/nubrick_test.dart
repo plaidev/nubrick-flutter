@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nubrick_flutter/channel/nubrick_flutter_platform_interface.dart';
+import 'package:nubrick_flutter/channel/nubrick_flutter_method_channel.dart';
 import 'package:nubrick_flutter/nubrick_flutter.dart';
 import 'package:nubrick_flutter/src/runtime.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
@@ -13,6 +14,7 @@ class _FakeNubrickFlutterPlatform extends NubrickFlutterPlatform
   int recordedCrashCount = 0;
   final List<String> connectedProjectIds = [];
   final List<String> dispatchedEvents = [];
+  final List<Map<String, Object>> dispatchedProperties = [];
   String? connectClientResult = 'ok';
   Object? connectClientError;
   Completer<String?>? connectClientCompleter;
@@ -32,6 +34,14 @@ class _FakeNubrickFlutterPlatform extends NubrickFlutterPlatform
   @override
   Future<String?> dispatch(String name) async {
     dispatchedEvents.add(name);
+    return 'ok';
+  }
+
+  @override
+  Future<String?> dispatchWithProperties(
+      String name, Map<String, Object> properties) async {
+    dispatchedEvents.add(name);
+    dispatchedProperties.add(properties);
     return 'ok';
   }
 
@@ -372,6 +382,107 @@ void main() {
       });
 
       expect(dispatchedName, 'checkout_opened');
+    });
+
+    test('dispatches a snapshot of typed event properties', () async {
+      Nubrick.initialize('project-a');
+      await Nubrick.ready;
+
+      final input = <String, Object?>{
+        'count': 3,
+        'price': 12.5,
+        'active': true,
+        'label': 'checkout',
+        'at': DateTime.utc(2026, 10, 27, 1, 2, 3, 456, 789),
+        'invalid': double.nan,
+      };
+      final event = NubrickEvent.withProperties('purchase', input);
+      input['count'] = 9;
+
+      await NubrickDispatcher.instance.dispatch(event);
+
+      expect(fakePlatform.dispatchedEvents, ['purchase']);
+      expect(fakePlatform.dispatchedProperties.single, {
+        'count': 3,
+        'price': 12.5,
+        'active': true,
+        'label': 'checkout',
+        'at': DateTime.utc(2026, 10, 27, 1, 2, 3, 456, 789),
+      });
+      expect(() => event.properties['count'] = 4, throwsUnsupportedError);
+    });
+
+    test('encodes typed properties on the method channel', () async {
+      final calls = <MethodCall>[];
+      const channel = MethodChannel('nubrick_flutter');
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      messenger.setMockMethodCallHandler(channel, (call) async {
+        calls.add(call);
+        return 'ok';
+      });
+      try {
+        final platform = MethodChannelNubrickFlutter();
+        await platform.dispatch('plain');
+        final event = NubrickEvent.withProperties('purchase', {
+          'count': 3,
+          'price': 12.5,
+          'active': true,
+          'label': 'checkout',
+          'at': DateTime.utc(2026, 10, 27, 1, 2, 3, 456, 789),
+        });
+        await platform.dispatchWithProperties(event.name, event.properties);
+
+        expect(calls[0].arguments, 'plain');
+        expect(calls[1].arguments, {
+          'name': 'purchase',
+          'properties': {
+            'count': {'type': 'integer', 'value': 3},
+            'price': {'type': 'float', 'value': 12.5},
+            'active': {'type': 'boolean', 'value': true},
+            'label': {'type': 'string', 'value': 'checkout'},
+            'at': {
+              'type': 'timestamp',
+              'value': '2026-10-27T01:02:03.456789Z',
+            },
+          },
+        });
+      } finally {
+        messenger.setMockMethodCallHandler(channel, null);
+      }
+    });
+
+    test('delivers typed properties to experimental dispatch listeners',
+        () async {
+      Nubrick.initialize('project-a');
+
+      String? dispatchedName;
+      NubrickEvent? dispatchedEvent;
+      Nubrick.addOnDispatchListener((name) => dispatchedName = name);
+      Nubrick.addOnDispatchEventListener((event) => dispatchedEvent = event);
+
+      await _sendMethodChannelCall('on-dispatch', {
+        'name': 'purchase',
+        'properties': {
+          'count': {'type': 'integer', 'value': 3},
+          'price': {'type': 'float', 'value': 12.5},
+          'active': {'type': 'boolean', 'value': true},
+          'label': {'type': 'string', 'value': 'checkout'},
+          'at': {
+            'type': 'timestamp',
+            'value': '2026-10-27T01:02:03.456789Z',
+          },
+        },
+      });
+
+      expect(dispatchedName, 'purchase');
+      expect(dispatchedEvent?.properties, {
+        'count': 3,
+        'price': 12.5,
+        'active': true,
+        'label': 'checkout',
+        'at': DateTime.utc(2026, 10, 27, 1, 2, 3, 456, 789),
+      });
     });
 
     test('rejects native tooltip delivery when no overlay is listening',

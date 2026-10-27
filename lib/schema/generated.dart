@@ -756,6 +756,104 @@ extension ConditionOperatorExtension on ConditionOperator {
   }
 }
 
+class EventPropertyCondition {
+  final String? property;
+  final EventPropertyType? asType;
+  final ConditionOperator? operator;
+  final String? value;
+
+  EventPropertyCondition({
+    this.property,
+    this.asType,
+    this.operator,
+    this.value,
+  });
+
+  static EventPropertyCondition? decode(dynamic json) {
+    if (json == null) {
+      return null;
+    }
+    if (json is! Map<String, dynamic>) {
+      return null;
+    }
+
+    return EventPropertyCondition(
+      property: StringDecoder.decode(json['property']),
+      asType: EventPropertyTypeExtension.decode(json['asType']),
+      operator: ConditionOperatorExtension.decode(json['operator']),
+      value: StringDecoder.decode(json['value']),
+    );
+  }
+
+  Map<String, dynamic> encode() {
+    return {
+      '__typename': 'EventPropertyCondition',
+      'property': property,
+      'asType': asType?.encode(),
+      'operator': operator?.encode(),
+      'value': value,
+    };
+  }
+}
+
+enum EventPropertyType {
+  // ignore: constant_identifier_names
+  INTEGER,
+  // ignore: constant_identifier_names
+  FLOAT,
+  // ignore: constant_identifier_names
+  STRING,
+  // ignore: constant_identifier_names
+  BOOLEAN,
+  // ignore: constant_identifier_names
+  TIMESTAMP,
+  // ignore: constant_identifier_names
+  UNKNOWN,
+}
+
+extension EventPropertyTypeExtension on EventPropertyType {
+  static EventPropertyType? decode(dynamic json) {
+    if (json == null) {
+      return null;
+    }
+    if (json is! String) {
+      return null;
+    }
+
+    switch (json) {
+      case 'INTEGER':
+        return EventPropertyType.INTEGER;
+      case 'FLOAT':
+        return EventPropertyType.FLOAT;
+      case 'STRING':
+        return EventPropertyType.STRING;
+      case 'BOOLEAN':
+        return EventPropertyType.BOOLEAN;
+      case 'TIMESTAMP':
+        return EventPropertyType.TIMESTAMP;
+      default:
+        return EventPropertyType.UNKNOWN;
+    }
+  }
+
+  String? encode() {
+    switch (this) {
+      case EventPropertyType.INTEGER:
+        return 'INTEGER';
+      case EventPropertyType.FLOAT:
+        return 'FLOAT';
+      case EventPropertyType.STRING:
+        return 'STRING';
+      case EventPropertyType.BOOLEAN:
+        return 'BOOLEAN';
+      case EventPropertyType.TIMESTAMP:
+        return 'TIMESTAMP';
+      case EventPropertyType.UNKNOWN:
+        return null;
+    }
+  }
+}
+
 class ExperimentCondition {
   final String? property;
   final UserPropertyType? asType;
@@ -808,6 +906,7 @@ class ExperimentConfig {
   final DateTime? startedAt;
   final DateTime? endedAt;
   final int? priority;
+  final List<EventPropertyCondition>? triggerEventPropertyConditions;
 
   ExperimentConfig({
     this.id,
@@ -821,6 +920,7 @@ class ExperimentConfig {
     this.startedAt,
     this.endedAt,
     this.priority,
+    this.triggerEventPropertyConditions,
   });
 
   static ExperimentConfig? decode(dynamic json) {
@@ -847,6 +947,9 @@ class ExperimentConfig {
       startedAt: DateTimeDecoder.decode(json['startedAt']),
       endedAt: DateTimeDecoder.decode(json['endedAt']),
       priority: IntDecoder.decode(json['priority']),
+      triggerEventPropertyConditions: ListDecoder.decode(
+          json['triggerEventPropertyConditions'],
+          (element) => EventPropertyCondition.decode(element)),
     );
   }
 
@@ -867,6 +970,9 @@ class ExperimentConfig {
       'startedAt': startedAt,
       'endedAt': endedAt,
       'priority': priority,
+      'triggerEventPropertyConditions': triggerEventPropertyConditions
+          ?.map((e) => e.encode())
+          .toList(growable: false),
     };
   }
 }

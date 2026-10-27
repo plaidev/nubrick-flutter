@@ -4,7 +4,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:nubrick_flutter/channel/nubrick_flutter_platform_interface.dart';
 import 'package:nubrick_flutter/crash_report.dart';
+import 'package:nubrick_flutter/dispatcher.dart';
 import 'package:nubrick_flutter/event.dart';
+import 'package:nubrick_flutter/src/event_property_codec.dart';
 import 'package:nubrick_flutter/utils/parse_event.dart';
 
 final nubrickRuntime = NubrickRuntime._internal();
@@ -22,6 +24,7 @@ class NubrickRuntime {
   Completer<void>? _initializationCompleter;
   final List<EventHandler> _listeners = [];
   final List<void Function(String)> _onDispatchListeners = [];
+  final List<void Function(NubrickEvent)> _onDispatchEventListeners = [];
   final List<void Function(String, String?)> _publicTooltipListeners = [];
   final List<void Function(String, String?, String?, String)>
       _internalTooltipListeners = [];
@@ -184,6 +187,14 @@ class NubrickRuntime {
     _onDispatchListeners.remove(listener);
   }
 
+  void addOnDispatchEventListener(void Function(NubrickEvent) listener) {
+    _onDispatchEventListeners.add(listener);
+  }
+
+  void removeOnDispatchEventListener(void Function(NubrickEvent) listener) {
+    _onDispatchEventListeners.remove(listener);
+  }
+
   void addOnTooltipListener(void Function(String, String?) listener) {
     _publicTooltipListeners.add(listener);
   }
@@ -214,10 +225,16 @@ class NubrickRuntime {
         }
         return Future.value(true);
       case 'on-dispatch':
-        final name = call.arguments["name"] as String?;
-        if (name != null) {
+        final arguments = call.arguments;
+        final name = arguments is Map ? arguments['name'] : null;
+        if (name is String) {
+          final event = NubrickEvent.withProperties(
+              name, decodeEventProperties(arguments['properties']));
           for (var listener in List.of(_onDispatchListeners)) {
-            listener(name);
+            listener(event.name);
+          }
+          for (var listener in List.of(_onDispatchEventListeners)) {
+            listener(event);
           }
         }
         return Future.value(true);
@@ -278,6 +295,7 @@ class NubrickRuntime {
 
     _listeners.clear();
     _onDispatchListeners.clear();
+    _onDispatchEventListeners.clear();
     _publicTooltipListeners.clear();
     _internalTooltipListeners.clear();
   }
