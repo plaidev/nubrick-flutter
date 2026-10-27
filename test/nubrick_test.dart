@@ -396,7 +396,7 @@ void main() {
         'at': DateTime.utc(2026, 10, 27, 1, 2, 3, 456, 789),
         'invalid': double.nan,
       };
-      final event = NubrickEvent.withProperties('purchase', input);
+      final event = NubrickEvent('purchase', properties: input);
       input['count'] = 9;
 
       await NubrickDispatcher.instance.dispatch(event);
@@ -424,7 +424,7 @@ void main() {
       try {
         final platform = MethodChannelNubrickFlutter();
         await platform.dispatch('plain');
-        final event = NubrickEvent.withProperties('purchase', {
+        final event = NubrickEvent('purchase', properties: {
           'count': 3,
           'minInt64': -9223372036854775807 - 1,
           'maxInt64': 9223372036854775807,

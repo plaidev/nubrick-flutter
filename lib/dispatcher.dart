@@ -1,4 +1,3 @@
-import 'package:meta/meta.dart';
 import 'package:nubrick_flutter/channel/nubrick_flutter_platform_interface.dart';
 import 'package:nubrick_flutter/src/event_property_codec.dart';
 import 'package:nubrick_flutter/src/runtime.dart';
@@ -8,16 +7,12 @@ class NubrickEvent {
 
   /// Supported values are int, double, String, bool, and DateTime.
   /// Unsupported values and non-finite doubles are omitted.
-  @experimental
   final Map<String, Object> properties;
-
-  NubrickEvent(this.name) : properties = const {};
 
   /// Creates an event with a snapshot of its properties.
   ///
-  /// For example, `NubrickEvent.withProperties('purchase', {'price': 19.99})`.
-  @experimental
-  NubrickEvent.withProperties(this.name, Map<String, Object?> properties)
+  /// For example, `NubrickEvent('purchase', properties: {'price': 19.99})`.
+  NubrickEvent(this.name, {Map<String, Object?> properties = const {}})
       : properties = Map.unmodifiable(normalizeEventProperties(properties));
 }
 
