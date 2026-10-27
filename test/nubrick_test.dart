@@ -426,7 +426,11 @@ void main() {
         await platform.dispatch('plain');
         final event = NubrickEvent.withProperties('purchase', {
           'count': 3,
+          'minInt64': -9223372036854775807 - 1,
+          'maxInt64': 9223372036854775807,
           'price': 12.5,
+          'minFloat64': double.minPositive,
+          'maxFloat64': double.maxFinite,
           'active': true,
           'label': 'checkout',
           'at': DateTime.utc(2026, 10, 27, 1, 2, 3, 456, 789),
@@ -438,7 +442,11 @@ void main() {
           'name': 'purchase',
           'properties': {
             'count': {'type': 'integer', 'value': 3},
+            'minInt64': {'type': 'integer', 'value': -9223372036854775807 - 1},
+            'maxInt64': {'type': 'integer', 'value': 9223372036854775807},
             'price': {'type': 'float', 'value': 12.5},
+            'minFloat64': {'type': 'float', 'value': double.minPositive},
+            'maxFloat64': {'type': 'float', 'value': double.maxFinite},
             'active': {'type': 'boolean', 'value': true},
             'label': {'type': 'string', 'value': 'checkout'},
             'at': {
