@@ -1,12 +1,10 @@
-@file:OptIn(FlutterBridgeApi::class, ExperimentalEventPropertiesApi::class)
+@file:OptIn(FlutterBridgeApi::class)
 
 package app.nubrick.flutter.nubrick_flutter
 
 import android.content.Context
 import app.nubrick.nubrick.FlutterBridge
 import app.nubrick.nubrick.FlutterBridgeApi
-import app.nubrick.nubrick.ExperimentalEventPropertiesApi
-import app.nubrick.nubrick.EventPropertyValue
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodCall
@@ -32,14 +30,6 @@ internal const val ON_EVENT_METHOD = "on-event"
 internal const val ON_DISPATCH_METHOD = "on-dispatch"
 internal const val ON_NEXT_TOOLTIP_METHOD = "on-next-tooltip"
 internal const val ON_DISMISS_TOOLTIP_METHOD = "on-dismiss-tooltip"
-
-private fun encodeDispatchProperty(value: EventPropertyValue): Map<String, Any> = when (value) {
-    is EventPropertyValue.Integer -> mapOf("type" to "integer", "value" to value.value)
-    is EventPropertyValue.Float -> mapOf("type" to "float", "value" to value.value)
-    is EventPropertyValue.String -> mapOf("type" to "string", "value" to value.value)
-    is EventPropertyValue.Boolean -> mapOf("type" to "boolean", "value" to value.value)
-    is EventPropertyValue.Timestamp -> mapOf("type" to "timestamp", "value" to value.value.toString())
-}
 
 private fun decodeDispatchProperties(raw: Any?): Map<String, Any> {
     val source = raw as? Map<*, *> ?: return emptyMap()
@@ -124,8 +114,7 @@ class NubrickFlutterPlugin: FlutterPlugin, MethodCallHandler {
                     onDispatch = { event ->
                         sdkScope.launch {
                             channel.invokeMethod(ON_DISPATCH_METHOD, mapOf(
-                                "name" to event.name,
-                                "properties" to event.properties.mapValues { (_, value) -> encodeDispatchProperty(value) }
+                                "name" to event.name
                             ))
                         }
                     },

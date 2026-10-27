@@ -35,27 +35,3 @@ Map<String, Map<String, Object>> encodeEventProperties(
   }
   return encoded;
 }
-
-Map<String, Object> decodeEventProperties(dynamic raw) {
-  if (raw is! Map) return const {};
-
-  final properties = <String, Object>{};
-  for (final entry in raw.entries) {
-    if (entry.key is! String || entry.value is! Map) continue;
-    final encoded = entry.value as Map;
-    final value = encoded['value'];
-    switch (encoded['type']) {
-      case 'integer' when value is int:
-      case 'float' when value is double && value.isFinite:
-      case 'string' when value is String:
-      case 'boolean' when value is bool:
-        properties[entry.key as String] = value;
-      case 'timestamp' when value is String:
-        final timestamp = DateTime.tryParse(value);
-        if (timestamp != null) {
-          properties[entry.key as String] = timestamp.toUtc();
-        }
-    }
-  }
-  return properties;
-}

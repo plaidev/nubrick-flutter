@@ -460,39 +460,6 @@ void main() {
       }
     });
 
-    test('delivers typed properties to experimental dispatch listeners',
-        () async {
-      Nubrick.initialize('project-a');
-
-      String? dispatchedName;
-      NubrickEvent? dispatchedEvent;
-      Nubrick.addOnDispatchListener((name) => dispatchedName = name);
-      Nubrick.addOnDispatchEventListener((event) => dispatchedEvent = event);
-
-      await _sendMethodChannelCall('on-dispatch', {
-        'name': 'purchase',
-        'properties': {
-          'count': {'type': 'integer', 'value': 3},
-          'price': {'type': 'float', 'value': 12.5},
-          'active': {'type': 'boolean', 'value': true},
-          'label': {'type': 'string', 'value': 'checkout'},
-          'at': {
-            'type': 'timestamp',
-            'value': '2026-10-27T01:02:03.456789Z',
-          },
-        },
-      });
-
-      expect(dispatchedName, 'purchase');
-      expect(dispatchedEvent?.properties, {
-        'count': 3,
-        'price': 12.5,
-        'active': true,
-        'label': 'checkout',
-        'at': DateTime.utc(2026, 10, 27, 1, 2, 3, 456, 789),
-      });
-    });
-
     test('rejects native tooltip delivery when no overlay is listening',
         () async {
       Nubrick.initialize('project-a');

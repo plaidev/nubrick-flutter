@@ -1,6 +1,5 @@
-import 'package:meta/meta.dart';
+import 'package:flutter/foundation.dart';
 import 'package:nubrick_flutter/event.dart';
-import 'package:nubrick_flutter/dispatcher.dart';
 import 'package:nubrick_flutter/src/runtime.dart';
 
 // Export public APIs
@@ -73,18 +72,6 @@ class Nubrick {
 
   static void removeOnDispatchListener(void Function(String) listener) {
     nubrickRuntime.removeOnDispatchListener(listener);
-  }
-
-  /// Receives dispatched events with their typed properties.
-  @experimental
-  static void addOnDispatchEventListener(void Function(NubrickEvent) listener) {
-    nubrickRuntime.addOnDispatchEventListener(listener);
-  }
-
-  @experimental
-  static void removeOnDispatchEventListener(
-      void Function(NubrickEvent) listener) {
-    nubrickRuntime.removeOnDispatchEventListener(listener);
   }
 
   static void addOnTooltipListener(void Function(String, String?) listener) {

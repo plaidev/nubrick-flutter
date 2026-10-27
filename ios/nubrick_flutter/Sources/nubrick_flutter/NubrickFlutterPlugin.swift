@@ -24,14 +24,6 @@ private func decodeDispatchProperties(_ raw: Any?) -> [String: Any] {
     return properties
 }
 
-private func encodeDispatchProperties(_ properties: [String: EventPropertyValue]) -> [String: Any] {
-    guard let data = try? JSONEncoder().encode(properties),
-          let encoded = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-        return [:]
-    }
-    return encoded
-}
-
 @MainActor
 public class NubrickFlutterPlugin: NSObject, FlutterPlugin {
     private static var activeCallbackOwner: NubrickFlutterPlugin?
@@ -97,7 +89,6 @@ public class NubrickFlutterPlugin: NSObject, FlutterPlugin {
                     Task { @MainActor in
                         self?.channel.invokeMethod(ON_DISPATCH_METHOD, arguments: [
                             "name": event.name as Any?,
-                            "properties": encodeDispatchProperties(event.properties),
                         ])
                     }
                 },
