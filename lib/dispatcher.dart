@@ -41,11 +41,7 @@ class NubrickDispatcher {
     if (!nubrickRuntime.isReady) {
       await nubrickRuntime.ready;
     }
-    if (event.properties.isEmpty) {
-      await NubrickFlutterPlatform.instance.dispatch(event.name);
-    } else {
-      await NubrickFlutterPlatform.instance
-          .dispatchWithProperties(event.name, event.properties);
-    }
+    await NubrickFlutterPlatform.instance
+        .dispatch(event.name, properties: event.properties);
   }
 }

@@ -32,16 +32,10 @@ class _FakeNubrickFlutterPlatform extends NubrickFlutterPlatform
   }
 
   @override
-  Future<String?> dispatch(String name) async {
+  Future<String?> dispatch(String name,
+      {Map<String, Object> properties = const {}}) async {
     dispatchedEvents.add(name);
-    return 'ok';
-  }
-
-  @override
-  Future<String?> dispatchWithProperties(
-      String name, Map<String, Object> properties) async {
-    dispatchedEvents.add(name);
-    dispatchedProperties.add(properties);
+    if (properties.isNotEmpty) dispatchedProperties.add(properties);
     return 'ok';
   }
 
@@ -435,7 +429,7 @@ void main() {
           'label': 'checkout',
           'at': DateTime.utc(2026, 10, 27, 1, 2, 3, 456, 789),
         });
-        await platform.dispatchWithProperties(event.name, event.properties);
+        await platform.dispatch(event.name, properties: event.properties);
 
         expect(calls[0].arguments, 'plain');
         expect(calls[1].arguments, {

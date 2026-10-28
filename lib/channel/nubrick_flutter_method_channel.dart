@@ -189,21 +189,17 @@ class MethodChannelNubrickFlutter extends NubrickFlutterPlatform {
   }
 
   @override
-  Future<String?> dispatch(String name) async {
-    return methodChannel.invokeMethod<String>('dispatch', name);
-  }
-
-  @override
-  Future<String?> dispatchWithProperties(
-      String name, Map<String, Object> properties) async {
-    final result = await methodChannel.invokeMethod<String>(
+  Future<String?> dispatch(String name,
+      {Map<String, Object> properties = const {}}) async {
+    return methodChannel.invokeMethod<String>(
       'dispatch',
-      {
-        'name': name,
-        'properties': encodeEventProperties(properties),
-      },
+      properties.isEmpty
+          ? name
+          : {
+              'name': name,
+              'properties': encodeEventProperties(properties),
+            },
     );
-    return result;
   }
 
   @override
