@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nubrick_flutter/channel/nubrick_flutter_platform_interface.dart';
+import 'package:nubrick_flutter/channel/nubrick_flutter_method_channel.dart';
 import 'package:nubrick_flutter/nubrick_flutter.dart';
 import 'package:nubrick_flutter/src/runtime.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
@@ -13,6 +14,7 @@ class _FakeNubrickFlutterPlatform extends NubrickFlutterPlatform
   int recordedCrashCount = 0;
   final List<String> connectedProjectIds = [];
   final List<String> dispatchedEvents = [];
+  final List<Map<String, Object>> dispatchedProperties = [];
   String? connectClientResult = 'ok';
   Object? connectClientError;
   Completer<String?>? connectClientCompleter;
@@ -30,8 +32,10 @@ class _FakeNubrickFlutterPlatform extends NubrickFlutterPlatform
   }
 
   @override
-  Future<String?> dispatch(String name) async {
+  Future<String?> dispatch(String name,
+      {Map<String, Object> properties = const {}}) async {
     dispatchedEvents.add(name);
+    if (properties.isNotEmpty) dispatchedProperties.add(properties);
     return 'ok';
   }
 
@@ -372,6 +376,82 @@ void main() {
       });
 
       expect(dispatchedName, 'checkout_opened');
+    });
+
+    test('dispatches a snapshot of typed event properties', () async {
+      Nubrick.initialize('project-a');
+      await Nubrick.ready;
+
+      final input = <String, Object>{
+        'count': 3,
+        'price': 12.5,
+        'active': true,
+        'label': 'checkout',
+        'at': DateTime.utc(2026, 10, 27, 1, 2, 3, 456, 789),
+        'invalid': double.nan,
+      };
+      final event = NubrickEvent('purchase', properties: input);
+      input['count'] = 9;
+
+      await NubrickDispatcher.instance.dispatch(event);
+
+      expect(fakePlatform.dispatchedEvents, ['purchase']);
+      expect(fakePlatform.dispatchedProperties.single, {
+        'count': 3,
+        'price': 12.5,
+        'active': true,
+        'label': 'checkout',
+        'at': DateTime.utc(2026, 10, 27, 1, 2, 3, 456, 789),
+      });
+      expect(() => event.properties['count'] = 4, throwsUnsupportedError);
+    });
+
+    test('encodes typed properties on the method channel', () async {
+      final calls = <MethodCall>[];
+      const channel = MethodChannel('nubrick_flutter');
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      messenger.setMockMethodCallHandler(channel, (call) async {
+        calls.add(call);
+        return 'ok';
+      });
+      try {
+        final platform = MethodChannelNubrickFlutter();
+        await platform.dispatch('plain');
+        final event = NubrickEvent('purchase', properties: {
+          'count': 3,
+          'minInt64': -9223372036854775807 - 1,
+          'maxInt64': 9223372036854775807,
+          'price': 12.5,
+          'minFloat64': double.minPositive,
+          'maxFloat64': double.maxFinite,
+          'active': true,
+          'label': 'checkout',
+          'at': DateTime.utc(2026, 10, 27, 1, 2, 3, 456, 789),
+        });
+        await platform.dispatch(event.name, properties: event.properties);
+
+        expect(calls[0].arguments, 'plain');
+        expect(calls[1].arguments, {
+          'name': 'purchase',
+          'properties': {
+            'count': {'type': 'integer', 'value': 3},
+            'minInt64': {'type': 'integer', 'value': -9223372036854775807 - 1},
+            'maxInt64': {'type': 'integer', 'value': 9223372036854775807},
+            'price': {'type': 'float', 'value': 12.5},
+            'minFloat64': {'type': 'float', 'value': double.minPositive},
+            'maxFloat64': {'type': 'float', 'value': double.maxFinite},
+            'active': {'type': 'boolean', 'value': true},
+            'label': {'type': 'string', 'value': 'checkout'},
+            'at': {
+              'type': 'timestamp',
+              'value': '2026-10-27T01:02:03.456789Z',
+            },
+          },
+        });
+      } finally {
+        messenger.setMockMethodCallHandler(channel, null);
+      }
     });
 
     test('rejects native tooltip delivery when no overlay is listening',

@@ -214,8 +214,9 @@ class NubrickRuntime {
         }
         return Future.value(true);
       case 'on-dispatch':
-        final name = call.arguments["name"] as String?;
-        if (name != null) {
+        final arguments = call.arguments;
+        final name = arguments is Map ? arguments['name'] : null;
+        if (name is String) {
           for (var listener in List.of(_onDispatchListeners)) {
             listener(name);
           }

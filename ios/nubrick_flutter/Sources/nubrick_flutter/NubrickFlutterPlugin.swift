@@ -1,6 +1,6 @@
 import Flutter
 import UIKit
-@_spi(FlutterBridge) import Nubrick
+@_spi(FlutterBridge) @_spi(ExperimentalEventProperties) import Nubrick
 
 let EMEBEDDING_VIEW_ID = "nubrick-embedding-view"
 let EMBEDDING_PHASE_UPDATE_METHOD = "embedding-phase-update"
@@ -9,6 +9,20 @@ let ON_EVENT_METHOD = "on-event"
 let ON_DISPATCH_METHOD = "on-dispatch"
 let ON_NEXT_TOOLTIP_METHOD = "on-next-tooltip"
 let ON_DISMISS_TOOLTIP_METHOD = "on-dismiss-tooltip"
+
+private func decodeDispatchProperties(_ raw: Any?) -> [String: Any] {
+    guard let source = raw as? [String: Any] else { return [:] }
+    var properties: [String: Any] = [:]
+    for (key, encoded) in source {
+        guard JSONSerialization.isValidJSONObject(encoded),
+              let data = try? JSONSerialization.data(withJSONObject: encoded),
+              let value = try? JSONDecoder().decode(EventPropertyValue.self, from: data) else {
+            continue
+        }
+        properties[key] = value
+    }
+    return properties
+}
 
 @MainActor
 public class NubrickFlutterPlugin: NSObject, FlutterPlugin {
@@ -211,8 +225,20 @@ public class NubrickFlutterPlugin: NSObject, FlutterPlugin {
 
         // trigger
         case "dispatch":
-            let name = call.arguments as! String
-            self.manager.dispatch(name: name)
+            let name: String
+            let properties: [String: Any]
+            if let legacyName = call.arguments as? String {
+                name = legacyName
+                properties = [:]
+            } else if let event = call.arguments as? [String: Any],
+                      let eventName = event["name"] as? String {
+                name = eventName
+                properties = decodeDispatchProperties(event["properties"])
+            } else {
+                result(FlutterError(code: "invalid-event", message: "Expected an event name", details: nil))
+                return
+            }
+            self.manager.dispatch(name: name, properties: properties)
             result("ok")
 
         // crash report

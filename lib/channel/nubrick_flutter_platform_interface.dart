@@ -101,7 +101,8 @@ abstract class NubrickFlutterPlatform extends PlatformInterface {
         'appendTooltipExperimentHistory() has not been implemented.');
   }
 
-  Future<String?> dispatch(String name) {
+  Future<String?> dispatch(String name,
+      {Map<String, Object> properties = const {}}) {
     throw UnimplementedError('dispatch() has not been implemented.');
   }
 
