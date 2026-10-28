@@ -388,7 +388,7 @@ void main() {
       Nubrick.initialize('project-a');
       await Nubrick.ready;
 
-      final input = <String, Object?>{
+      final input = <String, Object>{
         'count': 3,
         'price': 12.5,
         'active': true,

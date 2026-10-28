@@ -12,7 +12,7 @@ class NubrickEvent {
   /// Creates an event with a snapshot of its properties.
   ///
   /// For example, `NubrickEvent('purchase', properties: {'price': 19.99})`.
-  NubrickEvent(this.name, {Map<String, Object?> properties = const {}})
+  NubrickEvent(this.name, {Map<String, Object> properties = const {}})
       : properties = Map.unmodifiable(normalizeEventProperties(properties));
 }
 

@@ -1,9 +1,9 @@
-Map<String, Object> normalizeEventProperties(Map<String, Object?> input) {
+Map<String, Object> normalizeEventProperties(Map<String, Object> input) {
   final normalized = <String, Object>{};
   for (final entry in input.entries) {
     final value = entry.value;
     if (value is int || value is String || value is bool) {
-      normalized[entry.key] = value as Object;
+      normalized[entry.key] = value;
     } else if (value is double && value.isFinite) {
       normalized[entry.key] = value;
     } else if (value is DateTime) {
