@@ -1,4 +1,4 @@
-@file:OptIn(FlutterBridgeApi::class, ExperimentalEventPropertiesApi::class)
+@file:OptIn(FlutterBridgeApi::class)
 
 package app.nubrick.flutter.nubrick_flutter
 
@@ -6,7 +6,6 @@ import android.content.Context
 import app.nubrick.nubrick.Config
 import app.nubrick.nubrick.Event
 import app.nubrick.nubrick.FlutterBridgeApi
-import app.nubrick.nubrick.ExperimentalEventPropertiesApi
 import app.nubrick.nubrick.FlutterBridge
 import app.nubrick.nubrick.NubrickSDK
 import app.nubrick.nubrick.data.ExceptionRecord

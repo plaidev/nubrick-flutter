@@ -3,7 +3,7 @@ import 'package:nubrick_flutter/nubrick_flutter.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  Nubrick.initialize("cgv3p3223akg00fod19g");
+  Nubrick.initialize("p_d357ola9io6g00f6evag");
   // Global event listener
   Nubrick.addEventListener((event) {
     print("Global Event: ${event.name}");
@@ -116,6 +116,25 @@ class PageA extends StatelessWidget {
                     .dispatch(NubrickEvent("DEMO_ON_CLICK"));
               },
               child: const Text('dispatch custom event'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final event = NubrickEvent("DEMO_ON_CLICK", properties: {
+                  'count': 3,
+                  'price': 19.99,
+                  'label': 'example',
+                  'active': true,
+                  'at': DateTime.now().toUtc(),
+                });
+                await NubrickDispatcher().dispatch(event);
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                      content: Text(
+                          'Dispatched ${event.name}: ${event.properties}')),
+                );
+              },
+              child: const Text('dispatch event with properties'),
             ),
             const SizedBox(height: 200),
             NubrickAnchor(

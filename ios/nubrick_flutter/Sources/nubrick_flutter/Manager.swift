@@ -8,7 +8,7 @@
 import Foundation
 import Flutter
 import UIKit
-@_spi(FlutterBridge) @_spi(ExperimentalEventProperties) import Nubrick
+@_spi(FlutterBridge) import Nubrick
 
 private func preferredWindow(_ connectedScenes: Set<UIScene>) -> UIWindow? {
     let windowScenes = connectedScenes.compactMap { $0 as? UIWindowScene }
