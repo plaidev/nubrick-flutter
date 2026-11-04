@@ -1,3 +1,7 @@
+## 0.22.0
+
+- Promote event properties support to stable
+
 ## 0.21.10
 
 - Add experimental support for event properties
