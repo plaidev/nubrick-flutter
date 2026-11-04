@@ -1,6 +1,6 @@
 import Flutter
 import UIKit
-@_spi(FlutterBridge) @_spi(ExperimentalEventProperties) import Nubrick
+@_spi(FlutterBridge) import Nubrick
 
 let EMEBEDDING_VIEW_ID = "nubrick-embedding-view"
 let EMBEDDING_PHASE_UPDATE_METHOD = "embedding-phase-update"
