@@ -13,12 +13,15 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  publish:
+  validate:
     if: github.ref_type == 'tag' && inputs.version == github.ref_name
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
-      contents: write
-      id-token: write
+      contents: read
+    outputs:
+      published: ${{ steps.validate.outputs.published }}
+      sha: ${{ steps.commit.outputs.sha }}
     env:
       GH_TOKEN: ${{ github.token }}
       RELEASE_TAG: ${{ github.ref_name }}
@@ -26,15 +29,48 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-      - uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d # v1.8.1
       - uses: ./.github/actions/setup-flutter
       - name: Validate release
         id: validate
         env:
           INPUT_VERSION: ${{ inputs.version }}
         run: dart .github/scripts/publish.dart validate
+      - name: Record candidate commit
+        id: commit
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  validate-native:
+    needs: validate
+    if: needs.validate.outputs.published == 'false'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/test-flutter.yaml
+    with:
+      ref: ${{ needs.validate.outputs.sha }}
+
+  publish:
+    needs: [validate, validate-native]
+    if: >-
+      ${{ !cancelled() && needs.validate.result == 'success' &&
+          (needs.validate.outputs.published == 'true' || needs.validate-native.result == 'success') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      id-token: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: ${{ github.ref_name }}
+    steps:
+      - name: Checkout validated commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.validate.outputs.sha }}
+          fetch-depth: 0
+      - uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d # v1.8.1
+      - uses: ./.github/actions/setup-flutter
       - name: Publish to pub.dev
-        if: steps.validate.outputs.published == 'false'
+        if: needs.validate.outputs.published == 'false'
         run: dart .github/scripts/publish.dart publish
       - name: Create GitHub Release
         run: dart .github/scripts/publish.dart create-release

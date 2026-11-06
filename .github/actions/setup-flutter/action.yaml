@@ -1,16 +1,27 @@
 # This action is forked from subosito/flutter-action@v2.21.0
 
 name: Set up Flutter
-description: Install the Flutter version specified in .fvmrc (stable channel) and cache the SDK and pub dependencies.
+description: Install a requested Flutter version or the version in .fvmrc and cache the SDK and pub dependencies.
+
+inputs:
+  flutter-version:
+    description: Flutter version to install. Defaults to .fvmrc.
+    required: false
+    default: ''
 
 runs:
   using: composite
   steps:
-    - name: Read Flutter version from FVM config
+    - name: Resolve Flutter version
       id: fvm-config
       shell: bash
+      env:
+        REQUESTED_FLUTTER_VERSION: ${{ inputs.flutter-version }}
       run: |
-        version="$(jq -er '.flutter | select(type == "string" and length > 0)' "$GITHUB_WORKSPACE/.fvmrc")"
+        version="$REQUESTED_FLUTTER_VERSION"
+        if [ -z "$version" ]; then
+          version="$(jq -er '.flutter | select(type == "string" and length > 0)' "$GITHUB_WORKSPACE/.fvmrc")"
+        fi
         echo "version=$version" >> "$GITHUB_OUTPUT"
 
     - name: Make setup script executable
