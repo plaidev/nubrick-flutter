@@ -1,33 +1,46 @@
 name: "[flutter] Test Nubrick SDK"
 
 on:
+  workflow_call:
+    inputs:
+      ref:
+        description: Commit to validate.
+        required: true
+        type: string
   workflow_dispatch:
   push:
     branches: [ main ]
     paths-ignore:
       - .github/workflows/e2e.yaml
-      - .github/workflows/publish.yaml
-      - .github/workflows/release.yaml
       - .gitignore
       - README.md
   pull_request:
     branches: [ main ]
     paths-ignore:
       - .github/workflows/e2e.yaml
-      - .github/workflows/publish.yaml
-      - .github/workflows/release.yaml
       - .gitignore
       - README.md
+
+permissions:
+  contents: read
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      matrix:
+        flutter-version: ['3.44.0', '']
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref || github.sha }}
 
       - name: Set up Flutter
         uses: ./.github/actions/setup-flutter
+        with:
+          flutter-version: ${{ matrix.flutter-version }}
 
       - name: Check version consistency
         run: |
@@ -61,3 +74,41 @@ jobs:
 
       - name: Validate package
         run: dart pub publish --dry-run
+
+  spm:
+    strategy:
+      matrix:
+        include:
+          - flutter-version: '3.44.0'
+            build-device: true
+          - flutter-version: ''
+            build-device: false
+    uses: ./.github/workflows/validate-spm.yaml
+    with:
+      ref: ${{ inputs.ref || github.sha }}
+      flutter-version: ${{ matrix.flutter-version }}
+      build-device: ${{ matrix.build-device }}
+
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+
+      - name: Set up JDK
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: zulu
+          java-version: '21'
+
+      - name: Set up minimum Flutter
+        uses: ./.github/actions/setup-flutter
+        with:
+          flutter-version: '3.44.0'
+
+      - name: Build Android consumer
+        working-directory: example
+        run: flutter build apk --debug

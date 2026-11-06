@@ -1,0 +1,67 @@
+name: Validate Swift Package Manager
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: Commit to build.
+        required: true
+        type: string
+      flutter-version:
+        description: Flutter version. Defaults to .fvmrc.
+        required: false
+        default: ''
+        type: string
+      build-device:
+        description: Also build the device Release app without signing.
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - name: Checkout candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref }}
+
+      - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
+        with:
+          xcode-version: '26.5'
+
+      - name: Prepare Xcode
+        run: |
+          xcodebuild -runFirstLaunch
+          xcodebuild -showsdks
+
+      - name: Set up Flutter
+        uses: ./.github/actions/setup-flutter
+        with:
+          flutter-version: ${{ inputs.flutter-version }}
+
+      - name: Require Swift Package Manager
+        run: |
+          flutter config --enable-swift-package-manager
+          mkdir -p "$RUNNER_TEMP/spm-bin"
+          cat > "$RUNNER_TEMP/spm-bin/pod" <<'SH'
+          #!/bin/sh
+          echo '::error::The SPM consumer must build without CocoaPods.' >&2
+          exit 1
+          SH
+          chmod +x "$RUNNER_TEMP/spm-bin/pod"
+          echo "$RUNNER_TEMP/spm-bin" >> "$GITHUB_PATH"
+
+      - name: Build SPM Simulator consumer
+        working-directory: e2e
+        run: flutter build ios --simulator
+
+      - name: Build SPM device consumer
+        if: inputs.build-device
+        working-directory: e2e
+        run: flutter build ios --release --no-codesign

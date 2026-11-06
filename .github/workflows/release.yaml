@@ -24,6 +24,8 @@ jobs:
       actions: write
       contents: write
       pull-requests: write
+    outputs:
+      merge_sha: ${{ steps.merge_pr.outputs.merge_sha }}
     env:
       GH_TOKEN: ${{ github.token }}
       RELEASE_TAG: ${{ inputs.version }}
@@ -54,15 +56,49 @@ jobs:
         env:
           MERGE_SHA: ${{ steps.merge_pr.outputs.merge_sha }}
         run: dart .github/scripts/release.dart validate-merged
-      - name: Create release tag
+      - name: Record release candidate
         env:
           MERGE_SHA: ${{ steps.merge_pr.outputs.merge_sha }}
+        run: printf 'Release %s candidate commit is %s\n' "$RELEASE_TAG" "$MERGE_SHA" >> "$GITHUB_STEP_SUMMARY"
+
+  validate-spm:
+    needs: release
+    permissions:
+      contents: read
+    uses: ./.github/workflows/validate-spm.yaml
+    with:
+      ref: ${{ needs.release.outputs.merge_sha }}
+
+  finalize:
+    needs: [release, validate-spm]
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    environment: Only Main
+    permissions:
+      actions: write
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: ${{ inputs.version }}
+      MERGE_SHA: ${{ needs.release.outputs.merge_sha }}
+    steps:
+      - name: Checkout validated commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.release.outputs.merge_sha }}
+          fetch-depth: 0
+      - uses: ./.github/actions/setup-flutter
+      - name: Configure tag author
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+      - name: Create release tag
         run: dart .github/scripts/release.dart tag
       - name: Start publisher
         id: start_publisher
         run: dart .github/scripts/release.dart start-publisher
       - name: Wait for publisher
-        timeout-minutes: 20
+        timeout-minutes: 120
         env:
           PUBLISH_RUN_ID: ${{ steps.start_publisher.outputs.run_id }}
         run: gh run watch "$PUBLISH_RUN_ID" --exit-status --interval 10

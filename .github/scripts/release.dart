@@ -137,8 +137,13 @@ Future<void> validateMergedRelease() async {
 }
 
 Future<void> createTag() async {
-  await command('git',
-      ['tag', '-a', tag, '-m', 'Release $tag', environment('MERGE_SHA')]);
+  final mergeSha = environment('MERGE_SHA');
+  if (output('git', ['tag', '--list', tag]).isEmpty) {
+    await command('git', ['tag', '-a', tag, '-m', 'Release $tag', mergeSha]);
+  } else if (output('git', ['rev-parse', '$tag^{commit}']) != mergeSha) {
+    throw StateError(
+        'Existing tag $tag does not match validated commit $mergeSha');
+  }
   await command('git', ['push', 'origin', 'refs/tags/$tag']);
 }
 

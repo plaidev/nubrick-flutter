@@ -122,4 +122,43 @@ printf '%s\n' "$GH_DISPATCH_RESPONSE"
     expect(file('outputs').existsSync(), isFalse);
     expect(file('summary').existsSync(), isFalse);
   });
+
+  test('release tag retries preserve the validated commit', () async {
+    final repository = Directory('${directory.path}/repository')..createSync();
+    final remote = '${directory.path}/remote.git';
+    final script = File('.github/scripts/release.dart').absolute.path;
+
+    String git(List<String> arguments) {
+      final result =
+          Process.runSync('git', arguments, workingDirectory: repository.path);
+      expect(result.exitCode, 0, reason: '${result.stderr}');
+      return (result.stdout as String).trim();
+    }
+
+    git(['init', '--quiet']);
+    git(['config', 'user.name', 'Release Test']);
+    git(['config', 'user.email', 'release-test@example.com']);
+    git(['commit', '--quiet', '--allow-empty', '-m', 'Initial commit']);
+    git(['init', '--bare', '--quiet', remote]);
+    git(['remote', 'add', 'origin', remote]);
+    final validatedSha = git(['rev-parse', 'HEAD']);
+
+    Future<ProcessResult> createTag(String sha) => Process.run(
+          'dart',
+          [script, 'tag'],
+          workingDirectory: repository.path,
+          environment: {'RELEASE_TAG': 'v0.10.0', 'MERGE_SHA': sha},
+        );
+
+    final first = await createTag(validatedSha);
+    expect(first.exitCode, 0, reason: '${first.stderr}');
+    final retry = await createTag(validatedSha);
+    expect(retry.exitCode, 0, reason: '${retry.stderr}');
+    git(['commit', '--quiet', '--allow-empty', '-m', 'Another commit']);
+    final conflict = await createTag(git(['rev-parse', 'HEAD']));
+    expect(conflict.exitCode, 1);
+    expect(git(['rev-parse', 'v0.10.0^{commit}']), validatedSha);
+    expect(git(['ls-remote', 'origin', 'refs/tags/v0.10.0^{}']),
+        startsWith(validatedSha));
+  });
 }
